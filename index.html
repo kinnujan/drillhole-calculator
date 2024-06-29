@@ -209,6 +209,7 @@
 
     function saveMeasurements() {
         localStorage.setItem('drillHoleMeasurements', JSON.stringify(measurements));
+        saveDrillHoleInfo();
     }
 
     function loadMeasurements() {
@@ -216,6 +217,28 @@
         if (savedMeasurements) {
             measurements = JSON.parse(savedMeasurements);
             updateResultsTable();
+        }
+        loadDrillHoleInfo();
+    }
+
+    function saveDrillHoleInfo() {
+        const drillHoleInfo = {
+            holeId: document.getElementById('holeId').value,
+            holeDip: document.getElementById('holeDip').value,
+            holeAzimuth: document.getElementById('holeAzimuth').value
+        };
+        localStorage.setItem('drillHoleInfo', JSON.stringify(drillHoleInfo));
+    }
+
+    function loadDrillHoleInfo() {
+        const savedDrillHoleInfo = localStorage.getItem('drillHoleInfo');
+        if (savedDrillHoleInfo) {
+            const drillHoleInfo = JSON.parse(savedDrillHoleInfo);
+            document.getElementById('holeId').value = drillHoleInfo.holeId;
+            document.getElementById('holeDip').value = drillHoleInfo.holeDip;
+            document.getElementById('holeAzimuth').value = drillHoleInfo.holeAzimuth;
+            document.getElementById('holeDipSlider').value = drillHoleInfo.holeDip;
+            document.getElementById('holeAzimuthSlider').value = drillHoleInfo.holeAzimuth;
         }
     }
 
@@ -225,6 +248,13 @@
             saveMeasurements();
             updateResultsTable();
             document.getElementById('copyStatus').textContent = 'All measurements cleared.';
+            // Clear drill hole info as well
+            document.getElementById('holeId').value = '';
+            document.getElementById('holeDip').value = '0';
+            document.getElementById('holeAzimuth').value = '0';
+            document.getElementById('holeDipSlider').value = '0';
+            document.getElementById('holeAzimuthSlider').value = '0';
+            saveDrillHoleInfo();
         }
     }
 
@@ -248,12 +278,21 @@
             slider.addEventListener('input', () => {
                 input.value = slider.value;
                 updatePreview();
+                if (id === 'holeDip' || id === 'holeAzimuth') {
+                    saveDrillHoleInfo();
+                }
             });
             input.addEventListener('input', () => {
                 slider.value = input.value;
                 updatePreview();
+                if (id === 'holeDip' || id === 'holeAzimuth') {
+                    saveDrillHoleInfo();
+                }
             });
         });
+
+        // Add event listener for holeId
+        document.getElementById('holeId').addEventListener('input', saveDrillHoleInfo);
     }
 
     function adjustDepth(amount) {
@@ -357,7 +396,7 @@
                 dipOutputFINAL = 90;
                 dipdirectionOutputFINAL = inputHoleAzimuth;
             } else {
-				dipOutputFINAL = 0;
+                dipOutputFINAL = 0;
                 dipdirectionOutputFINAL = 0;
             }
         } else {
@@ -472,9 +511,10 @@
     window.onload = function() {
         setupTypeSelector();
         syncInputs();
-        updatePreview();
         loadMeasurements();
+        updatePreview();
     };
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('sw.js').then(function(registration) {
