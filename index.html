@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drill Hole Orientation Calculator</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f0f4f8;
+            font-size: 16px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 { 
+            color: #333; 
+            font-size: 1.2em; 
+            margin: 10px 0; 
+            text-align: center;
+        }
+        .input-group { 
+            margin-bottom: 10px; 
+            display: flex;
+            align-items: center;
+        }
+        label { 
+            flex: 0 0 120px;
+            font-size: 0.9em; 
+        }
+        input[type="number"], input[type="text"] { 
+            width: calc(100% - 130px);
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="range"] { 
+            width: calc(100% - 130px);
+            vertical-align: middle; 
+        }
+        .type-selector { 
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin: 10px 0; 
+        }
+        .type-button, .depth-button, button {
+            padding: 8px;
+            margin: 2px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .type-button.active { background-color: #4CAF50; color: white; }
+        #error { color: red; margin-top: 10px; font-size: 0.9em; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            font-size: 0.8em; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 4px; 
+            text-align: left; 
+        }
+        th { background-color: #f2f2f2; }
+        .depth-buttons { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 5px; 
+        }
+        #preview {
+            font-size: 1.2em;
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+        }
+        #comment {
+            width: 100%;
+            height: 60px;
+            margin-top: 10px;
+            resize: vertical;
+        }
+        #copyStatus {
+            text-align: center;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        #clearMeasurements {
+            background-color: #ff4444;
+            color: white;
+        }
+        .results-section {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Drill Hole Orientation Calculator</h1>
+        <div class="input-section">
+            <div class="input-group">
+                <label for="holeId">Hole ID:</label>
+                <input type="text" id="holeId">
+            </div>
+            <div class="input-group">
+                <label for="holeDip">Hole Dip (°):</label>
+                <input type="range" id="holeDipSlider" min="-90" max="90" step="0.1" value="0">
+            </div>
+            <div class="input-group">
+                <input type="number" id="holeDip" min="-90" max="90" step="0.1" value="0">
+            </div>
+            <div class="input-group">
+                <label for="holeAzimuth">Hole Azimuth (°):</label>
+                <input type="range" id="holeAzimuthSlider" min="0" max="360" step="0.1" value="0">
+            </div>
+            <div class="input-group">
+                <input type="number" id="holeAzimuth" min="0" max="360" step="0.1" value="0">
+            </div>
+            
+            <h2>Measurement</h2>
+            <div class="input-group">
+                <label for="depth">Depth (m):</label>
+                <input type="number" id="depth" min="0" step="0.01" value="0">
+            </div>
+            <div class="depth-buttons">
+                <button class="depth-button" onclick="adjustDepth(-10)">-10m</button>
+                <button class="depth-button" onclick="adjustDepth(-1)">-1m</button>
+                <button class="depth-button" onclick="adjustDepth(-0.1)">-0.1m</button>
+                <button class="depth-button" onclick="adjustDepth(0.1)">+0.1m</button>
+                <button class="depth-button" onclick="adjustDepth(1)">+1m</button>
+                <button class="depth-button" onclick="adjustDepth(10)">+10m</button>
+            </div>
+            <div class="type-selector">
+                <button class="type-button active" data-type="bedding">Bedding</button>
+                <button class="type-button" data-type="foliation">Foliation</button>
+                <button class="type-button" data-type="fault">Fault</button>
+                <button class="type-button" data-type="shear">Shear</button>
+            </div>
+            <div class="input-group">
+                <label for="alpha">Alpha (°):</label>
+                <input type="range" id="alphaSlider" min="0" max="90" step="1" value="0">
+            </div>
+            <div class="input-group">
+                <input type="number" id="alpha" min="0" max="90" step="1" value="0">
+            </div>
+            <div class="input-group">
+                <label for="beta">Beta (°):</label>
+                <input type="range" id="betaSlider" min="0" max="360" step="1" value="0">
+            </div>
+            <div class="input-group">
+                <input type="number" id="beta" min="0" max="360" step="1" value="0">
+            </div>
+            
+            <div id="preview"></div>
+            
+            <textarea id="comment" placeholder="Add a comment..."></textarea>
+            
+            <button onclick="addMeasurement()">Add Measurement</button>
+            <button onclick="copyResults()">Copy Results</button>
+            <button id="clearMeasurements" onclick="clearMeasurementsWithConfirmation()">Clear Measurements</button>
+            <div id="copyStatus"></div>
+            <div id="error"></div>
+        </div>
+        <div class="results-section">
+            <h2>Results</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Depth</th>
+                        <th>Type</th>
+                        <th>Dip</th>
+                        <th>DipDir</th>
+                        <th>Comment</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <footer>Done by Janne v.08</footer>
+<script>
+    let measurements = [];
+    let selectedType = 'bedding';
+
+    function saveMeasurements() {
+        localStorage.setItem('drillHoleMeasurements', JSON.stringify(measurements));
+    }
+
+    function loadMeasurements() {
+        const savedMeasurements = localStorage.getItem('drillHoleMeasurements');
+        if (savedMeasurements) {
+            measurements = JSON.parse(savedMeasurements);
+            updateResultsTable();
+        }
+    }
+
+    function clearMeasurementsWithConfirmation() {
+        if (confirm("Are you sure you want to clear all measurements? This action cannot be undone.")) {
+            measurements = [];
+            saveMeasurements();
+            updateResultsTable();
+            document.getElementById('copyStatus').textContent = 'All measurements cleared.';
+        }
+    }
+
+    function setupTypeSelector() {
+        const buttons = document.querySelectorAll('.type-button');
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                buttons.forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                selectedType = button.dataset.type;
+                updatePreview();
+            });
+        });
+    }
+
+    function syncInputs() {
+        const inputs = ['holeDip', 'holeAzimuth', 'alpha', 'beta'];
+        inputs.forEach(id => {
+            const slider = document.getElementById(id + 'Slider');
+            const input = document.getElementById(id);
+            slider.addEventListener('input', () => {
+                input.value = slider.value;
+                updatePreview();
+            });
+            input.addEventListener('input', () => {
+                slider.value = input.value;
+                updatePreview();
+            });
+        });
+    }
+
+    function adjustDepth(amount) {
+        const depthInput = document.getElementById('depth');
+        depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
+    }
+
+    function validateInputs(holeDip, holeAzimuth, alpha, beta) {
+        if (holeDip < -90 || holeDip > 90) return "Hole Dip must be between -90° and 90°";
+        if (holeAzimuth < 0 || holeAzimuth > 360) return "Hole Azimuth must be between 0° and 360°";
+        if (alpha < 0 || alpha > 90) return "Alpha (Core Angle) must be between 0° and 90°";
+        if (beta < 0 || beta > 360) return "Beta must be between 0° and 360°";
+        return null;
+    }
+
+    function addMeasurement() {
+        const holeId = document.getElementById('holeId').value;
+        const holeDip = parseFloat(document.getElementById('holeDip').value);
+        const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
+        const depth = parseFloat(document.getElementById('depth').value) || 0;
+        const alpha = parseFloat(document.getElementById('alpha').value);
+        const beta = parseFloat(document.getElementById('beta').value);
+        const comment = document.getElementById('comment').value;
+
+        const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
+        if (errorMessage) {
+            document.getElementById('error').textContent = errorMessage;
+            return;
+        }
+        document.getElementById('error').textContent = '';
+
+        const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+        const strike = (dipDirection + 90) % 360;
+        
+        const result = {
+            holeId,
+            depth,
+            type: selectedType,
+            alpha: alpha.toFixed(1),
+            beta: beta.toFixed(1),
+            dip: dip.toFixed(1),
+            dipDirection: dipDirection.toFixed(1),
+            strike: strike.toFixed(1),
+            comment
+        };
+
+        measurements.push(result);
+        saveMeasurements();
+
+        updateResultsTable();
+
+        document.getElementById('alpha').value = '0';
+        document.getElementById('beta').value = '0';
+        document.getElementById('alphaSlider').value = '0';
+        document.getElementById('betaSlider').value = '0';
+        document.getElementById('comment').value = '';
+        updatePreview();
+    }
+
+    function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth) {
+        const toRadians = (angle) => angle * Math.PI / 180;
+        const toDegrees = (angle) => angle * 180 / Math.PI;
+
+        const alphaRad = toRadians(inputAlpha);
+        const betaRad = toRadians(inputBeta);
+        const holeDipRad = toRadians(-inputHoleDip);
+        const holeAzimuthRad = toRadians(inputHoleAzimuth);
+
+        const sinBeta = -Math.sin(betaRad);
+        const cosBeta = -Math.cos(betaRad);
+        const tanAlpha = -1 / Math.tan(alphaRad);
+
+        let P, Q, R;
+        if (sinBeta === 0) {
+            P = 0;
+            Q = Math.sqrt(-tanAlpha);
+            R = cosBeta / Math.sqrt(-tanAlpha);
+        } else {
+            P = Math.sqrt(-tanAlpha / (1 + cosBeta ** 2 / sinBeta ** 2));
+            Q = cosBeta * P / sinBeta;
+            R = sinBeta / P;
+        }
+
+        const T = P;
+        const U = Q * Math.cos(Math.PI / 2 - holeDipRad) - R * Math.sin(Math.PI / 2 - holeDipRad);
+        const V = Q * Math.sin(Math.PI / 2 - holeDipRad) + R * Math.cos(Math.PI / 2 - holeDipRad);
+        const X = T * Math.cos(-holeAzimuthRad) - U * Math.sin(-holeAzimuthRad);
+        const Y = T * Math.sin(-holeAzimuthRad) + U * Math.cos(-holeAzimuthRad);
+        const Z = V;
+
+        const AL = Z * X;
+        const AM = Z * Y;
+        const AN = -(X ** 2 + Y ** 2);
+
+        const AB = (AL !== 0 || AM !== 0 || AN !== 0) ? 1 : 3;
+
+        let dipOutputFINAL, dipdirectionOutputFINAL;
+
+        if (AB > 1) {
+            if (AB === 2) {
+                dipOutputFINAL = 90;
+                dipdirectionOutputFINAL = inputHoleAzimuth;
+            } else {
+				dipOutputFINAL = 0;
+                dipdirectionOutputFINAL = 0;
+            }
+        } else {
+            const AD = Math.atan(Math.abs(AL / AM));
+            const AE = toDegrees(AD);
+            const AG = toDegrees(Math.PI - AD);
+            const AI = toDegrees(Math.PI + AD);
+            const AK = toDegrees(2 * Math.PI - AD);
+
+            if (AL > 0) {
+                dipdirectionOutputFINAL = AM > 0 ? AE : AG;
+            } else {
+                dipdirectionOutputFINAL = AM > 0 ? AK : AI;
+            }
+            dipOutputFINAL = toDegrees(Math.atan(-AN / Math.sqrt(AL ** 2 + AM ** 2)));
+        }
+
+        return [dipOutputFINAL, dipdirectionOutputFINAL];
+    }
+
+    function updateResultsTable() {
+        const resultsTable = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+        resultsTable.innerHTML = '';
+
+        measurements.forEach((measurement) => {
+            const row = resultsTable.insertRow();
+            row.insertCell(0).textContent = measurement.depth.toFixed(2);
+            row.insertCell(1).textContent = measurement.type;
+            row.insertCell(2).textContent = measurement.dip + '°';
+            row.insertCell(3).textContent = measurement.dipDirection + '°';
+            
+            const commentCell = row.insertCell(4);
+            commentCell.textContent = measurement.comment.length > 20 ? 
+                measurement.comment.substring(0, 20) + '...' : 
+                measurement.comment;
+            commentCell.title = measurement.comment; // Show full comment on hover
+        });
+    }
+
+    function updatePreview() {
+        const holeDip = parseFloat(document.getElementById('holeDip').value);
+        const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
+        const alpha = parseFloat(document.getElementById('alpha').value);
+        const beta = parseFloat(document.getElementById('beta').value);
+
+        const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+        const strike = (dipDirection + 90) % 360;
+
+        const previewElement = document.getElementById('preview');
+        
+        let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
+        
+        previewElement.textContent = previewText;
+    }
+
+    function copyResults() {
+        let csvContent = "HoleID,Depth,Type,Alpha,Beta,Dip,DipDirection,Strike,Comment\n";
+        
+        measurements.forEach(function(measurement) {
+            let row = [
+                measurement.holeId,
+                measurement.depth,
+                measurement.type,
+                measurement.alpha,
+                measurement.beta,
+                measurement.dip,
+                measurement.dipDirection,
+                measurement.strike,
+                measurement.comment
+            ].map(value => `"${value}"`).join(",");
+            csvContent += row + "\n";
+        });
+
+        if (navigator.clipboard && window.isSecureContext) {
+            // Use Clipboard API if available
+            navigator.clipboard.writeText(csvContent).then(() => {
+                document.getElementById('copyStatus').textContent = 'Results copied to clipboard!';
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                fallbackCopyTextToClipboard(csvContent);
+            });
+        } else {
+            // Fallback to older method
+            fallbackCopyTextToClipboard(csvContent);
+        }
+    }
+
+    function fallbackCopyTextToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        
+        // Make the textarea out of viewport
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            const successful = document.execCommand('copy');
+            const msg = successful ? 'Results copied to clipboard!' : 'Unable to copy results';
+            document.getElementById('copyStatus').textContent = msg;
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+            document.getElementById('copyStatus').textContent = 'Unable to copy results';
+        }
+
+        document.body.removeChild(textArea);
+    }
+
+    window.onload = function() {
+        setupTypeSelector();
+        syncInputs();
+        updatePreview();
+        loadMeasurements();
+    };
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+</script>
+</body>
+</html>
