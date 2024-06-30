@@ -52,21 +52,23 @@ input[type="range"] {
     vertical-align: middle; 
 }
 
-.type-selector, .generation-selector, .custom-type-selectors { 
+.type-selector, .generation-selector, .custom-type-selectors, .depth-buttons { 
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: stretch;
     margin: 10px 0; 
 }
 
 .type-button, .generation-button, .custom-option-button, .depth-button, button {
-    padding: 8px 12px;
+    flex: 1 0 calc(33.333% - 8px); /* Three buttons per row on mobile */
     margin: 4px;
+    padding: 10px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 14px;
+    text-align: center;
     transition: background-color 0.3s;
 }
 
@@ -101,12 +103,6 @@ th, td {
 th { 
     background-color: #f2f2f2; 
     font-weight: bold;
-}
-
-.depth-buttons { 
-    display: flex; 
-    justify-content: space-between; 
-    margin-top: 5px; 
 }
 
 #preview {
@@ -275,22 +271,13 @@ body.dark-mode #preview {
     background-color: #555;
 }
 
-/* Custom type selector styles */
-.custom-type-selectors {
-    margin-bottom: 15px;
-}
-
-.custom-type-selector {
-    margin-bottom: 10px;
-}
-
-.custom-type-selector label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
 /* Responsive design */
+@media (min-width: 768px) {
+    .type-button, .generation-button, .custom-option-button, .depth-button, button {
+        flex: 1 0 auto; /* Full width on larger screens */
+    }
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 10px;
