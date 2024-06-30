@@ -1,11 +1,10 @@
-import { updateTypeSelectorButtons, updateGenerationSelectorButtons } from './ui.js';
+import { updateTypeSelectorButtons, updateGenerationSelectorButtons, updateCustomTypeSelectorButtons } from './ui.js';
 import { saveSettings, loadSettings } from './storage.js';
 
 export function setupSettings() {
     const settings = loadSettings();
     setupDarkMode(settings.darkMode);
-    setupCustomTypes(settings.measurementTypes, settings.generationTypes);
-    setupUnits(settings.units);
+    setupCustomTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
 }
 
 function setupDarkMode(initialState) {
@@ -21,25 +20,14 @@ function setupDarkMode(initialState) {
     });
 }
 
-function setupCustomTypes(measurementTypes, generationTypes) {
+function setupCustomTypes(measurementTypes, generationTypes, customTypes) {
     updateMeasurementTypes(measurementTypes);
     updateGenerationTypes(generationTypes);
+    updateCustomTypes(customTypes);
 
     document.getElementById('addMeasurementType').addEventListener('click', addMeasurementType);
     document.getElementById('addGenerationType').addEventListener('click', addGenerationType);
-}
-
-function setupUnits(initialUnit) {
-    const unitsSelect = document.getElementById('units');
-    unitsSelect.value = initialUnit;
-    updateUnits(initialUnit);
-
-    unitsSelect.addEventListener('change', () => {
-        const settings = loadSettings();
-        settings.units = unitsSelect.value;
-        saveSettings(settings);
-        updateUnits(unitsSelect.value);
-    });
+    document.getElementById('addCustomType').addEventListener('click', addCustomType);
 }
 
 export function updateMeasurementTypes(types) {
@@ -78,6 +66,21 @@ export function updateGenerationTypes(types) {
     saveSettings(settings);
 }
 
+export function updateCustomTypes(types) {
+    const container = document.getElementById('customTypes');
+    container.innerHTML = '';
+    types.forEach(type => {
+        const div = document.createElement('div');
+        div.textContent = type.name;
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteCustomType(type.name);
+        div.appendChild(deleteButton);
+        container.appendChild(div);
+    });
+    updateCustomTypeSelectorButtons(types);
+}
+
 function addMeasurementType() {
     const newType = prompt('Enter new measurement type:');
     if (newType) {
@@ -93,6 +96,18 @@ function addGenerationType() {
         const settings = loadSettings();
         settings.generationTypes.push(newType);
         updateGenerationTypes(settings.generationTypes);
+    }
+}
+
+function addCustomType() {
+    const name = prompt('Enter new custom type name:');
+    if (name) {
+        const optionsString = prompt('Enter options for this type (comma-separated):');
+        const options = optionsString.split(',').map(option => option.trim());
+        const settings = loadSettings();
+        settings.customTypes.push({ name, options });
+        updateCustomTypes(settings.customTypes);
+        saveSettings(settings);
     }
 }
 
@@ -114,12 +129,9 @@ function deleteGenerationType(type) {
     }
 }
 
-function updateUnits(unit) {
-    const depthLabel = document.querySelector('label[for="depth"]');
-    if (unit === 'metric') {
-        depthLabel.textContent = 'Depth (m):';
-    } else {
-        depthLabel.textContent = 'Depth (ft):';
-    }
-    // Update other unit-dependent elements here
+function deleteCustomType(typeName) {
+    const settings = loadSettings();
+    settings.customTypes = settings.customTypes.filter(type => type.name !== typeName);
+    updateCustomTypes(settings.customTypes);
+    saveSettings(settings);
 }
