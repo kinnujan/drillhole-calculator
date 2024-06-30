@@ -53,44 +53,35 @@ export function saveSettings(settings) {
         console.error("Error saving settings:", error);
     }
 }
-
 export function loadSettings() {
     console.log("Loading settings from local storage...");
+    const currentVersion = 2; // Increment this when making changes to settings structure
     try {
         const savedSettings = localStorage.getItem('appSettings');
-        const parsedSettings = savedSettings ? JSON.parse(savedSettings) : {
-            darkMode: false,
-            measurementTypes: ['bedding', 'foliation', 'fault', 'shear'],
-            generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
-            customTypes: []
-        };
+        let parsedSettings = savedSettings ? JSON.parse(savedSettings) : null;
+
+        if (!parsedSettings || parsedSettings.version < currentVersion) {
+            parsedSettings = {
+                version: currentVersion,
+                darkMode: parsedSettings ? parsedSettings.darkMode : false,
+                measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
+                generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
+                customTypes: parsedSettings ? parsedSettings.customTypes : []
+            };
+            // Save the updated settings
+            localStorage.setItem('appSettings', JSON.stringify(parsedSettings));
+        }
+
         console.log("Settings loaded successfully.");
         return parsedSettings;
     } catch (error) {
         console.error("Error loading settings:", error);
         return {
+            version: currentVersion,
             darkMode: false,
-            measurementTypes: ['bedding', 'foliation', 'fault', 'shear'],
+            measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
             generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
             customTypes: []
         };
-    }
-}
-
-export function loadLastMeasurement() {
-    console.log("Loading last measurement from local storage...");
-    try {
-        const savedMeasurements = localStorage.getItem('drillHoleMeasurements');
-        const parsedMeasurements = savedMeasurements ? JSON.parse(savedMeasurements) : [];
-        if (parsedMeasurements.length > 0) {
-            const lastMeasurement = parsedMeasurements[parsedMeasurements.length - 1];
-            console.log("Last measurement loaded successfully.");
-            return lastMeasurement;
-        }
-        console.log("No last measurement found.");
-        return null;
-    } catch (error) {
-        console.error("Error loading last measurement:", error);
-        return null;
     }
 }

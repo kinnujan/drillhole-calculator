@@ -307,14 +307,6 @@ export function setSelectedGeneration(gen) {
 export function setSelectedCustomType(typeName, option) {
     selectedCustomTypes[typeName] = option;
     console.log(`Selected custom type ${typeName} set to:`, option);
-    
-    // Update UI to reflect the selection
-    const container = document.querySelector(`.custom-type-selector-${typeName.replace(/\s+/g, '-').toLowerCase()}`);
-    if (container) {
-        container.querySelectorAll('.custom-option-button').forEach(btn => {
-            btn.classList.toggle('active', btn.getAttribute('data-custom-option') === option);
-        });
-    }
 }
 
 export { measurements, selectedType, selectedGeneration, selectedCustomTypes };
