@@ -10,6 +10,7 @@ export function setupSettings() {
     document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
     document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
     document.getElementById('addCustomType').addEventListener('click', addCustomType);
+    setupResetButton(); 
     console.log("Settings setup complete.");
 }
 
@@ -145,4 +146,29 @@ function deleteCustomTypeOption(typeName, option) {
             saveSettings(settings);
         }
     }
+}
+
+function setupResetButton() {
+    const resetButton = document.getElementById('resetApp');
+    resetButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset all settings and data? This action cannot be undone.')) {
+            // Clear all localStorage items
+            localStorage.clear();
+
+            // Reset settings to default
+            const defaultSettings = {
+                darkMode: false,
+                measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
+                generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
+                customTypes: []
+            };
+            saveSettings(defaultSettings);
+
+            // Clear measurements
+            saveMeasurements([]);
+
+            // Reload the page to reset the UI
+            window.location.reload();
+        }
+    });
 }
