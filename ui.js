@@ -1,5 +1,5 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType } from './measurements.js';
-import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
+import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings, loadLastMeasurement } from './storage.js';
 
 export function setupUI() {
     console.log("Setting up UI...");
@@ -29,9 +29,11 @@ function setupTabs() {
 
 function setupTypeSelectors() {
     const settings = loadSettings();
-    updateTypeSelectorButtons(settings.measurementTypes);
-    updateGenerationSelectorButtons(settings.generationTypes);
-    updateCustomTypeSelectorButtons(settings.customTypes);
+    const savedMeasurement = loadLastMeasurement();
+
+    updateTypeSelectorButtons(settings.measurementTypes, savedMeasurement?.type);
+    updateGenerationSelectorButtons(settings.generationTypes, savedMeasurement?.generation);
+    updateCustomTypeSelectorButtons(settings.customTypes, savedMeasurement?.customTypes);
 }
 
 function setupDepthButtons() {
@@ -44,15 +46,15 @@ function setupDepthButtons() {
     });
 }
 
-export function updateTypeSelectorButtons(types) {
-    updateSelectorButtons('.type-selector', types, 'type', setSelectedType);
+export function updateTypeSelectorButtons(types, selectedType) {
+    updateSelectorButtons('.type-selector', types, 'type', setSelectedType, selectedType);
 }
 
-export function updateGenerationSelectorButtons(types) {
-    updateSelectorButtons('.generation-selector', types, 'gen', setSelectedGeneration);
+export function updateGenerationSelectorButtons(types, selectedGeneration) {
+    updateSelectorButtons('.generation-selector', types, 'gen', setSelectedGeneration, selectedGeneration);
 }
 
-export function updateCustomTypeSelectorButtons(customTypes) {
+export function updateCustomTypeSelectorButtons(customTypes, selectedCustomTypes) {
     const container = document.querySelector('.custom-type-selectors');
     container.innerHTML = ''; // Clear existing custom type selectors
 
@@ -68,12 +70,13 @@ export function updateCustomTypeSelectorButtons(customTypes) {
             `.custom-type-selector-${customType.name.replace(/\s+/g, '-').toLowerCase()}`, 
             customType.options, 
             'custom-option', 
-            (option) => setSelectedCustomType(customType.name, option)
+            (option) => setSelectedCustomType(customType.name, option),
+            selectedCustomTypes?.[customType.name]
         );
     });
 }
 
-function updateSelectorButtons(containerSelector, options, dataAttribute, onClickHandler) {
+function updateSelectorButtons(containerSelector, options, dataAttribute, onClickHandler, selectedValue) {
     const container = document.querySelector(containerSelector);
     if (!container) {
         console.error(`Container not found: ${containerSelector}`);
@@ -82,9 +85,12 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
     container.innerHTML = '';
     options.forEach(option => {
         const button = document.createElement('button');
-        button.className = `${dataAttribute}-button`;
+        button.className = `${dataAttribute}-button selector-button`;
         button.setAttribute(`data-${dataAttribute}`, option);
         button.textContent = option;
+        if (option === selectedValue) {
+            button.classList.add('active');
+        }
         button.onclick = () => {
             container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
@@ -214,10 +220,11 @@ export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
     depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
     depthInput.dispatchEvent(new Event('input')); // Trigger input event
+    updatePreview(); // Update the preview after adjusting depth
 }
 
 export function resetUISelections() {
-    document.querySelectorAll('.type-button, .generation-button, .custom-option-button').forEach(btn => {
+    document.querySelectorAll('.selector-button').forEach(btn => {
         btn.classList.remove('active');
     });
 }
