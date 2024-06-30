@@ -5,13 +5,12 @@ export function setupSettings() {
     console.log("Setting up settings...");
     const settings = loadSettings();
     setupDarkMode(settings.darkMode);
-    setupCustomTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
+    setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
     
-    console.log("Adding event listeners to buttons...");
-    document.getElementById('addMeasurementType').addEventListener('click', addMeasurementType);
-    document.getElementById('addGenerationType').addEventListener('click', addGenerationType);
+    document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
+    document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
     document.getElementById('addCustomType').addEventListener('click', addCustomType);
-    console.log("Event listeners added.");
+    console.log("Settings setup complete.");
 }
 
 function setupDarkMode(initialState) {
@@ -27,111 +26,90 @@ function setupDarkMode(initialState) {
     });
 }
 
-function setupCustomTypes(measurementTypes, generationTypes, customTypes) {
-    updateMeasurementTypes(measurementTypes);
-    updateGenerationTypes(generationTypes);
-    updateCustomTypes(customTypes);
+function setupAllTypes(measurementTypes, generationTypes, customTypes) {
+    updateTypeList('measurementTypes', measurementTypes);
+    updateTypeList('generationTypes', generationTypes);
+    updateCustomTypesList(customTypes);
 }
 
-export function updateMeasurementTypes(types) {
-    const container = document.getElementById('measurementTypes');
+function updateTypeList(typeCategory, types) {
+    const container = document.getElementById(typeCategory);
     container.innerHTML = '';
     types.forEach(type => {
         const div = document.createElement('div');
         div.textContent = type;
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.onclick = () => deleteMeasurementType(type);
+        deleteButton.onclick = () => deleteType(typeCategory, type);
         div.appendChild(deleteButton);
         container.appendChild(div);
     });
-    updateTypeSelectorButtons(types);
-}
-
-export function updateGenerationTypes(types) {
-    const container = document.getElementById('generationTypes');
-    container.innerHTML = '';
-    types.forEach(type => {
-        const div = document.createElement('div');
-        div.textContent = type;
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.onclick = () => deleteGenerationType(type);
-        div.appendChild(deleteButton);
-        container.appendChild(div);
-    });
-    updateGenerationSelectorButtons(types);
-}
-
-export function updateCustomTypes(types) {
-    const container = document.getElementById('customTypes');
-    container.innerHTML = '';
-    types.forEach(type => {
-        const div = document.createElement('div');
-        div.textContent = type.name;
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.onclick = () => deleteCustomType(type.name);
-        div.appendChild(deleteButton);
-        container.appendChild(div);
-    });
-    updateCustomTypeSelectorButtons(types);
-}
-
-function addMeasurementType() {
-    console.log("Adding measurement type...");
-    const newType = prompt('Enter new measurement type:');
-    if (newType) {
-        const settings = loadSettings();
-        settings.measurementTypes.push(newType);
-        updateMeasurementTypes(settings.measurementTypes);
-        saveSettings(settings);
-        console.log("New measurement type added:", newType);
+    if (typeCategory === 'measurementTypes') {
+        updateTypeSelectorButtons(types);
+    } else if (typeCategory === 'generationTypes') {
+        updateGenerationSelectorButtons(types);
     }
 }
 
-function addGenerationType() {
-    console.log("Adding generation type...");
-    const newType = prompt('Enter new generation type:');
+function updateCustomTypesList(customTypes) {
+    const container = document.getElementById('customTypes');
+    container.innerHTML = '';
+    customTypes.forEach(customType => {
+        const div = document.createElement('div');
+        div.textContent = customType.name;
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteCustomType(customType.name);
+        div.appendChild(deleteButton);
+        
+        const optionsContainer = document.createElement('div');
+        customType.options.forEach(option => {
+            const optionDiv = document.createElement('div');
+            optionDiv.textContent = option;
+            const deleteOptionButton = document.createElement('button');
+            deleteOptionButton.textContent = 'Delete';
+            deleteOptionButton.onclick = () => deleteCustomTypeOption(customType.name, option);
+            optionDiv.appendChild(deleteOptionButton);
+            optionsContainer.appendChild(optionDiv);
+        });
+        
+        const addOptionButton = document.createElement('button');
+        addOptionButton.textContent = 'Add Option';
+        addOptionButton.onclick = () => addCustomTypeOption(customType.name);
+        
+        div.appendChild(optionsContainer);
+        div.appendChild(addOptionButton);
+        container.appendChild(div);
+    });
+    updateCustomTypeSelectorButtons(customTypes);
+}
+
+function addType(typeCategory) {
+    const newType = prompt(`Enter new ${typeCategory.slice(0, -1)}:`);
     if (newType) {
         const settings = loadSettings();
-        settings.generationTypes.push(newType);
-        updateGenerationTypes(settings.generationTypes);
+        settings[typeCategory].push(newType);
+        updateTypeList(typeCategory, settings[typeCategory]);
         saveSettings(settings);
-        console.log("New generation type added:", newType);
+    }
+}
+
+function deleteType(typeCategory, type) {
+    const settings = loadSettings();
+    const index = settings[typeCategory].indexOf(type);
+    if (index > -1) {
+        settings[typeCategory].splice(index, 1);
+        updateTypeList(typeCategory, settings[typeCategory]);
+        saveSettings(settings);
     }
 }
 
 function addCustomType() {
-    console.log("Adding custom type...");
     const name = prompt('Enter new custom type name:');
     if (name) {
-        const optionsString = prompt('Enter options for this type (comma-separated):');
-        const options = optionsString.split(',').map(option => option.trim());
         const settings = loadSettings();
-        settings.customTypes.push({ name, options });
-        updateCustomTypes(settings.customTypes);
-        saveSettings(settings);
-        console.log("New custom type added:", name, "with options:", options);
-    }
-}
-
-function deleteMeasurementType(type) {
-    const settings = loadSettings();
-    const index = settings.measurementTypes.indexOf(type);
-    if (index > -1) {
-        settings.measurementTypes.splice(index, 1);
-        updateMeasurementTypes(settings.measurementTypes);
-        saveSettings(settings);
-    }
-}
-
-function deleteGenerationType(type) {
-    const settings = loadSettings();
-    const index = settings.generationTypes.indexOf(type);
-    if (index > -1) {
-        settings.generationTypes.splice(index, 1);
-        updateGenerationTypes(settings.generationTypes);
+        settings.customTypes.push({ name, options: [] });
+        updateCustomTypesList(settings.customTypes);
         saveSettings(settings);
     }
 }
@@ -139,6 +117,32 @@ function deleteGenerationType(type) {
 function deleteCustomType(typeName) {
     const settings = loadSettings();
     settings.customTypes = settings.customTypes.filter(type => type.name !== typeName);
-    updateCustomTypes(settings.customTypes);
+    updateCustomTypesList(settings.customTypes);
     saveSettings(settings);
+}
+
+function addCustomTypeOption(typeName) {
+    const newOption = prompt(`Enter new option for ${typeName}:`);
+    if (newOption) {
+        const settings = loadSettings();
+        const customType = settings.customTypes.find(type => type.name === typeName);
+        if (customType) {
+            customType.options.push(newOption);
+            updateCustomTypesList(settings.customTypes);
+            saveSettings(settings);
+        }
+    }
+}
+
+function deleteCustomTypeOption(typeName, option) {
+    const settings = loadSettings();
+    const customType = settings.customTypes.find(type => type.name === typeName);
+    if (customType) {
+        const index = customType.options.indexOf(option);
+        if (index > -1) {
+            customType.options.splice(index, 1);
+            updateCustomTypesList(settings.customTypes);
+            saveSettings(settings);
+        }
+    }
 }
