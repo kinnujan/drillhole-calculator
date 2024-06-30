@@ -8,18 +8,23 @@ let selectedCustomType = null;
 let selectedCustomTypeOption = null;
 
 export function loadMeasurements() {
+    console.log("Loading measurements...");
     measurements = loadMeasurementsFromStorage();
     updateResultsTable();
+    console.log("Measurements loaded.");
 }
 
 export function setupMeasurementHandlers() {
+    console.log("Setting up measurement handlers...");
     document.getElementById('addMeasurement').addEventListener('click', addMeasurement);
     document.getElementById('copyResults').addEventListener('click', copyResults);
     document.getElementById('saveAsCSV').addEventListener('click', saveAsCSV);
     document.getElementById('clearMeasurements').addEventListener('click', clearMeasurementsWithConfirmation);
+    console.log("Measurement handlers set up.");
 }
 
 function addMeasurement() {
+    console.log("Adding new measurement...");
     const holeId = document.getElementById('holeId').value;
     const holeDip = parseFloat(document.getElementById('holeDip').value);
     const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
@@ -31,6 +36,7 @@ function addMeasurement() {
     const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
     if (errorMessage) {
         document.getElementById('error').textContent = errorMessage;
+        console.log("Measurement validation failed:", errorMessage);
         return;
     }
     document.getElementById('error').textContent = '';
@@ -69,6 +75,7 @@ function addMeasurement() {
     resetGeneration();
     resetCustomType();
     updatePreview();
+    console.log("New measurement added:", result);
 }
 
 export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth) {
@@ -159,11 +166,13 @@ function resetCustomType() {
 }
 
 function copyResults() {
+    console.log("Copying results to clipboard...");
     const csvContent = getCSVContent();
 
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(csvContent).then(() => {
             document.getElementById('copyStatus').textContent = 'Results copied to clipboard!';
+            console.log("Results copied to clipboard successfully.");
         }).catch(err => {
             console.error('Failed to copy: ', err);
             fallbackCopyTextToClipboard(csvContent);
@@ -187,6 +196,7 @@ function fallbackCopyTextToClipboard(text) {
         const successful = document.execCommand('copy');
         const msg = successful ? 'Results copied to clipboard!' : 'Unable to copy results';
         document.getElementById('copyStatus').textContent = msg;
+        console.log(msg);
     } catch (err) {
         console.error('Fallback: Oops, unable to copy', err);
         document.getElementById('copyStatus').textContent = 'Unable to copy results';
@@ -196,6 +206,7 @@ function fallbackCopyTextToClipboard(text) {
 }
 
 async function saveAsCSV() {
+    console.log("Saving results as CSV...");
     const csvContent = getCSVContent();
     const filename = `drill_hole_measurements_${new Date().toISOString().slice(0,10)}.csv`;
 
@@ -212,6 +223,7 @@ async function saveAsCSV() {
             await writable.write(csvContent);
             await writable.close();
             document.getElementById('copyStatus').textContent = 'File saved successfully!';
+            console.log("File saved successfully.");
         } catch (err) {
             console.error('Error saving file:', err);
             fallbackSaveAsCSV(csvContent, filename);
@@ -238,6 +250,7 @@ function fallbackSaveAsCSV(csvContent, filename) {
         }
     }
     document.getElementById('copyStatus').textContent = 'File download initiated.';
+    console.log("File download initiated.");
 }
 
 function getCSVContent() {
@@ -265,6 +278,7 @@ function getCSVContent() {
 }
 
 function clearMeasurementsWithConfirmation() {
+    console.log("Clearing measurements with confirmation...");
     if (confirm("Are you sure you want to clear all measurements? This action cannot be undone.")) {
         measurements = [];
         saveMeasurements(measurements);
@@ -276,24 +290,31 @@ function clearMeasurementsWithConfirmation() {
         document.getElementById('holeDipSlider').value = '0';
         document.getElementById('holeAzimuthSlider').value = '0';
         saveDrillHoleInfo({ holeId: '', holeDip: 0, holeAzimuth: 0 });
+        console.log("All measurements cleared.");
+    } else {
+        console.log("Measurement clearing cancelled.");
     }
 }
 
 export function setSelectedType(type) {
     selectedType = type;
+    console.log("Selected type set to:", type);
 }
 
 export function setSelectedGeneration(gen) {
     selectedGeneration = gen;
+    console.log("Selected generation set to:", gen);
 }
 
 export function setSelectedCustomType(type) {
     selectedCustomType = type;
     selectedCustomTypeOption = null;
+    console.log("Selected custom type set to:", type);
 }
 
 export function setSelectedCustomTypeOption(option) {
     selectedCustomTypeOption = option;
+    console.log("Selected custom type option set to:", option);
 }
 
 export { measurements, selectedType, selectedGeneration, selectedCustomType, selectedCustomTypeOption };
