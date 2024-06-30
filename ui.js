@@ -16,6 +16,12 @@ function setupDepthButtons() {
             const amount = parseFloat(button.getAttribute('data-amount'));
             const depthInput = document.getElementById('depth');
             depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
+            
+            // Add visual feedback
+            button.classList.add('active');
+            setTimeout(() => {
+                button.classList.remove('active');
+            }, 200);
         });
     });
 }
