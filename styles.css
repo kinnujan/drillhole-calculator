@@ -80,8 +80,8 @@ input[type="range"] {
 }
 
 .selector-button.active { 
-    background-color: #4CAF50 !important; 
-    color: white !important; 
+    background-color: #4CAF50; 
+    color: white; 
 }
 
 #error { 
@@ -223,6 +223,12 @@ body.dark-mode .depth-button,
 body.dark-mode button {
     background-color: #3a3a3a;
     color: #e0e0e0;
+}
+
+body.dark-mode .selector-button:hover,
+body.dark-mode .depth-button:hover,
+body.dark-mode button:hover {
+    background-color: #4a4a4a;
 }
 
 body.dark-mode .selector-button.active {
