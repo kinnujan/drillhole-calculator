@@ -51,18 +51,9 @@
                     <button class="depth-button" data-amount="1">+1m</button>
                     <button class="depth-button" data-amount="10">+10m</button>
                 </div>
-                <div class="type-selector">
-                    <!-- Buttons will be dynamically added here -->
-                </div>
-                <div class="generation-selector">
-                    <!-- Buttons will be dynamically added here -->
-                </div>
-                <div class="custom-type-selector">
-                    <!-- Custom type buttons will be dynamically added here -->
-                </div>
-                <div class="custom-type-options">
-                    <!-- Custom type options will be dynamically added here -->
-                </div>
+                <div class="type-selector"></div>
+                <div class="generation-selector"></div>
+                <div class="custom-type-selectors"></div>
                 <div class="input-group">
                     <label for="alpha">Alpha (°):</label>
                     <input type="range" id="alphaSlider" min="0" max="90" step="1" value="0">
@@ -85,17 +76,11 @@
                 <h2>Results</h2>
                 <table id="resultsTable">
                     <thead>
-                        <tr>
-                            <th>Depth</th>
-                            <th>Type</th>
-                            <th>Gen</th>
-                            <th>Dip</th>
-                            <th>DipDir</th>
-                            <th>Comment</th>
-                            <th>Custom</th>
-                        </tr>
+                        <!-- Table header will be dynamically generated -->
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                        <!-- Table body will be dynamically populated -->
+                    </tbody>
                 </table>
             </div>
             <div class="action-buttons">
@@ -114,12 +99,12 @@
             <div class="setting-group">
                 <label>Measurement Types:</label>
                 <div id="measurementTypes"></div>
-                <button id="addMeasurementType">Add Type</button>
+                <button id="addMeasurementType">Add Measurement Type</button>
             </div>
             <div class="setting-group">
                 <label>Generation Types:</label>
                 <div id="generationTypes"></div>
-                <button id="addGenerationType">Add Generation</button>
+                <button id="addGenerationType">Add Generation Type</button>
             </div>
             <div class="setting-group">
                 <label>Custom Types:</label>
@@ -131,7 +116,7 @@
         <div id="copyStatus"></div>
         <div id="error"></div>
     </div>
-    <footer>Done by Janne v.12</footer>
+    <footer>Done by Janne v.13</footer>
     <script type="module" src="main.js"></script>
 </body>
 </html>
