@@ -1,5 +1,9 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType } from './measurements.js';
-import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings, loadLastMeasurement } from './storage.js';
+import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings, loadLastMeasurement, saveMeasurements } from './storage.js';
+
+let selectedType = '';
+let selectedGeneration = '';
+let selectedCustomTypes = {};
 
 export function setupUI() {
     console.log("Setting up UI...");
@@ -7,6 +11,8 @@ export function setupUI() {
     setupTypeSelectors();
     setupDepthButtons();
     syncInputs();
+    setupAddMeasurementButton();
+    setupActionButtons();
     console.log("UI setup complete.");
 }
 
@@ -46,6 +52,23 @@ function setupDepthButtons() {
     });
 }
 
+function setupAddMeasurementButton() {
+    const addButton = document.getElementById('addMeasurement');
+    if (addButton) {
+        addButton.addEventListener('click', addMeasurement);
+    } else {
+        console.error("Add Measurement button not found");
+    }
+}
+function setupActionButtons() {
+    const copyButton = document.getElementById('copyResults');
+    const saveCSVButton = document.getElementById('saveAsCSV');
+    const clearButton = document.getElementById('clearMeasurements');
+
+    if (copyButton) copyButton.addEventListener('click', copyResults);
+    if (saveCSVButton) saveCSVButton.addEventListener('click', saveAsCSV);
+    if (clearButton) clearButton.addEventListener('click', clearMeasurementsWithConfirmation);
+}
 export function updateTypeSelectorButtons(types, selectedType) {
     updateSelectorButtons('.type-selector', types, 'type', setSelectedType, selectedType);
 }
@@ -91,11 +114,11 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
         if (option === selectedValue) {
             button.classList.add('active');
         }
-        button.onclick = () => {
+        button.addEventListener('click', () => {
             container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             onClickHandler(option);
-        };
+        });
         container.appendChild(button);
     });
 }
@@ -227,4 +250,134 @@ export function resetUISelections() {
     document.querySelectorAll('.selector-button').forEach(btn => {
         btn.classList.remove('active');
     });
+}
+
+function addMeasurement() {
+    console.log("Adding new measurement...");
+    const holeId = document.getElementById('holeId').value;
+    const depth = parseFloat(document.getElementById('depth').value) || 0;
+    const holeDip = parseFloat(document.getElementById('holeDip').value);
+    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
+    const alpha = parseFloat(document.getElementById('alpha').value);
+    const beta = parseFloat(document.getElementById('beta').value);
+    const comment = document.getElementById('comment').value;
+
+    if (!selectedType) {
+        alert("Please select a measurement type.");
+        return;
+    }
+
+    const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+    const strike = (dipDirection + 90) % 360;
+
+    const newMeasurement = {
+        holeId,
+        depth,
+        type: selectedType,
+        generation: selectedGeneration,
+        customTypes: { ...selectedCustomTypes },
+        alpha,
+        beta,
+        dip,
+        dipDirection,
+        strike,
+        comment
+    };
+
+    measurements.push(newMeasurement);
+    saveMeasurements(measurements);
+    updateResultsTable();
+
+    // Reset input fields
+    document.getElementById('alpha').value = '0';
+    document.getElementById('beta').value = '0';
+    document.getElementById('alphaSlider').value = '0';
+    document.getElementById('betaSlider').value = '0';
+    document.getElementById('comment').value = '';
+
+    // Increment depth
+    const depthInput = document.getElementById('depth');
+    depthInput.value = (parseFloat(depthInput.value) + 0.1).toFixed(2);
+
+    resetUISelections();
+    updatePreview();
+    console.log("New measurement added:", newMeasurement);
+}
+
+function copyResults() {
+    const csvContent = getCSVContent();
+    navigator.clipboard.writeText(csvContent).then(() => {
+        alert("Results copied to clipboard!");
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert("Failed to copy results. Please try again.");
+    });
+}
+function saveAsCSV() {
+    const csvContent = getCSVContent();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "measurements.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+function getCSVContent() {
+    const headers = ['HoleID', 'Depth', 'Type', 'Generation', 'Alpha', 'Beta', 'Dip', 'DipDirection', 'Strike', 'Comment'];
+    const settings = loadSettings();
+    settings.customTypes.forEach(customType => {
+        headers.push(customType.name);
+    });
+
+    let csvContent = headers.join(',') + '\n';
+
+    measurements.forEach(measurement => {
+        let row = [
+            measurement.holeId,
+            measurement.depth,
+            measurement.type,
+            measurement.generation,
+            measurement.alpha,
+            measurement.beta,
+            measurement.dip,
+            measurement.dipDirection,
+            measurement.strike,
+            measurement.comment
+        ];
+
+        settings.customTypes.forEach(customType => {
+            row.push(measurement.customTypes[customType.name] || '');
+        });
+
+        csvContent += row.map(value => `"${value}"`).join(',') + '\n';
+    });
+
+    return csvContent;
+}
+
+function clearMeasurementsWithConfirmation() {
+    if (confirm("Are you sure you want to clear all measurements? This action cannot be undone.")) {
+        measurements.length = 0; // Clear the array
+        saveMeasurements(measurements);
+        updateResultsTable();
+        alert("All measurements have been cleared.");
+    }
+}
+
+export function setSelectedType(type) {
+    selectedType = type;
+}
+
+export function setSelectedGeneration(generation) {
+    selectedGeneration = generation;
+}
+
+export function setSelectedCustomType(typeName, value) {
+    selectedCustomTypes[typeName] = value;
 }
