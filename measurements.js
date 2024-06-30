@@ -77,62 +77,75 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
     const toRadians = (angle) => angle * Math.PI / 180;
     const toDegrees = (angle) => angle * 180 / Math.PI;
 
+    // Convert input angles to radians
     const alphaRad = toRadians(inputAlpha);
     const betaRad = toRadians(inputBeta);
     const holeDipRad = toRadians(-inputHoleDip);
     const holeAzimuthRad = toRadians(inputHoleAzimuth);
 
+    // Calculate trigonometric values
     const sinBeta = -Math.sin(betaRad);
     const cosBeta = -Math.cos(betaRad);
     const tanAlpha = -1 / Math.tan(alphaRad);
 
-    let P, Q, R;
+    // Calculate direction cosines of the normal to the plane
+    let normalX, normalY, normalZ;
     if (sinBeta === 0) {
-        P = 0;
-        Q = Math.sqrt(-tanAlpha);
-        R = cosBeta / Math.sqrt(-tanAlpha);
+        normalX = 0;
+        normalY = Math.sqrt(-tanAlpha);
+        normalZ = cosBeta / Math.sqrt(-tanAlpha);
     } else {
-        P = Math.sqrt(-tanAlpha / (1 + cosBeta ** 2 / sinBeta ** 2));
-        Q = cosBeta * P / sinBeta;
-        R = sinBeta / P;
+        normalX = Math.sqrt(-tanAlpha / (1 + cosBeta ** 2 / sinBeta ** 2));
+        normalY = cosBeta * normalX / sinBeta;
+        normalZ = sinBeta / normalX;
     }
 
-    const T = P;
-    const U = Q * Math.cos(Math.PI / 2 - holeDipRad) - R * Math.sin(Math.PI / 2 - holeDipRad);
-    const V = Q * Math.sin(Math.PI / 2 - holeDipRad) + R * Math.cos(Math.PI / 2 - holeDipRad);
-    const X = T * Math.cos(-holeAzimuthRad) - U * Math.sin(-holeAzimuthRad);
-    const Y = T * Math.sin(-holeAzimuthRad) + U * Math.cos(-holeAzimuthRad);
-    const Z = V;
+    // Rotate the normal vector according to hole dip and azimuth
+    const rotatedX = normalX;
+    const rotatedY = normalY * Math.cos(Math.PI / 2 - holeDipRad) - normalZ * Math.sin(Math.PI / 2 - holeDipRad);
+    const rotatedZ = normalY * Math.sin(Math.PI / 2 - holeDipRad) + normalZ * Math.cos(Math.PI / 2 - holeDipRad);
 
-    const AL = Z * X;
-    const AM = Z * Y;
-    const AN = -(X ** 2 + Y ** 2);
+    // Adjust for hole azimuth
+    const finalX = rotatedX * Math.cos(-holeAzimuthRad) - rotatedY * Math.sin(-holeAzimuthRad);
+    const finalY = rotatedX * Math.sin(-holeAzimuthRad) + rotatedY * Math.cos(-holeAzimuthRad);
+    const finalZ = rotatedZ;
 
-    const AB = (AL !== 0 || AM !== 0 || AN !== 0) ? 1 : 3;
+    // Calculate components for dip and dip direction
+    const dipDirectionX = finalZ * finalX;
+    const dipDirectionY = finalZ * finalY;
+    const dipComponent = -(finalX ** 2 + finalY ** 2);
+
+    // Check if the plane is horizontal or vertical
+    const isNonStandardOrientation = (dipDirectionX === 0 && dipDirectionY === 0 && dipComponent === 0) ? 3 : 1;
 
     let dipOutputFINAL, dipdirectionOutputFINAL;
 
-    if (AB > 1) {
-        if (AB === 2) {
+    if (isNonStandardOrientation > 1) {
+        if (isNonStandardOrientation === 2) {
+            // Vertical plane
             dipOutputFINAL = 90;
             dipdirectionOutputFINAL = inputHoleAzimuth;
         } else {
+            // Horizontal plane
             dipOutputFINAL = 0;
             dipdirectionOutputFINAL = 0;
         }
     } else {
-        const AD = Math.atan(Math.abs(AL / AM));
-        const AE = toDegrees(AD);
-        const AG = toDegrees(Math.PI - AD);
-        const AI = toDegrees(Math.PI + AD);
-        const AK = toDegrees(2 * Math.PI - AD);
+        // Calculate dip direction
+        const dipDirectionAngle = Math.atan(Math.abs(dipDirectionX / dipDirectionY));
+        const quadrant1 = toDegrees(dipDirectionAngle);
+        const quadrant2 = toDegrees(Math.PI - dipDirectionAngle);
+        const quadrant3 = toDegrees(Math.PI + dipDirectionAngle);
+        const quadrant4 = toDegrees(2 * Math.PI - dipDirectionAngle);
 
-        if (AL > 0) {
-            dipdirectionOutputFINAL = AM > 0 ? AE : AG;
+        if (dipDirectionX > 0) {
+            dipdirectionOutputFINAL = dipDirectionY > 0 ? quadrant1 : quadrant2;
         } else {
-            dipdirectionOutputFINAL = AM > 0 ? AK : AI;
+            dipdirectionOutputFINAL = dipDirectionY > 0 ? quadrant4 : quadrant3;
         }
-        dipOutputFINAL = toDegrees(Math.atan(-AN / Math.sqrt(AL ** 2 + AM ** 2)));
+
+        // Calculate dip
+        dipOutputFINAL = toDegrees(Math.atan(-dipComponent / Math.sqrt(dipDirectionX ** 2 + dipDirectionY ** 2)));
     }
 
     return [dipOutputFINAL, dipdirectionOutputFINAL];
