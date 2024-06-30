@@ -1,56 +1,12 @@
-import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, setSelectedCustomTypeOption } from './measurements.js';
+import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 
 export function setupUI() {
     console.log("Setting up UI...");
     setupTabs();
-    setupTypeSelector();
-    setupGenerationSelector();
-    setupCustomTypeSelector();
+    setupTypeSelectors();
     syncInputs();
     console.log("UI setup complete.");
-}
-
-export function updateResultsTable() {
-    const resultsTable = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
-    resultsTable.innerHTML = '';
-
-    measurements.forEach((measurement) => {
-        const row = resultsTable.insertRow();
-        row.insertCell(0).textContent = measurement.depth.toFixed(2);
-        row.insertCell(1).textContent = measurement.type;
-        row.insertCell(2).textContent = measurement.generation;
-        row.insertCell(3).textContent = measurement.dip + '°';
-        row.insertCell(4).textContent = measurement.dipDirection + '°';
-        
-        const commentCell = row.insertCell(5);
-        commentCell.textContent = (measurement.comment.length > 20 ? 
-            measurement.comment.substring(0, 20) + '...' : 
-            measurement.comment);
-        commentCell.title = measurement.comment; // Show full comment on hover
-
-        if (measurement.customType) {
-            row.insertCell(6).textContent = `${measurement.customType.name}: ${measurement.customType.option}`;
-        } else {
-            row.insertCell(6).textContent = '-';
-        }
-    });
-}
-
-export function updatePreview() {
-    const holeDip = parseFloat(document.getElementById('holeDip').value);
-    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
-    const alpha = parseFloat(document.getElementById('alpha').value);
-    const beta = parseFloat(document.getElementById('beta').value);
-
-    const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
-    const strike = (dipDirection + 90) % 360;
-
-    const previewElement = document.getElementById('preview');
-    
-    let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
-    
-    previewElement.textContent = previewText;
 }
 
 function setupTabs() {
@@ -70,53 +26,60 @@ function setupTabs() {
     });
 }
 
-function setupTypeSelector() {
-    const buttons = document.querySelectorAll('.type-button');
-    buttons.forEach(button => {
-        button.addEventListener('click', () => {
-            buttons.forEach(b => b.classList.remove('active'));
-            button.classList.add('active');
-            setSelectedType(button.dataset.type);
-            updatePreview();
-        });
+function setupTypeSelectors() {
+    const settings = loadSettings();
+    updateTypeSelectorButtons(settings.measurementTypes);
+    updateGenerationSelectorButtons(settings.generationTypes);
+    updateCustomTypeSelectorButtons(settings.customTypes);
+}
+
+export function updateTypeSelectorButtons(types) {
+    updateSelectorButtons('.type-selector', types, 'type', setSelectedType);
+}
+
+export function updateGenerationSelectorButtons(types) {
+    updateSelectorButtons('.generation-selector', types, 'gen', setSelectedGeneration);
+}
+
+export function updateCustomTypeSelectorButtons(customTypes) {
+    const container = document.querySelector('.custom-type-selectors');
+    container.innerHTML = ''; // Clear existing custom type selectors
+
+    customTypes.forEach(customType => {
+        const selectorDiv = document.createElement('div');
+        selectorDiv.className = `custom-type-selector custom-type-selector-${customType.name.replace(/\s+/g, '-').toLowerCase()}`;
+        const label = document.createElement('label');
+        label.textContent = customType.name + ':';
+        selectorDiv.appendChild(label);
+        container.appendChild(selectorDiv);
+
+        updateSelectorButtons(
+            `.custom-type-selector-${customType.name.replace(/\s+/g, '-').toLowerCase()}`, 
+            customType.options, 
+            'custom-option', 
+            (option) => setSelectedCustomType(customType.name, option)
+        );
     });
 }
 
-function setupGenerationSelector() {
-    const buttons = document.querySelectorAll('.generation-button');
-    buttons.forEach(button => {
-        button.addEventListener('click', () => {
-            buttons.forEach(b => b.classList.remove('active'));
-            button.classList.add('active');
-            setSelectedGeneration(button.dataset.gen);
-        });
-    });
-}
-
-function setupCustomTypeSelector() {
-    const container = document.querySelector('.custom-type-selector');
-    container.addEventListener('click', (event) => {
-        if (event.target.classList.contains('custom-type-button')) {
-            const typeName = event.target.getAttribute('data-type');
-            const settings = loadSettings();
-            const customType = settings.customTypes.find(type => type.name === typeName);
-            if (customType) {
-                setSelectedCustomType(customType);
-                showCustomTypeOptions(customType);
-            }
-        }
-    });
-}
-
-function showCustomTypeOptions(customType) {
-    const optionsContainer = document.querySelector('.custom-type-options');
-    optionsContainer.innerHTML = '';
-    customType.options.forEach(option => {
+function updateSelectorButtons(containerSelector, options, dataAttribute, onClickHandler) {
+    const container = document.querySelector(containerSelector);
+    if (!container) {
+        console.error(`Container not found: ${containerSelector}`);
+        return;
+    }
+    container.innerHTML = '';
+    options.forEach(option => {
         const button = document.createElement('button');
-        button.className = 'custom-type-option';
+        button.className = `${dataAttribute}-button`;
+        button.setAttribute(`data-${dataAttribute}`, option);
         button.textContent = option;
-        button.onclick = () => setSelectedCustomTypeOption(option);
-        optionsContainer.appendChild(button);
+        button.onclick = () => {
+            container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            onClickHandler(option);
+        };
+        container.appendChild(button);
     });
 }
 
@@ -168,64 +131,81 @@ function syncInputs() {
     }
 }
 
+export function updatePreview() {
+    const holeDip = parseFloat(document.getElementById('holeDip').value);
+    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
+    const alpha = parseFloat(document.getElementById('alpha').value);
+    const beta = parseFloat(document.getElementById('beta').value);
+
+    const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+    const strike = (dipDirection + 90) % 360;
+
+    const previewElement = document.getElementById('preview');
+    
+    let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
+    
+    previewElement.textContent = previewText;
+}
+
+export function updateResultsTable() {
+    const resultsTable = document.getElementById('resultsTable');
+    const thead = resultsTable.querySelector('thead');
+    const tbody = resultsTable.querySelector('tbody');
+    
+    // Clear existing content
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+
+    // Create header row
+    const headerRow = document.createElement('tr');
+    const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
+    baseColumns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        headerRow.appendChild(th);
+    });
+
+    // Add custom type columns
+    const settings = loadSettings();
+    settings.customTypes.forEach(customType => {
+        const th = document.createElement('th');
+        th.textContent = customType.name;
+        headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+
+    // Populate table body
+    measurements.forEach((measurement) => {
+        const row = tbody.insertRow();
+        row.insertCell(0).textContent = measurement.depth.toFixed(2);
+        row.insertCell(1).textContent = measurement.type;
+        row.insertCell(2).textContent = measurement.generation;
+        row.insertCell(3).textContent = measurement.dip + '°';
+        row.insertCell(4).textContent = measurement.dipDirection + '°';
+        
+        const commentCell = row.insertCell(5);
+        commentCell.textContent = (measurement.comment.length > 20 ? 
+            measurement.comment.substring(0, 20) + '...' : 
+            measurement.comment);
+        commentCell.title = measurement.comment; // Show full comment on hover
+
+        // Add custom type values
+        settings.customTypes.forEach(customType => {
+            const cell = row.insertCell();
+            const customValue = measurement.customTypes && measurement.customTypes[customType.name];
+            cell.textContent = customValue || '-';
+        });
+    });
+}
+
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
     depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
 }
 
-export function updateTypeSelectorButtons(types) {
-    const container = document.querySelector('.type-selector');
-    container.innerHTML = '';
-    types.forEach(type => {
-        const button = document.createElement('button');
-        button.className = 'type-button';
-        button.setAttribute('data-type', type);
-        button.textContent = type;
-        button.onclick = () => {
-            document.querySelectorAll('.type-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            setSelectedType(type);
-        };
-        container.appendChild(button);
-    });
-    // Set the first type as active
-    if (types.length > 0) {
-        container.firstChild.classList.add('active');
-        setSelectedType(types[0]);
-    }
-}
-
-export function updateGenerationSelectorButtons(types) {
-    const container = document.querySelector('.generation-selector');
-    container.innerHTML = '';
-    types.forEach(type => {
-        const button = document.createElement('button');
-        button.className = 'generation-button';
-        button.setAttribute('data-gen', type);
-        button.textContent = type;
-        button.onclick = () => {
-            document.querySelectorAll('.generation-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            setSelectedGeneration(type);
-        };
-        container.appendChild(button);
-    });
-}
-
-export function updateCustomTypeSelectorButtons(types) {
-    const container = document.querySelector('.custom-type-selector');
-    container.innerHTML = '';
-    types.forEach(type => {
-        const button = document.createElement('button');
-        button.className = 'custom-type-button';
-        button.setAttribute('data-type', type.name);
-        button.textContent = type.name;
-        button.onclick = () => {
-            document.querySelectorAll('.custom-type-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            setSelectedCustomType(type);
-            showCustomTypeOptions(type);
-        };
-        container.appendChild(button);
+export function resetUISelections() {
+    document.querySelectorAll('.type-button, .generation-button, .custom-option-button').forEach(btn => {
+        btn.classList.remove('active');
     });
 }
