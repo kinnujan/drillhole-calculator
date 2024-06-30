@@ -5,6 +5,7 @@ export function setupUI() {
     console.log("Setting up UI...");
     setupTabs();
     setupTypeSelectors();
+    setupDepthButtons();
     syncInputs();
     console.log("UI setup complete.");
 }
@@ -31,6 +32,16 @@ function setupTypeSelectors() {
     updateTypeSelectorButtons(settings.measurementTypes);
     updateGenerationSelectorButtons(settings.generationTypes);
     updateCustomTypeSelectorButtons(settings.customTypes);
+}
+
+function setupDepthButtons() {
+    const depthButtons = document.querySelectorAll('.depth-button');
+    depthButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const amount = parseFloat(button.getAttribute('data-amount'));
+            adjustDepth(amount);
+        });
+    });
 }
 
 export function updateTypeSelectorButtons(types) {
