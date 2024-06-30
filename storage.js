@@ -26,6 +26,6 @@ export function loadSettings() {
         darkMode: false,
         measurementTypes: ['bedding', 'foliation', 'fault', 'shear'],
         generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
-        units: 'metric'
+        customTypes: []
     };
 }
