@@ -4,6 +4,8 @@ import { updateResultsTable, updatePreview } from './ui.js';
 let measurements = [];
 let selectedType = 'bedding';
 let selectedGeneration = '';
+let selectedCustomType = null;
+let selectedCustomTypeOption = null;
 
 export function loadMeasurements() {
     measurements = loadMeasurementsFromStorage();
@@ -41,6 +43,10 @@ function addMeasurement() {
         depth,
         type: selectedType,
         generation: selectedGeneration,
+        customType: selectedCustomType ? {
+            name: selectedCustomType.name,
+            option: selectedCustomTypeOption
+        } : null,
         alpha: alpha.toFixed(1),
         beta: beta.toFixed(1),
         dip: dip.toFixed(1),
@@ -61,6 +67,7 @@ function addMeasurement() {
     document.getElementById('betaSlider').value = '0';
     document.getElementById('comment').value = '';
     resetGeneration();
+    resetCustomType();
     updatePreview();
 }
 
@@ -141,7 +148,14 @@ function resetGeneration() {
     const buttons = document.querySelectorAll('.generation-button');
     buttons.forEach(b => b.classList.remove('active'));
     selectedGeneration = '';
-    document.getElementById('generation').value = '';
+}
+
+function resetCustomType() {
+    const buttons = document.querySelectorAll('.custom-type-button');
+    buttons.forEach(b => b.classList.remove('active'));
+    selectedCustomType = null;
+    selectedCustomTypeOption = null;
+    document.querySelector('.custom-type-options').innerHTML = '';
 }
 
 function copyResults() {
@@ -227,7 +241,7 @@ function fallbackSaveAsCSV(csvContent, filename) {
 }
 
 function getCSVContent() {
-    let csvContent = "HoleID,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment\n";
+    let csvContent = "HoleID,Depth,Type,Generation,CustomType,CustomOption,Alpha,Beta,Dip,DipDirection,Strike,Comment\n";
     
     measurements.forEach(function(measurement) {
         let row = [
@@ -235,6 +249,8 @@ function getCSVContent() {
             measurement.depth,
             measurement.type,
             measurement.generation,
+            measurement.customType ? measurement.customType.name : '',
+            measurement.customType ? measurement.customType.option : '',
             measurement.alpha,
             measurement.beta,
             measurement.dip,
@@ -271,4 +287,13 @@ export function setSelectedGeneration(gen) {
     selectedGeneration = gen;
 }
 
-export { measurements, selectedType, selectedGeneration };
+export function setSelectedCustomType(type) {
+    selectedCustomType = type;
+    selectedCustomTypeOption = null;
+}
+
+export function setSelectedCustomTypeOption(option) {
+    selectedCustomTypeOption = option;
+}
+
+export { measurements, selectedType, selectedGeneration, selectedCustomType, selectedCustomTypeOption };
