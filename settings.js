@@ -2,14 +2,16 @@ import { updateTypeSelectorButtons, updateGenerationSelectorButtons, updateCusto
 import { saveSettings, loadSettings } from './storage.js';
 
 export function setupSettings() {
+    console.log("Setting up settings...");
     const settings = loadSettings();
     setupDarkMode(settings.darkMode);
     setupCustomTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
     
-    // Add event listeners to the buttons
+    console.log("Adding event listeners to buttons...");
     document.getElementById('addMeasurementType').addEventListener('click', addMeasurementType);
     document.getElementById('addGenerationType').addEventListener('click', addGenerationType);
     document.getElementById('addCustomType').addEventListener('click', addCustomType);
+    console.log("Event listeners added.");
 }
 
 function setupDarkMode(initialState) {
@@ -44,9 +46,6 @@ export function updateMeasurementTypes(types) {
         container.appendChild(div);
     });
     updateTypeSelectorButtons(types);
-    const settings = loadSettings();
-    settings.measurementTypes = types;
-    saveSettings(settings);
 }
 
 export function updateGenerationTypes(types) {
@@ -62,9 +61,6 @@ export function updateGenerationTypes(types) {
         container.appendChild(div);
     });
     updateGenerationSelectorButtons(types);
-    const settings = loadSettings();
-    settings.generationTypes = types;
-    saveSettings(settings);
 }
 
 export function updateCustomTypes(types) {
@@ -83,26 +79,31 @@ export function updateCustomTypes(types) {
 }
 
 function addMeasurementType() {
+    console.log("Adding measurement type...");
     const newType = prompt('Enter new measurement type:');
     if (newType) {
         const settings = loadSettings();
         settings.measurementTypes.push(newType);
         updateMeasurementTypes(settings.measurementTypes);
         saveSettings(settings);
+        console.log("New measurement type added:", newType);
     }
 }
 
 function addGenerationType() {
+    console.log("Adding generation type...");
     const newType = prompt('Enter new generation type:');
     if (newType) {
         const settings = loadSettings();
         settings.generationTypes.push(newType);
         updateGenerationTypes(settings.generationTypes);
         saveSettings(settings);
+        console.log("New generation type added:", newType);
     }
 }
 
 function addCustomType() {
+    console.log("Adding custom type...");
     const name = prompt('Enter new custom type name:');
     if (name) {
         const optionsString = prompt('Enter options for this type (comma-separated):');
@@ -111,6 +112,7 @@ function addCustomType() {
         settings.customTypes.push({ name, options });
         updateCustomTypes(settings.customTypes);
         saveSettings(settings);
+        console.log("New custom type added:", name, "with options:", options);
     }
 }
 
