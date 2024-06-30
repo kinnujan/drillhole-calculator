@@ -6,9 +6,19 @@ export function setupUI() {
     setupTabs();
     setupTypeSelectors();
     syncInputs();
+    setupDepthButtons(); // Add this line
     console.log("UI setup complete.");
 }
-
+function setupDepthButtons() {
+    const depthButtons = document.querySelectorAll('.depth-button');
+    depthButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const amount = parseFloat(button.getAttribute('data-amount'));
+            const depthInput = document.getElementById('depth');
+            depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
+        });
+    });
+}
 function setupTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
