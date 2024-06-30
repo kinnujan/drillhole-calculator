@@ -9,7 +9,6 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -58,9 +57,11 @@
                 <div class="generation-selector">
                     <!-- Buttons will be dynamically added here -->
                 </div>
-                <div class="input-group">
-                    <label for="generation">Generation:</label>
-                    <input type="text" id="generation" readonly>
+                <div class="custom-type-selector">
+                    <!-- Custom type buttons will be dynamically added here -->
+                </div>
+                <div class="custom-type-options">
+                    <!-- Custom type options will be dynamically added here -->
                 </div>
                 <div class="input-group">
                     <label for="alpha">Alpha (°):</label>
@@ -91,6 +92,7 @@
                             <th>Dip</th>
                             <th>DipDir</th>
                             <th>Comment</th>
+                            <th>Custom</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -120,11 +122,9 @@
                 <button id="addGenerationType">Add Generation</button>
             </div>
             <div class="setting-group">
-                <label for="units">Units:</label>
-                <select id="units">
-                    <option value="metric">Metric</option>
-                    <option value="imperial">Imperial</option>
-                </select>
+                <label>Custom Types:</label>
+                <div id="customTypes"></div>
+                <button id="addCustomType">Add Custom Type</button>
             </div>
         </div>
 
