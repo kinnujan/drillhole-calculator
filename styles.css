@@ -195,64 +195,78 @@ footer {
     border-radius: 4px;
 }
 
-/* Dark mode styles */
+/* Dark Mode Styles */
 body.dark-mode {
-    background-color: #333;
-    color: #fff;
+    background-color: #121212;
+    color: #e0e0e0;
 }
 
 body.dark-mode .container {
-    background-color: #444;
+    background-color: #1e1e1e;
 }
 
-body.dark-mode input,
-body.dark-mode select,
+body.dark-mode h1, 
+body.dark-mode h2 {
+    color: #ffffff;
+}
+
+body.dark-mode input[type="number"],
+body.dark-mode input[type="text"],
 body.dark-mode textarea {
-    background-color: #555;
-    color: #fff;
-    border-color: #777;
+    background-color: #2c2c2c;
+    color: #ffffff;
+    border-color: #4a4a4a;
 }
 
-body.dark-mode .tab-button {
-    background-color: #555;
-    color: #ddd;
+body.dark-mode .type-button,
+body.dark-mode .generation-button,
+body.dark-mode .custom-option-button,
+body.dark-mode .depth-button {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
 }
 
-body.dark-mode .tab-button.active {
+body.dark-mode .type-button.active,
+body.dark-mode .generation-button.active,
+body.dark-mode .custom-option-button.active {
     background-color: #4CAF50;
-    color: #fff;
+    color: #ffffff;
 }
 
-body.dark-mode .selector-button, 
-body.dark-mode .depth-button, 
-body.dark-mode button {
-    background-color: #555;
-    color: #fff;
-}
-
-body.dark-mode .selector-button:hover, 
-body.dark-mode .depth-button:hover, 
-body.dark-mode button:hover {
-    background-color: #666;
-}
-
-body.dark-mode table {
-    color: #fff;
-}
-
-body.dark-mode th, 
-body.dark-mode td {
-    border-color: #555;
-}
-
-body.dark-mode th {
-    background-color: #555;
+body.dark-mode .depth-button.active {
+    background-color: #2196F3;
+    color: #ffffff;
 }
 
 body.dark-mode #preview {
-    background-color: #555;
+    background-color: #2c2c2c;
+    color: #ffffff;
 }
 
+body.dark-mode table {
+    border-color: #4a4a4a;
+}
+
+body.dark-mode th {
+    background-color: #2c2c2c;
+    color: #ffffff;
+}
+
+body.dark-mode td {
+    border-color: #4a4a4a;
+}
+
+body.dark-mode #copyStatus {
+    color: #4CAF50;
+}
+
+body.dark-mode #error {
+    color: #ff6b6b;
+}
+
+body.dark-mode footer {
+    color: #a0a0a0;
+}
 /* Responsive design */
 @media (min-width: 768px) {
     .selector-button, .depth-button, button {
