@@ -79,7 +79,9 @@ input[type="range"] {
     background-color: #d0d0d0;
 }
 
-.selector-button.active { 
+.type-selector .selector-button.active,
+.generation-selector .selector-button.active,
+.custom-type-selector .selector-button.active { 
     background-color: #4CAF50; 
     color: white; 
 }
@@ -231,8 +233,10 @@ body.dark-mode button:hover {
     background-color: #4a4a4a;
 }
 
-body.dark-mode .selector-button.active {
-    background-color: #4CAF50;
+body.dark-mode .type-selector .selector-button.active,
+body.dark-mode .generation-selector .selector-button.active,
+body.dark-mode .custom-type-selector .selector-button.active {
+    background-color: #45a049;
     color: #ffffff;
 }
 
