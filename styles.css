@@ -62,7 +62,7 @@ input[type="range"] {
     margin: 10px 0; 
 }
 
-.type-button, .generation-button, .custom-option-button, .depth-button, button {
+.selector-button, .depth-button, button {
     flex: 1 0 calc(50% - 4px);
     margin: 2px;
     padding: 8px;
@@ -75,11 +75,11 @@ input[type="range"] {
     transition: background-color 0.3s;
 }
 
-.type-button:hover, .generation-button:hover, .custom-option-button:hover, .depth-button:hover, button:hover {
+.selector-button:hover, .depth-button:hover, button:hover {
     background-color: #d0d0d0;
 }
 
-.type-button.active, .generation-button.active, .custom-option-button.active { 
+.selector-button.active { 
     background-color: #4CAF50 !important; 
     color: white !important; 
 }
@@ -223,18 +223,14 @@ body.dark-mode .tab-button.active {
     color: #fff;
 }
 
-body.dark-mode .type-button, 
-body.dark-mode .generation-button, 
-body.dark-mode .custom-option-button, 
+body.dark-mode .selector-button, 
 body.dark-mode .depth-button, 
 body.dark-mode button {
     background-color: #555;
     color: #fff;
 }
 
-body.dark-mode .type-button:hover, 
-body.dark-mode .generation-button:hover, 
-body.dark-mode .custom-option-button:hover, 
+body.dark-mode .selector-button:hover, 
 body.dark-mode .depth-button:hover, 
 body.dark-mode button:hover {
     background-color: #666;
@@ -259,7 +255,7 @@ body.dark-mode #preview {
 
 /* Responsive design */
 @media (min-width: 768px) {
-    .type-button, .generation-button, .custom-option-button, .depth-button, button {
+    .selector-button, .depth-button, button {
         flex: 1 0 auto; /* Full width on larger screens */
     }
     
