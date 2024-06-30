@@ -9,7 +9,7 @@ body {
 .container {
     background-color: white;
     border-radius: 8px;
-    padding: 20px;
+    padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     max-width: 800px;
     margin: 0 auto;
@@ -22,34 +22,37 @@ h1, h2 {
 }
 
 h1 {
-    font-size: 1.8em;
-}
-
-h2 {
     font-size: 1.4em;
 }
 
+h2 {
+    font-size: 1.2em;
+}
+
 .input-group { 
-    margin-bottom: 15px; 
+    margin-bottom: 10px; 
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
 }
 
 label { 
-    flex: 0 0 140px;
+    flex: 0 0 120px;
     font-size: 0.9em; 
+    margin-right: 10px;
 }
 
 input[type="number"], input[type="text"] { 
-    width: calc(100% - 150px);
-    padding: 8px;
+    flex: 1;
+    min-width: 0;
+    padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
 input[type="range"] { 
-    width: calc(100% - 150px);
-    vertical-align: middle; 
+    flex: 1;
+    min-width: 0;
 }
 
 .type-selector, .generation-selector, .custom-type-selectors, .depth-buttons { 
@@ -60,14 +63,14 @@ input[type="range"] {
 }
 
 .type-button, .generation-button, .custom-option-button, .depth-button, button {
-    flex: 1 0 calc(33.333% - 8px); /* Three buttons per row on mobile */
-    margin: 4px;
-    padding: 10px;
+    flex: 1 0 calc(50% - 4px);
+    margin: 2px;
+    padding: 8px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.9em;
     text-align: center;
     transition: background-color 0.3s;
 }
@@ -90,25 +93,24 @@ input[type="range"] {
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    margin-top: 20px; 
-    font-size: 0.9em; 
+    margin-top: 10px; 
+    font-size: 0.8em; 
 }
 
 th, td { 
     border: 1px solid #ddd; 
-    padding: 8px; 
+    padding: 4px; 
     text-align: left; 
 }
 
 th { 
     background-color: #f2f2f2; 
-    font-weight: bold;
 }
 
 #preview {
     font-size: 1.2em;
     text-align: center;
-    margin: 15px 0;
+    margin: 10px 0;
     padding: 10px;
     background-color: #e0e0e0;
     border-radius: 8px;
@@ -119,7 +121,7 @@ th {
     height: 60px;
     margin-top: 10px;
     resize: vertical;
-    padding: 8px;
+    padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
@@ -143,13 +145,14 @@ footer {
 
 .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     margin-top: 20px;
 }
 
 .action-buttons button {
-    flex: 1;
-    margin: 0 5px;
+    flex: 1 0 calc(50% - 5px);
+    margin: 2.5px;
 }
 
 #clearMeasurements {
@@ -190,16 +193,6 @@ footer {
     border: 1px solid #ddd;
     padding: 10px;
     border-radius: 4px;
-}
-
-.setting-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-#darkMode {
-    margin-left: 10px;
 }
 
 /* Dark mode styles */
@@ -247,13 +240,6 @@ body.dark-mode button:hover {
     background-color: #666;
 }
 
-body.dark-mode .type-button.active, 
-body.dark-mode .generation-button.active, 
-body.dark-mode .custom-option-button.active {
-    background-color: #4CAF50 !important;
-    color: white !important;
-}
-
 body.dark-mode table {
     color: #fff;
 }
@@ -276,13 +262,13 @@ body.dark-mode #preview {
     .type-button, .generation-button, .custom-option-button, .depth-button, button {
         flex: 1 0 auto; /* Full width on larger screens */
     }
+    
+    .action-buttons button {
+        flex: 1;
+    }
 }
 
 @media (max-width: 600px) {
-    .container {
-        padding: 10px;
-    }
-
     .input-group {
         flex-direction: column;
         align-items: stretch;
@@ -296,13 +282,5 @@ body.dark-mode #preview {
     input[type="text"], 
     input[type="range"] {
         width: 100%;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-    }
-
-    .action-buttons button {
-        margin: 5px 0;
     }
 }
