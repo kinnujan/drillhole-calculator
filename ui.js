@@ -1,5 +1,12 @@
-import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType } from './measurements.js';
-import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings, loadLastMeasurement, saveMeasurements } from './storage.js';
+import { measurements, calculateDipDirection } from './measurements.js';
+import { 
+    loadDrillHoleInfo, 
+    saveDrillHoleInfo, 
+    loadSettings, 
+    loadLastMeasurement, 
+    saveMeasurements, 
+    loadMeasurementsFromStorage 
+} from './storage.js';
 
 let selectedType = '';
 let selectedGeneration = '';
@@ -13,6 +20,7 @@ export function setupUI() {
     syncInputs();
     setupAddMeasurementButton();
     setupActionButtons();
+    updateResultsTable();
     console.log("UI setup complete.");
 }
 
@@ -60,6 +68,7 @@ function setupAddMeasurementButton() {
         console.error("Add Measurement button not found");
     }
 }
+
 function setupActionButtons() {
     const copyButton = document.getElementById('copyResults');
     const saveCSVButton = document.getElementById('saveAsCSV');
@@ -69,6 +78,7 @@ function setupActionButtons() {
     if (saveCSVButton) saveCSVButton.addEventListener('click', saveAsCSV);
     if (clearButton) clearButton.addEventListener('click', clearMeasurementsWithConfirmation);
 }
+
 export function updateTypeSelectorButtons(types, selectedType) {
     updateSelectorButtons('.type-selector', types, 'type', setSelectedType, selectedType);
 }
@@ -221,8 +231,8 @@ export function updateResultsTable() {
         row.insertCell(0).textContent = measurement.depth.toFixed(2);
         row.insertCell(1).textContent = measurement.type;
         row.insertCell(2).textContent = measurement.generation;
-        row.insertCell(3).textContent = measurement.dip + '°';
-        row.insertCell(4).textContent = measurement.dipDirection + '°';
+        row.insertCell(3).textContent = measurement.dip.toFixed(1) + '°';
+        row.insertCell(4).textContent = measurement.dipDirection.toFixed(1) + '°';
         
         const commentCell = row.insertCell(5);
         commentCell.textContent = (measurement.comment.length > 20 ? 
@@ -250,6 +260,9 @@ export function resetUISelections() {
     document.querySelectorAll('.selector-button').forEach(btn => {
         btn.classList.remove('active');
     });
+    selectedType = '';
+    selectedGeneration = '';
+    selectedCustomTypes = {};
 }
 
 function addMeasurement() {
@@ -313,6 +326,7 @@ function copyResults() {
         alert("Failed to copy results. Please try again.");
     });
 }
+
 function saveAsCSV() {
     const csvContent = getCSVContent();
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -381,3 +395,16 @@ export function setSelectedGeneration(generation) {
 export function setSelectedCustomType(typeName, value) {
     selectedCustomTypes[typeName] = value;
 }
+
+// Initial setup
+document.addEventListener('DOMContentLoaded', () => {
+    setupUI();
+});
+
+// Exports
+export {
+    updatePreview,
+    updateResultsTable,
+    adjustDepth,
+    resetUISelections
+};
