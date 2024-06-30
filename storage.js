@@ -76,21 +76,3 @@ export function loadSettings() {
         };
     }
 }
-
-export function loadLastMeasurement() {
-    console.log("Loading last measurement from local storage...");
-    try {
-        const savedMeasurements = localStorage.getItem('drillHoleMeasurements');
-        const parsedMeasurements = savedMeasurements ? JSON.parse(savedMeasurements) : [];
-        if (parsedMeasurements.length > 0) {
-            const lastMeasurement = parsedMeasurements[parsedMeasurements.length - 1];
-            console.log("Last measurement loaded successfully.");
-            return lastMeasurement;
-        }
-        console.log("No last measurement found.");
-        return null;
-    } catch (error) {
-        console.error("Error loading last measurement:", error);
-        return null;
-    }
-}

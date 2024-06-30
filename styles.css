@@ -9,7 +9,7 @@ body {
 .container {
     background-color: white;
     border-radius: 8px;
-    padding: 10px;
+    padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     max-width: 800px;
     margin: 0 auto;
@@ -22,66 +22,61 @@ h1, h2 {
 }
 
 h1 {
-    font-size: 1.4em;
+    font-size: 1.8em;
 }
 
 h2 {
-    font-size: 1.2em;
+    font-size: 1.4em;
 }
 
 .input-group { 
-    margin-bottom: 10px; 
+    margin-bottom: 15px; 
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
 }
 
 label { 
-    flex: 0 0 120px;
+    flex: 0 0 140px;
     font-size: 0.9em; 
-    margin-right: 10px;
 }
 
 input[type="number"], input[type="text"] { 
-    flex: 1;
-    min-width: 0;
-    padding: 5px;
+    width: calc(100% - 150px);
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
 input[type="range"] { 
-    flex: 1;
-    min-width: 0;
+    width: calc(100% - 150px);
+    vertical-align: middle; 
 }
 
-.type-selector, .generation-selector, .custom-type-selectors, .depth-buttons { 
+.type-selector, .generation-selector, .custom-type-selectors { 
     display: flex;
     flex-wrap: wrap;
-    justify-content: stretch;
+    justify-content: flex-start;
     margin: 10px 0; 
 }
 
-.selector-button, .depth-button, button {
-    flex: 1 0 calc(50% - 4px);
-    margin: 2px;
-    padding: 8px;
+.type-button, .generation-button, .custom-option-button, .depth-button, button {
+    padding: 8px 12px;
+    margin: 4px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
-    text-align: center;
     transition: background-color 0.3s;
 }
 
-.selector-button:hover, .depth-button:hover, button:hover {
+.type-button:hover, .generation-button:hover, .custom-option-button:hover, .depth-button:hover, button:hover {
     background-color: #d0d0d0;
 }
 
-.selector-button.active { 
-    background-color: #4CAF50 !important; 
-    color: white !important; 
+.type-button.active, .generation-button.active, .custom-option-button.active { 
+    background-color: #4CAF50; 
+    color: white; 
 }
 
 #error { 
@@ -93,24 +88,31 @@ input[type="range"] {
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    margin-top: 10px; 
-    font-size: 0.8em; 
+    margin-top: 20px; 
+    font-size: 0.9em; 
 }
 
 th, td { 
     border: 1px solid #ddd; 
-    padding: 4px; 
+    padding: 8px; 
     text-align: left; 
 }
 
 th { 
     background-color: #f2f2f2; 
+    font-weight: bold;
+}
+
+.depth-buttons { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-top: 5px; 
 }
 
 #preview {
     font-size: 1.2em;
     text-align: center;
-    margin: 10px 0;
+    margin: 15px 0;
     padding: 10px;
     background-color: #e0e0e0;
     border-radius: 8px;
@@ -121,7 +123,7 @@ th {
     height: 60px;
     margin-top: 10px;
     resize: vertical;
-    padding: 5px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
@@ -145,14 +147,13 @@ footer {
 
 .action-buttons {
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
     margin-top: 20px;
 }
 
 .action-buttons button {
-    flex: 1 0 calc(50% - 5px);
-    margin: 2.5px;
+    flex: 1;
+    margin: 0 5px;
 }
 
 #clearMeasurements {
@@ -195,6 +196,16 @@ footer {
     border-radius: 4px;
 }
 
+.setting-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#darkMode {
+    margin-left: 10px;
+}
+
 /* Dark mode styles */
 body.dark-mode {
     background-color: #333;
@@ -223,17 +234,27 @@ body.dark-mode .tab-button.active {
     color: #fff;
 }
 
-body.dark-mode .selector-button, 
+body.dark-mode .type-button, 
+body.dark-mode .generation-button, 
+body.dark-mode .custom-option-button, 
 body.dark-mode .depth-button, 
 body.dark-mode button {
     background-color: #555;
     color: #fff;
 }
 
-body.dark-mode .selector-button:hover, 
+body.dark-mode .type-button:hover, 
+body.dark-mode .generation-button:hover, 
+body.dark-mode .custom-option-button:hover, 
 body.dark-mode .depth-button:hover, 
 body.dark-mode button:hover {
     background-color: #666;
+}
+
+body.dark-mode .type-button.active, 
+body.dark-mode .generation-button.active, 
+body.dark-mode .custom-option-button.active {
+    background-color: #4CAF50;
 }
 
 body.dark-mode table {
@@ -253,18 +274,27 @@ body.dark-mode #preview {
     background-color: #555;
 }
 
-/* Responsive design */
-@media (min-width: 768px) {
-    .selector-button, .depth-button, button {
-        flex: 1 0 auto; /* Full width on larger screens */
-    }
-    
-    .action-buttons button {
-        flex: 1;
-    }
+/* Custom type selector styles */
+.custom-type-selectors {
+    margin-bottom: 15px;
 }
 
+.custom-type-selector {
+    margin-bottom: 10px;
+}
+
+.custom-type-selector label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* Responsive design */
 @media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
     .input-group {
         flex-direction: column;
         align-items: stretch;
@@ -278,5 +308,13 @@ body.dark-mode #preview {
     input[type="text"], 
     input[type="range"] {
         width: 100%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons button {
+        margin: 5px 0;
     }
 }
