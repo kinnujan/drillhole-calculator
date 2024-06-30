@@ -5,6 +5,7 @@
 The Drill Hole Orientation Calculator is a Progressive Web App (PWA). This tool provides an easy-to-use interface for inputting measurement data, performing calculations of planes to real world dip and dip direction, and storing results.
 
 ![image](https://github.com/kinnujan/drillhole-calculator/assets/55635375/bbb588bf-0535-4bf6-978b-60bfd8958ab3)
+![image](https://github.com/kinnujan/drillhole-calculator/assets/55635375/922f8b3d-53fc-4021-8482-223aba2b26e3)
 
 ## Features
 
