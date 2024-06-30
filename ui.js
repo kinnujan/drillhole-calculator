@@ -253,7 +253,7 @@ export function updateResultsTable() {
     });
 }
 
-export function adjustDepth(amount) {
+function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
     depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
     depthInput.dispatchEvent(new Event('input')); // Trigger input event
@@ -382,7 +382,12 @@ function clearMeasurementsWithConfirmation() {
 export function setSelectedType(type) {
     selectedType = type;
 }
-
+function resetUISelections() {
+    selectedType = '';
+    selectedGeneration = '';
+    selectedCustomTypes = {};
+    document.querySelectorAll('.selector-button').forEach(btn => btn.classList.remove('active'));
+}
 export function setSelectedGeneration(generation) {
     selectedGeneration = generation;
 }
@@ -399,11 +404,15 @@ window.addEventListener('load', () => {
 // Exports
 export { 
     setupUI, 
-    updateTypeSelectorButtons, 
+    updateTypeSelectorButtons,
     updateGenerationSelectorButtons, 
     updateCustomTypeSelectorButtons, 
     updatePreview, 
     updateResultsTable,
-    adjustDepth,  // Add this line if it's not already here
-    resetUISelections 
+    adjustDepth,
+    resetUISelections,
+    setSelectedType,
+    setSelectedGeneration,
+    setSelectedCustomType
 };
+
