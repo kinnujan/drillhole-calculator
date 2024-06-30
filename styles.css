@@ -5,97 +5,108 @@ body {
     background-color: #f0f4f8;
     font-size: 16px;
 }
+
 .container {
     background-color: white;
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 0 auto;
 }
+
 h1, h2 { 
     color: #333; 
-    font-size: 1.2em; 
     margin: 10px 0; 
     text-align: center;
 }
+
+h1 {
+    font-size: 1.4em;
+}
+
+h2 {
+    font-size: 1.2em;
+}
+
 .input-group { 
     margin-bottom: 10px; 
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
 }
+
 label { 
     flex: 0 0 120px;
     font-size: 0.9em; 
+    margin-right: 10px;
 }
+
 input[type="number"], input[type="text"] { 
-    width: calc(100% - 130px);
+    flex: 1;
+    min-width: 0;
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
 input[type="range"] { 
-    width: calc(100% - 130px);
-    vertical-align: middle; 
-}
-.type-selector,
-.generation-selector,
-.custom-type-selector {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin: 10px 0;
+    flex: 1;
+    min-width: 0;
 }
 
-.type-button,
-.generation-button,
-.custom-option-button,
-.depth-button {
-    padding: 8px;
+.type-selector, .generation-selector, .custom-type-selectors, .depth-buttons { 
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    margin: 10px 0; 
+}
+
+.selector-button, .depth-button, button {
+    flex: 1 0 calc(50% - 4px);
     margin: 2px;
+    padding: 8px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
-    flex-grow: 1;
     text-align: center;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s;
 }
 
-.type-button.active,
-.generation-button.active,
-.custom-option-button.active {
-    background-color: #4CAF50;
-    color: white;
+.selector-button:hover, .depth-button:hover, button:hover {
+    background-color: #d0d0d0;
 }
 
-.depth-button.active {
-    background-color: #2196F3;
-    color: white;
+.selector-button.active { 
+    background-color: #4CAF50 !important; 
+    color: white !important; 
 }
+
 #error { 
     color: red; 
     margin-top: 10px; 
     font-size: 0.9em; 
 }
+
 table { 
     width: 100%; 
     border-collapse: collapse; 
     margin-top: 10px; 
     font-size: 0.8em; 
 }
+
 th, td { 
     border: 1px solid #ddd; 
     padding: 4px; 
     text-align: left; 
 }
+
 th { 
     background-color: #f2f2f2; 
 }
-.depth-buttons { 
-    display: flex; 
-    justify-content: space-between; 
-    margin-top: 5px; 
-}
+
 #preview {
     font-size: 1.2em;
     text-align: center;
@@ -104,60 +115,85 @@ th {
     background-color: #e0e0e0;
     border-radius: 8px;
 }
+
 #comment {
     width: 100%;
     height: 60px;
     margin-top: 10px;
     resize: vertical;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
+
 #copyStatus {
     text-align: center;
     margin-top: 10px;
     font-style: italic;
 }
+
 footer {
     text-align: center;
     margin-top: 20px;
     font-size: 0.8em;
     color: #666;
 }
+
 .results-section {
     overflow-x: auto;
 }
+
 .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     margin-top: 20px;
 }
+
 .action-buttons button {
-    flex: 1;
-    margin: 0 5px;
+    flex: 1 0 calc(50% - 5px);
+    margin: 2.5px;
 }
+
 #clearMeasurements {
     background-color: #ff4444;
     color: white;
 }
+
 .tab-container {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     margin-bottom: 20px;
 }
+
 .tab-button {
     padding: 10px 20px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 5px 5px 0 0;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
+
 .tab-button.active {
     background-color: #4CAF50;
     color: white;
 }
+
 .tab-content {
     display: none;
 }
+
 .tab-content.active {
     display: block;
+}
+
+.setting-group {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+}
 
 /* Dark Mode Styles */
 body.dark-mode {
@@ -167,6 +203,13 @@ body.dark-mode {
 
 body.dark-mode .container {
     background-color: #1e1e1e;
+}
+
+body.dark-mode h1, 
+body.dark-mode h2 {
+    color: #ffffff;
+}
+
 body.dark-mode input[type="number"],
 body.dark-mode input[type="text"],
 body.dark-mode textarea {
@@ -175,22 +218,19 @@ body.dark-mode textarea {
     border-color: #4a4a4a;
 }
 
-body.dark-mode .type-button,
-body.dark-mode .generation-button,
-body.dark-mode .custom-option-button,
-body.dark-mode .depth-button {
+body.dark-mode .selector-button,
+body.dark-mode .depth-button,
+body.dark-mode button {
     background-color: #3a3a3a;
     color: #e0e0e0;
 }
 
-body.dark-mode .type-button.active,
-body.dark-mode .generation-button.active,
-body.dark-mode .custom-option-button.active {
+body.dark-mode .selector-button.active {
     background-color: #4CAF50;
     color: #ffffff;
 }
 
-body.dark-mode .depth-button.active {
+body.dark-mode .depth-button:active {
     background-color: #2196F3;
     color: #ffffff;
 }
@@ -204,6 +244,19 @@ body.dark-mode table {
     border-color: #4a4a4a;
 }
 
+body.dark-mode th {
+    background-color: #2c2c2c;
+    color: #ffffff;
+}
+
+body.dark-mode td {
+    border-color: #4a4a4a;
+}
+
+body.dark-mode #copyStatus {
+    color: #4CAF50;
+}
+
 body.dark-mode #error {
     color: #ff6b6b;
 }
@@ -211,6 +264,45 @@ body.dark-mode #error {
 body.dark-mode footer {
     color: #a0a0a0;
 }
-.setting-group {
-    margin-bottom: 20px;
+
+body.dark-mode .tab-button {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .tab-button.active {
+    background-color: #4CAF50;
+    color: #ffffff;
+}
+
+body.dark-mode .setting-group {
+    border-color: #4a4a4a;
+}
+
+/* Responsive design */
+@media (min-width: 768px) {
+    .selector-button, .depth-button, button {
+        flex: 1 0 auto; /* Full width on larger screens */
+    }
+    
+    .action-buttons button {
+        flex: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    label {
+        margin-bottom: 5px;
+    }
+
+    input[type="number"], 
+    input[type="text"], 
+    input[type="range"] {
+        width: 100%;
+    }
 }
