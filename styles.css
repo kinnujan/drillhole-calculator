@@ -54,6 +54,17 @@ input[type="range"] {
     cursor: pointer;
     font-size: 0.9em;
     transition: background-color 0.3s ease;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.type-selector,
+.generation-selector,
+.custom-type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 10px 0;
 }
 
 .type-button.active,
