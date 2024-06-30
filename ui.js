@@ -81,7 +81,7 @@ export function updateCustomTypeSelectorButtons(customTypes) {
 function updateSelectorButtons(containerSelector, options, dataAttribute, onClickHandler) {
     const container = document.querySelector(containerSelector);
     if (!container) {
-        console.error(`Container not found: ${containerSelector}`);
+        console.log(`Container not found: ${containerSelector}`);
         return;
     }
     container.innerHTML = '';
@@ -91,7 +91,9 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
         button.setAttribute(`data-${dataAttribute}`, option);
         button.textContent = option;
         button.onclick = () => {
+            // Remove 'active' class from all buttons in this container
             container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
+            // Add 'active' class to clicked button
             button.classList.add('active');
             onClickHandler(option);
         };
