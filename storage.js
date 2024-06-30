@@ -53,14 +53,13 @@ export function saveSettings(settings) {
         console.error("Error saving settings:", error);
     }
 }
-
 export function loadSettings() {
     console.log("Loading settings from local storage...");
     try {
         const savedSettings = localStorage.getItem('appSettings');
         const parsedSettings = savedSettings ? JSON.parse(savedSettings) : {
             darkMode: false,
-            measurementTypes: ['bedding', 'foliation', 'fault', 'shear'],
+            measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'], 
             generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
             customTypes: []
         };
@@ -70,7 +69,7 @@ export function loadSettings() {
         console.error("Error loading settings:", error);
         return {
             darkMode: false,
-            measurementTypes: ['bedding', 'foliation', 'fault', 'shear'],
+            measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'], 
             generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
             customTypes: []
         };
