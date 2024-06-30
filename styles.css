@@ -202,10 +202,34 @@ footer {
 .danger-button:hover {
     background-color: #ff6666;
 }
+.help-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.help-content h3 {
+    margin-top: 20px;
+    color: #4CAF50;
+}
+
+.help-content ul, .help-content ol {
+    margin-left: 20px;
+}
+
+.help-content li {
+    margin-bottom: 10px;
+}
+
 /* Dark Mode Styles */
 body.dark-mode {
     background-color: #121212;
     color: #e0e0e0;
+}
+
+body.dark-mode .help-content h3 {
+    color: #81c784;
 }
 
 body.dark-mode .container {
