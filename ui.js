@@ -54,7 +54,7 @@ export function updateTypeSelectorButtons(types) {
 }
 
 export function updateGenerationSelectorButtons(types) {
-    updateSelectorButtons('.generation-selector', types, 'gen', setSelectedGeneration);
+    updateSelectorButtons('.generation-selector', types, 'generation', setSelectedGeneration);
 }
 
 export function updateCustomTypeSelectorButtons(customTypes) {
