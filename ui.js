@@ -14,14 +14,18 @@ let selectedCustomTypes = {};
 
 export function setupUI() {
     console.log("Setting up UI...");
-    setupTabs();
-    setupTypeSelectors();
-    setupDepthButtons();
-    syncInputs();
-    setupAddMeasurementButton();
-    setupActionButtons();
-    updateResultsTable();
-    console.log("UI setup complete.");
+    try {
+        setupTabs();
+        setupTypeSelectors();
+        setupDepthButtons();
+        syncInputs();
+        setupAddMeasurementButton();
+        setupActionButtons();
+        updateResultsTable();
+        console.log("UI setup complete.");
+    } catch (error) {
+        console.error("Error during UI setup:", error);
+    }
 }
 
 function setupTabs() {
