@@ -2,11 +2,13 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 
 export function setupUI() {
+    console.log("Setting up UI...");
     setupTabs();
     setupTypeSelector();
     setupGenerationSelector();
     setupCustomTypeSelector();
     syncInputs();
+    console.log("UI setup complete.");
 }
 
 export function updateResultsTable() {
