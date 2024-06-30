@@ -397,7 +397,7 @@ export function setSelectedCustomType(typeName, value) {
 }
 
 // Initial setup
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('load', () => {
     setupUI();
 });
 
