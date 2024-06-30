@@ -260,15 +260,6 @@ export function adjustDepth(amount) {
     updatePreview(); // Update the preview after adjusting depth
 }
 
-export function resetUISelections() {
-    document.querySelectorAll('.selector-button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    selectedType = '';
-    selectedGeneration = '';
-    selectedCustomTypes = {};
-}
-
 function addMeasurement() {
     console.log("Adding new measurement...");
     const holeId = document.getElementById('holeId').value;
