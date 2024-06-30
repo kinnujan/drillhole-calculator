@@ -213,6 +213,7 @@ export function updateResultsTable() {
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
     depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
+    depthInput.dispatchEvent(new Event('input')); // Trigger input event
 }
 
 export function resetUISelections() {
