@@ -5,6 +5,11 @@ export function setupSettings() {
     const settings = loadSettings();
     setupDarkMode(settings.darkMode);
     setupCustomTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
+    
+    // Add event listeners to the buttons
+    document.getElementById('addMeasurementType').addEventListener('click', addMeasurementType);
+    document.getElementById('addGenerationType').addEventListener('click', addGenerationType);
+    document.getElementById('addCustomType').addEventListener('click', addCustomType);
 }
 
 function setupDarkMode(initialState) {
@@ -24,10 +29,6 @@ function setupCustomTypes(measurementTypes, generationTypes, customTypes) {
     updateMeasurementTypes(measurementTypes);
     updateGenerationTypes(generationTypes);
     updateCustomTypes(customTypes);
-
-    document.getElementById('addMeasurementType').addEventListener('click', addMeasurementType);
-    document.getElementById('addGenerationType').addEventListener('click', addGenerationType);
-    document.getElementById('addCustomType').addEventListener('click', addCustomType);
 }
 
 export function updateMeasurementTypes(types) {
@@ -87,6 +88,7 @@ function addMeasurementType() {
         const settings = loadSettings();
         settings.measurementTypes.push(newType);
         updateMeasurementTypes(settings.measurementTypes);
+        saveSettings(settings);
     }
 }
 
@@ -96,6 +98,7 @@ function addGenerationType() {
         const settings = loadSettings();
         settings.generationTypes.push(newType);
         updateGenerationTypes(settings.generationTypes);
+        saveSettings(settings);
     }
 }
 
@@ -117,6 +120,7 @@ function deleteMeasurementType(type) {
     if (index > -1) {
         settings.measurementTypes.splice(index, 1);
         updateMeasurementTypes(settings.measurementTypes);
+        saveSettings(settings);
     }
 }
 
@@ -126,6 +130,7 @@ function deleteGenerationType(type) {
     if (index > -1) {
         settings.generationTypes.splice(index, 1);
         updateGenerationTypes(settings.generationTypes);
+        saveSettings(settings);
     }
 }
 
