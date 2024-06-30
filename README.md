@@ -18,6 +18,8 @@ The Drill Hole Orientation Calculator is a Progressive Web App (PWA). This tool 
 - Data persistence using local storage
 - Export results to CSV
 - Responsive design for use on various devices
+### Todo:
+- Support for lineations/gamma measurements.
 
 ## Installation
 
