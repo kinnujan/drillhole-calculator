@@ -218,22 +218,19 @@ body.dark-mode textarea {
     border-color: #4a4a4a;
 }
 
-body.dark-mode .type-button,
-body.dark-mode .generation-button,
-body.dark-mode .custom-option-button,
-body.dark-mode .depth-button {
+body.dark-mode .selector-button,
+body.dark-mode .depth-button,
+body.dark-mode button {
     background-color: #3a3a3a;
     color: #e0e0e0;
 }
 
-body.dark-mode .type-button.active,
-body.dark-mode .generation-button.active,
-body.dark-mode .custom-option-button.active {
+body.dark-mode .selector-button.active {
     background-color: #4CAF50;
     color: #ffffff;
 }
 
-body.dark-mode .depth-button.active {
+body.dark-mode .depth-button:active {
     background-color: #2196F3;
     color: #ffffff;
 }
@@ -267,6 +264,21 @@ body.dark-mode #error {
 body.dark-mode footer {
     color: #a0a0a0;
 }
+
+body.dark-mode .tab-button {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .tab-button.active {
+    background-color: #4CAF50;
+    color: #ffffff;
+}
+
+body.dark-mode .setting-group {
+    border-color: #4a4a4a;
+}
+
 /* Responsive design */
 @media (min-width: 768px) {
     .selector-button, .depth-button, button {
