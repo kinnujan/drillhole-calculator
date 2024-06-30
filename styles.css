@@ -5,152 +5,217 @@ body {
     background-color: #f0f4f8;
     font-size: 16px;
 }
+
 .container {
     background-color: white;
     border-radius: 8px;
-    padding: 10px;
+    padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 0 auto;
 }
+
 h1, h2 { 
     color: #333; 
-    font-size: 1.2em; 
     margin: 10px 0; 
     text-align: center;
 }
+
+h1 {
+    font-size: 1.8em;
+}
+
+h2 {
+    font-size: 1.4em;
+}
+
 .input-group { 
-    margin-bottom: 10px; 
+    margin-bottom: 15px; 
     display: flex;
     align-items: center;
 }
+
 label { 
-    flex: 0 0 120px;
+    flex: 0 0 140px;
     font-size: 0.9em; 
 }
+
 input[type="number"], input[type="text"] { 
-    width: calc(100% - 130px);
-    padding: 5px;
+    width: calc(100% - 150px);
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
 input[type="range"] { 
-    width: calc(100% - 130px);
+    width: calc(100% - 150px);
     vertical-align: middle; 
 }
-.type-selector, .generation-selector { 
+
+.type-selector, .generation-selector, .custom-type-selectors { 
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin: 10px 0; 
 }
-.type-button, .generation-button, .depth-button, button {
-    padding: 8px;
-    margin: 2px;
+
+.type-button, .generation-button, .custom-option-button, .depth-button, button {
+    padding: 8px 12px;
+    margin: 4px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
-    flex-grow: 1;
-    text-align: center;
+    transition: background-color 0.3s;
 }
-.type-button.active, .generation-button.active { 
+
+.type-button:hover, .generation-button:hover, .custom-option-button:hover, .depth-button:hover, button:hover {
+    background-color: #d0d0d0;
+}
+
+.type-button.active, .generation-button.active, .custom-option-button.active { 
     background-color: #4CAF50; 
     color: white; 
 }
+
 #error { 
     color: red; 
     margin-top: 10px; 
     font-size: 0.9em; 
 }
+
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    margin-top: 10px; 
-    font-size: 0.8em; 
+    margin-top: 20px; 
+    font-size: 0.9em; 
 }
+
 th, td { 
     border: 1px solid #ddd; 
-    padding: 4px; 
+    padding: 8px; 
     text-align: left; 
 }
+
 th { 
     background-color: #f2f2f2; 
+    font-weight: bold;
 }
+
 .depth-buttons { 
     display: flex; 
     justify-content: space-between; 
     margin-top: 5px; 
 }
+
 #preview {
     font-size: 1.2em;
     text-align: center;
-    margin: 10px 0;
+    margin: 15px 0;
     padding: 10px;
     background-color: #e0e0e0;
     border-radius: 8px;
 }
+
 #comment {
     width: 100%;
     height: 60px;
     margin-top: 10px;
     resize: vertical;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
+
 #copyStatus {
     text-align: center;
     margin-top: 10px;
     font-style: italic;
 }
+
 footer {
     text-align: center;
     margin-top: 20px;
     font-size: 0.8em;
     color: #666;
 }
+
 .results-section {
     overflow-x: auto;
 }
+
 .action-buttons {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
 }
+
 .action-buttons button {
     flex: 1;
     margin: 0 5px;
 }
+
 #clearMeasurements {
     background-color: #ff4444;
     color: white;
 }
+
 .tab-container {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     margin-bottom: 20px;
 }
+
 .tab-button {
     padding: 10px 20px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 5px 5px 0 0;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
+
 .tab-button.active {
     background-color: #4CAF50;
     color: white;
 }
+
 .tab-content {
     display: none;
 }
+
 .tab-content.active {
     display: block;
 }
+
+.setting-group {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#darkMode {
+    margin-left: 10px;
+}
+
+/* Dark mode styles */
 body.dark-mode {
     background-color: #333;
     color: #fff;
 }
+
 body.dark-mode .container {
     background-color: #444;
 }
+
 body.dark-mode input,
 body.dark-mode select,
 body.dark-mode textarea {
@@ -158,14 +223,98 @@ body.dark-mode textarea {
     color: #fff;
     border-color: #777;
 }
+
 body.dark-mode .tab-button {
     background-color: #555;
     color: #ddd;
 }
+
 body.dark-mode .tab-button.active {
     background-color: #4CAF50;
     color: #fff;
 }
-.setting-group {
-    margin-bottom: 20px;
+
+body.dark-mode .type-button, 
+body.dark-mode .generation-button, 
+body.dark-mode .custom-option-button, 
+body.dark-mode .depth-button, 
+body.dark-mode button {
+    background-color: #555;
+    color: #fff;
+}
+
+body.dark-mode .type-button:hover, 
+body.dark-mode .generation-button:hover, 
+body.dark-mode .custom-option-button:hover, 
+body.dark-mode .depth-button:hover, 
+body.dark-mode button:hover {
+    background-color: #666;
+}
+
+body.dark-mode .type-button.active, 
+body.dark-mode .generation-button.active, 
+body.dark-mode .custom-option-button.active {
+    background-color: #4CAF50;
+}
+
+body.dark-mode table {
+    color: #fff;
+}
+
+body.dark-mode th, 
+body.dark-mode td {
+    border-color: #555;
+}
+
+body.dark-mode th {
+    background-color: #555;
+}
+
+body.dark-mode #preview {
+    background-color: #555;
+}
+
+/* Custom type selector styles */
+.custom-type-selectors {
+    margin-bottom: 15px;
+}
+
+.custom-type-selector {
+    margin-bottom: 10px;
+}
+
+.custom-type-selector label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    .input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    label {
+        margin-bottom: 5px;
+    }
+
+    input[type="number"], 
+    input[type="text"], 
+    input[type="range"] {
+        width: 100%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons button {
+        margin: 5px 0;
+    }
 }
