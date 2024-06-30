@@ -42,7 +42,10 @@ input[type="range"] {
     justify-content: space-between;
     margin: 10px 0; 
 }
-.type-button, .generation-button, .depth-button, button {
+.type-button,
+.generation-button,
+.custom-option-button,
+.depth-button {
     padding: 8px;
     margin: 2px;
     background-color: #e0e0e0;
@@ -50,12 +53,19 @@ input[type="range"] {
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
-    flex-grow: 1;
-    text-align: center;
+    transition: background-color 0.3s ease;
 }
-.type-button.active, .generation-button.active { 
-    background-color: #4CAF50; 
-    color: white; 
+
+.type-button.active,
+.generation-button.active,
+.custom-option-button.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.depth-button.active {
+    background-color: #2196F3;
+    color: white;
 }
 #error { 
     color: red; 
