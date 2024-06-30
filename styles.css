@@ -75,8 +75,8 @@ input[type="range"] {
 }
 
 .type-button.active, .generation-button.active, .custom-option-button.active { 
-    background-color: #4CAF50; 
-    color: white; 
+    background-color: #4CAF50 !important; 
+    color: white !important; 
 }
 
 #error { 
@@ -254,7 +254,8 @@ body.dark-mode button:hover {
 body.dark-mode .type-button.active, 
 body.dark-mode .generation-button.active, 
 body.dark-mode .custom-option-button.active {
-    background-color: #4CAF50;
+    background-color: #4CAF50 !important;
+    color: white !important;
 }
 
 body.dark-mode table {
