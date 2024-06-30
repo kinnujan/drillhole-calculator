@@ -1,10 +1,11 @@
-import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration } from './measurements.js';
-import { loadDrillHoleInfo, saveDrillHoleInfo } from './storage.js';
+import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, setSelectedCustomTypeOption } from './measurements.js';
+import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 
 export function setupUI() {
     setupTabs();
     setupTypeSelector();
     setupGenerationSelector();
+    setupCustomTypeSelector();
     syncInputs();
 }
 
@@ -21,10 +22,16 @@ export function updateResultsTable() {
         row.insertCell(4).textContent = measurement.dipDirection + '°';
         
         const commentCell = row.insertCell(5);
-        commentCell.textContent = measurement.comment.length > 20 ? 
+        commentCell.textContent = (measurement.comment.length > 20 ? 
             measurement.comment.substring(0, 20) + '...' : 
-            measurement.comment;
+            measurement.comment);
         commentCell.title = measurement.comment; // Show full comment on hover
+
+        if (measurement.customType) {
+            row.insertCell(6).textContent = `${measurement.customType.name}: ${measurement.customType.option}`;
+        } else {
+            row.insertCell(6).textContent = '-';
+        }
     });
 }
 
@@ -80,8 +87,34 @@ function setupGenerationSelector() {
             buttons.forEach(b => b.classList.remove('active'));
             button.classList.add('active');
             setSelectedGeneration(button.dataset.gen);
-            document.getElementById('generation').value = button.dataset.gen;
         });
+    });
+}
+
+function setupCustomTypeSelector() {
+    const container = document.querySelector('.custom-type-selector');
+    container.addEventListener('click', (event) => {
+        if (event.target.classList.contains('custom-type-button')) {
+            const typeName = event.target.getAttribute('data-type');
+            const settings = loadSettings();
+            const customType = settings.customTypes.find(type => type.name === typeName);
+            if (customType) {
+                setSelectedCustomType(customType);
+                showCustomTypeOptions(customType);
+            }
+        }
+    });
+}
+
+function showCustomTypeOptions(customType) {
+    const optionsContainer = document.querySelector('.custom-type-options');
+    optionsContainer.innerHTML = '';
+    customType.options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'custom-type-option';
+        button.textContent = option;
+        button.onclick = () => setSelectedCustomTypeOption(option);
+        optionsContainer.appendChild(button);
     });
 }
 
@@ -172,7 +205,24 @@ export function updateGenerationSelectorButtons(types) {
             document.querySelectorAll('.generation-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             setSelectedGeneration(type);
-            document.getElementById('generation').value = type;
+        };
+        container.appendChild(button);
+    });
+}
+
+export function updateCustomTypeSelectorButtons(types) {
+    const container = document.querySelector('.custom-type-selector');
+    container.innerHTML = '';
+    types.forEach(type => {
+        const button = document.createElement('button');
+        button.className = 'custom-type-button';
+        button.setAttribute('data-type', type.name);
+        button.textContent = type.name;
+        button.onclick = () => {
+            document.querySelectorAll('.custom-type-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            setSelectedCustomType(type);
+            showCustomTypeOptions(type);
         };
         container.appendChild(button);
     });
