@@ -397,9 +397,13 @@ window.addEventListener('load', () => {
 });
 
 // Exports
-export {
-    updatePreview,
+export { 
+    setupUI, 
+    updateTypeSelectorButtons, 
+    updateGenerationSelectorButtons, 
+    updateCustomTypeSelectorButtons, 
+    updatePreview, 
     updateResultsTable,
-    adjustDepth,
-    resetUISelections
+    adjustDepth,  // Add this line if it's not already here
+    resetUISelections 
 };
