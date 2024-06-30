@@ -1,11 +1,10 @@
-import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo } from './storage.js';
-import { updateResultsTable, updatePreview } from './ui.js';
+import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadSettings } from './storage.js';
+import { updateResultsTable, updatePreview, resetUISelections } from './ui.js';
 
 let measurements = [];
-let selectedType = 'bedding';
+let selectedType = '';
 let selectedGeneration = '';
-let selectedCustomType = null;
-let selectedCustomTypeOption = null;
+let selectedCustomTypes = {};
 
 export function loadMeasurements() {
     console.log("Loading measurements...");
@@ -49,10 +48,7 @@ function addMeasurement() {
         depth,
         type: selectedType,
         generation: selectedGeneration,
-        customType: selectedCustomType ? {
-            name: selectedCustomType.name,
-            option: selectedCustomTypeOption
-        } : null,
+        customTypes: { ...selectedCustomTypes },
         alpha: alpha.toFixed(1),
         beta: beta.toFixed(1),
         dip: dip.toFixed(1),
@@ -72,8 +68,7 @@ function addMeasurement() {
     document.getElementById('alphaSlider').value = '0';
     document.getElementById('betaSlider').value = '0';
     document.getElementById('comment').value = '';
-    resetGeneration();
-    resetCustomType();
+    resetSelections();
     updatePreview();
     console.log("New measurement added:", result);
 }
@@ -151,18 +146,11 @@ function validateInputs(holeDip, holeAzimuth, alpha, beta) {
     return null;
 }
 
-function resetGeneration() {
-    const buttons = document.querySelectorAll('.generation-button');
-    buttons.forEach(b => b.classList.remove('active'));
+function resetSelections() {
+    selectedType = '';
     selectedGeneration = '';
-}
-
-function resetCustomType() {
-    const buttons = document.querySelectorAll('.custom-type-button');
-    buttons.forEach(b => b.classList.remove('active'));
-    selectedCustomType = null;
-    selectedCustomTypeOption = null;
-    document.querySelector('.custom-type-options').innerHTML = '';
+    selectedCustomTypes = {};
+    resetUISelections();
 }
 
 function copyResults() {
@@ -254,7 +242,14 @@ function fallbackSaveAsCSV(csvContent, filename) {
 }
 
 function getCSVContent() {
-    let csvContent = "HoleID,Depth,Type,Generation,CustomType,CustomOption,Alpha,Beta,Dip,DipDirection,Strike,Comment\n";
+    const settings = loadSettings();
+    const customTypeNames = settings.customTypes.map(ct => ct.name);
+    
+    let csvContent = "HoleID,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
+    customTypeNames.forEach(name => {
+        csvContent += `,${name}`;
+    });
+    csvContent += "\n";
     
     measurements.forEach(function(measurement) {
         let row = [
@@ -262,16 +257,19 @@ function getCSVContent() {
             measurement.depth,
             measurement.type,
             measurement.generation,
-            measurement.customType ? measurement.customType.name : '',
-            measurement.customType ? measurement.customType.option : '',
             measurement.alpha,
             measurement.beta,
             measurement.dip,
             measurement.dipDirection,
             measurement.strike,
             measurement.comment
-        ].map(value => `"${value}"`).join(",");
-        csvContent += row + "\n";
+        ];
+        
+        customTypeNames.forEach(name => {
+            row.push(measurement.customTypes[name] || '');
+        });
+        
+        csvContent += row.map(value => `"${value}"`).join(",") + "\n";
     });
 
     return csvContent;
@@ -306,15 +304,9 @@ export function setSelectedGeneration(gen) {
     console.log("Selected generation set to:", gen);
 }
 
-export function setSelectedCustomType(type) {
-    selectedCustomType = type;
-    selectedCustomTypeOption = null;
-    console.log("Selected custom type set to:", type);
+export function setSelectedCustomType(typeName, option) {
+    selectedCustomTypes[typeName] = option;
+    console.log(`Selected custom type ${typeName} set to:`, option);
 }
 
-export function setSelectedCustomTypeOption(option) {
-    selectedCustomTypeOption = option;
-    console.log("Selected custom type option set to:", option);
-}
-
-export { measurements, selectedType, selectedGeneration, selectedCustomType, selectedCustomTypeOption };
+export { measurements, selectedType, selectedGeneration, selectedCustomTypes };
