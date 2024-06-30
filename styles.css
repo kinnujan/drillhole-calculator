@@ -11,79 +11,73 @@ body {
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 800px;
-    margin: 0 auto;
 }
 
 h1, h2 { 
     color: #333; 
+    font-size: 1.2em; 
     margin: 10px 0; 
     text-align: center;
-}
-
-h1 {
-    font-size: 1.4em;
-}
-
-h2 {
-    font-size: 1.2em;
 }
 
 .input-group { 
     margin-bottom: 10px; 
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
 }
 
 label { 
     flex: 0 0 120px;
     font-size: 0.9em; 
-    margin-right: 10px;
 }
 
 input[type="number"], input[type="text"] { 
-    flex: 1;
-    min-width: 0;
+    width: calc(100% - 130px);
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
 input[type="range"] { 
-    flex: 1;
-    min-width: 0;
+    width: calc(100% - 130px);
+    vertical-align: middle; 
 }
 
-.type-selector, .generation-selector, .custom-type-selectors, .depth-buttons { 
+.type-selector,
+.generation-selector,
+.custom-type-selector {
     display: flex;
     flex-wrap: wrap;
-    justify-content: stretch;
-    margin: 10px 0; 
+    justify-content: space-between;
+    margin: 10px 0;
 }
 
-.selector-button, .depth-button, button {
-    flex: 1 0 calc(50% - 4px);
-    margin: 2px;
+.type-button,
+.generation-button,
+.custom-option-button,
+.depth-button {
     padding: 8px;
+    margin: 2px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
+    flex-grow: 1;
     text-align: center;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
 }
 
-.selector-button:hover, .depth-button:hover, button:hover {
-    background-color: #d0d0d0;
+.type-button.active,
+.generation-button.active,
+.custom-option-button.active {
+    background-color: #4CAF50;
+    color: white;
 }
 
-.type-selector .selector-button.active,
-.generation-selector .selector-button.active,
-.custom-type-selector .selector-button.active { 
-    background-color: #4CAF50; 
-    color: white; 
+.depth-button.active {
+    background-color: #2196F3;
+    color: white;
 }
 
 #error { 
@@ -109,6 +103,12 @@ th {
     background-color: #f2f2f2; 
 }
 
+.depth-buttons { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-top: 5px; 
+}
+
 #preview {
     font-size: 1.2em;
     text-align: center;
@@ -123,9 +123,6 @@ th {
     height: 60px;
     margin-top: 10px;
     resize: vertical;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
 }
 
 #copyStatus {
@@ -147,14 +144,13 @@ footer {
 
 .action-buttons {
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
     margin-top: 20px;
 }
 
 .action-buttons button {
-    flex: 1 0 calc(50% - 5px);
-    margin: 2.5px;
+    flex: 1;
+    margin: 0 5px;
 }
 
 #clearMeasurements {
@@ -164,7 +160,7 @@ footer {
 
 .tab-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     margin-bottom: 20px;
 }
 
@@ -174,7 +170,6 @@ footer {
     border: none;
     border-radius: 5px 5px 0 0;
     cursor: pointer;
-    transition: background-color 0.3s;
 }
 
 .tab-button.active {
@@ -192,9 +187,6 @@ footer {
 
 .setting-group {
     margin-bottom: 20px;
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 4px;
 }
 
 /* Dark Mode Styles */
@@ -220,27 +212,22 @@ body.dark-mode textarea {
     border-color: #4a4a4a;
 }
 
-body.dark-mode .selector-button,
-body.dark-mode .depth-button,
-body.dark-mode button {
+body.dark-mode .type-button,
+body.dark-mode .generation-button,
+body.dark-mode .custom-option-button,
+body.dark-mode .depth-button {
     background-color: #3a3a3a;
     color: #e0e0e0;
 }
 
-body.dark-mode .selector-button:hover,
-body.dark-mode .depth-button:hover,
-body.dark-mode button:hover {
-    background-color: #4a4a4a;
-}
-
-body.dark-mode .type-selector .selector-button.active,
-body.dark-mode .generation-selector .selector-button.active,
-body.dark-mode .custom-type-selector .selector-button.active {
-    background-color: #45a049;
+body.dark-mode .type-button.active,
+body.dark-mode .generation-button.active,
+body.dark-mode .custom-option-button.active {
+    background-color: #4CAF50;
     color: #ffffff;
 }
 
-body.dark-mode .depth-button:active {
+body.dark-mode .depth-button.active {
     background-color: #2196F3;
     color: #ffffff;
 }
@@ -273,46 +260,4 @@ body.dark-mode #error {
 
 body.dark-mode footer {
     color: #a0a0a0;
-}
-
-body.dark-mode .tab-button {
-    background-color: #3a3a3a;
-    color: #e0e0e0;
-}
-
-body.dark-mode .tab-button.active {
-    background-color: #4CAF50;
-    color: #ffffff;
-}
-
-body.dark-mode .setting-group {
-    border-color: #4a4a4a;
-}
-
-/* Responsive design */
-@media (min-width: 768px) {
-    .selector-button, .depth-button, button {
-        flex: 1 0 auto; /* Full width on larger screens */
-    }
-    
-    .action-buttons button {
-        flex: 1;
-    }
-}
-
-@media (max-width: 600px) {
-    .input-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    label {
-        margin-bottom: 5px;
-    }
-
-    input[type="number"], 
-    input[type="text"], 
-    input[type="range"] {
-        width: 100%;
-    }
 }
