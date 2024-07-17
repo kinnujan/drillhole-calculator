@@ -91,18 +91,22 @@ export async function loadSettings() {
         let parsedSettings = savedSettings ? JSON.parse(savedSettings) : null;
 
         if (!parsedSettings || parsedSettings.version < CURRENT_SETTINGS_VERSION) {
+            // Merge existing settings with default settings
             parsedSettings = {
                 ...DEFAULT_SETTINGS,
-                version: CURRENT_SETTINGS_VERSION
+                ...parsedSettings,
+                version: CURRENT_SETTINGS_VERSION,
+                hapticFeedback: parsedSettings?.hapticFeedback ?? DEFAULT_SETTINGS.hapticFeedback
             };
             // Save the updated settings
             await saveSettings(parsedSettings);
         }
 
-        // Ensure strikeMode is always set to 'negative'
-        if (parsedSettings.strikeMode !== 'negative') {
-            parsedSettings.strikeMode = 'negative';
-            await saveSettings(parsedSettings);
+        // Ensure all default settings are present
+        for (const key in DEFAULT_SETTINGS) {
+            if (parsedSettings[key] === undefined) {
+                parsedSettings[key] = DEFAULT_SETTINGS[key];
+            }
         }
 
         console.log("Settings loaded successfully.");

@@ -25,4 +25,4 @@ export const DEFAULT_SETTINGS = {
     hapticFeedback: true
 };
 
-export const CURRENT_SETTINGS_VERSION = 5;
+export const CURRENT_SETTINGS_VERSION = 6; // Incremented from 5 to 6
