@@ -1,79 +1,48 @@
-/* Updated color palette */
-:root {
-    --primary-color: #3498db;
-    --primary-dark: #2980b9;
-    --secondary-color: #e74c3c;
-    --destructive-color: #c0392b;
-    --background-color: #f0f4f8;
-    --text-color: #333333;
-    --border-color: #dddddd;
-    --input-bg: #ffffff;
-    --button-bg: #e0e0e0;
-    --button-text: #333333;
-    --button-active: #3498db;
-    --button-active-text: #ffffff;
-}
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: Arial, sans-serif;
     margin: 0;
     padding: 10px;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    font-size: 16px;
+    background-color: #f0f4f8;
+    font-size: 14px;
 }
 
 .container {
-    background-color: var(--input-bg);
+    background-color: white;
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
 h1, h2 { 
-    color: var(--primary-color);
-    font-size: 1.2em; 
-    margin: 10px 0; 
-    text-align: center;
+    color: #333; 
+    font-size: 1.1em; 
+    margin: 8px 0; 
+    text-align: left;
 }
 
 .input-group { 
-    margin-bottom: 10px; 
+    margin-bottom: 8px; 
     display: flex;
     align-items: center;
-    flex-wrap: nowrap;
 }
 
-.input-group label { 
-    flex: 0 0 120px;
-    font-size: 0.9em;
-    margin-right: 10px;
+label { 
+    flex: 0 0 100px;
+    font-size: 0.9em; 
 }
 
-.input-group input[type="number"],
-.input-group input[type="text"] {
-    width: 80px;
-    padding: 8px;
-    border: 1px solid var(--border-color);
+input[type="number"], input[type="text"] { 
+    width: calc(100% - 110px);
+    padding: 4px;
+    border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 0.9em;
-    margin-right: 10px;
 }
 
-.input-group input[type="range"] { 
-    flex: 1;
-    margin-right: 10px;
-}
-
-textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 0.9em;
-    resize: vertical;
+input[type="range"] { 
+    width: calc(100% - 110px);
+    vertical-align: middle; 
 }
 
 .type-selector,
@@ -81,21 +50,21 @@ textarea {
 .custom-type-selector {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
-    margin: 10px 0;
+    justify-content: space-between;
+    margin: 8px 0;
 }
 
 .type-button,
 .generation-button,
 .custom-option-button,
 .depth-button {
-    padding: 8px;
+    padding: 6px;
     margin: 2px;
-    background-color: var(--button-bg);
+    background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.8em;
     flex-grow: 1;
     text-align: center;
     transition: background-color 0.3s ease;
@@ -103,67 +72,70 @@ textarea {
 
 .type-button.active,
 .generation-button.active,
-.custom-option-button.active,
+.custom-option-button.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
 .depth-button.active {
-    background-color: var(--button-active);
-    color: var(--button-active-text);
+    background-color: #2196F3;
+    color: white;
 }
 
 #error { 
-    color: var(--secondary-color);
-    margin-top: 10px; 
+    color: red; 
+    margin-top: 8px; 
     font-size: 0.9em; 
 }
 
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    margin-top: 10px; 
+    margin-top: 8px; 
     font-size: 0.8em; 
 }
 
 th, td { 
-    border: 1px solid var(--border-color);
-    padding: 8px; 
+    border: 1px solid #ddd; 
+    padding: 4px; 
     text-align: left; 
 }
 
 th { 
-    background-color: var(--primary-color);
-    color: var(--button-active-text);
+    background-color: #f2f2f2; 
 }
 
 .depth-buttons { 
     display: flex; 
     justify-content: space-between; 
-    margin-top: 5px; 
+    margin-top: 4px; 
 }
 
 #preview {
-    font-size: 1.2em;
+    font-size: 1.1em;
     text-align: center;
-    margin: 10px 0;
-    padding: 10px;
-    background-color: var(--button-bg);
+    margin: 8px 0;
+    padding: 8px;
+    background-color: #e0e0e0;
     border-radius: 8px;
 }
 
 #comment {
     width: 100%;
-    height: 60px;
-    margin-top: 10px;
+    height: 50px;
+    margin-top: 8px;
     resize: vertical;
 }
 
 #copyStatus {
     text-align: center;
-    margin-top: 10px;
+    margin-top: 8px;
     font-style: italic;
 }
 
 footer {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 16px;
     font-size: 0.8em;
     color: #666;
 }
@@ -175,198 +147,119 @@ footer {
 .action-buttons {
     display: flex;
     justify-content: space-between;
-    margin-top: 20px;
+    margin-top: 16px;
 }
 
 .action-buttons button {
     flex: 1;
-    margin: 0 5px;
-    padding: 10px;
-    background-color: var(--secondary-color);
-    color: var(--button-active-text);
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    margin: 0 4px;
     font-size: 0.9em;
-    transition: background-color 0.3s ease;
+    padding: 6px 10px;
 }
 
-#addMeasurement {
-    background-color: var(--primary-color);
-    color: var(--button-active-text);
-    width: 100%;
-    margin: 10px 0;
-    padding: 12px;
-    font-size: 1em;
-    text-align: center;
+#clearMeasurements {
+    background-color: #ff4444;
+    color: white;
 }
 
-#clearMeasurements,
-#resetApp,
-[id^="delete"] {
-    background-color: var(--destructive-color);
-}
-
-/* Tab styles */
-.tab-container {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-}
-
-.tab-button {
-    padding: 10px 20px;
-    background-color: var(--button-bg);
-    border: none;
-    border-radius: 5px 5px 0 0;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    color: var(--text-color);
-}
-
-.tab-button:hover {
-    background-color: var(--primary-color);
-    color: var(--button-active-text);
-}
-
-.tab-button.active {
-    background-color: var(--primary-color);
-    color: var(--button-active-text);
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Improved Settings styles */
-.setting-group {
-    margin-bottom: 20px;
-    background-color: var(--input-bg);
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.setting-group h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: var(--primary-color);
-}
-
-.setting-group label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.setting-group input[type="checkbox"] {
-    margin-right: 10px;
-}
-
-.setting-group select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    margin-bottom: 10px;
-}
-
-.setting-group button {
-    background-color: var(--primary-color);
-    color: var(--button-active-text);
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease;
-    margin-top: 10px;
-    width: auto;
-    display: inline-block;
-}
-
-.setting-group button:hover {
-    background-color: var(--primary-dark);
-}
-
-.help-content {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 10px;
-    line-height: 1.6;
-}
-
-.help-content h3 {
-    margin-top: 20px;
-    color: var(--primary-color);
-}
-
-.help-content ul, .help-content ol {
-    margin-left: 20px;
-}
-
-.help-content li {
-    margin-bottom: 10px;
-}
-
-/* Footer styles */
-footer {
+.header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    background-color: var(--button-bg);
-    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
-.social-links a {
-    margin-left: 10px;
-    color: var(--text-color);
-    font-size: 20px;
-    transition: color 0.3s ease;
+.icon-button {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
 }
 
-.social-links a:hover {
-    color: var(--primary-color);
+.spacer {
+    flex-grow: 1;
+}
+
+.collapsible {
+    margin-bottom: 10px;
+}
+
+#drillHoleInfoSummary {
+    background-color: #f0f0f0;
+    padding: 5px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+#drillHoleInfoSummary span {
+    margin-right: 10px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 8px;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
 }
 
 /* Dark Mode Styles */
 body.dark-mode {
-    --background-color: #121212;
-    --text-color: #e0e0e0;
-    --input-bg: #1e1e1e;
-    --button-bg: #2c2c2c;
-    --button-text: #e0e0e0;
-    --border-color: #4a4a4a;
-    --primary-color: #64b5f6;
-    --primary-dark: #42a5f5;
-    --secondary-color: #ff7043;
-    --destructive-color: #ff5252;
+    background-color: #121212;
+    color: #e0e0e0;
 }
 
-body.dark-mode .container {
-    background-color: var(--input-bg);
+body.dark-mode .container,
+body.dark-mode .modal-content {
+    background-color: #1e1e1e;
 }
 
 body.dark-mode h1, 
 body.dark-mode h2 {
-    color: var(--primary-color);
+    color: #ffffff;
 }
 
 body.dark-mode input[type="number"],
 body.dark-mode input[type="text"],
-body.dark-mode textarea,
-body.dark-mode select {
+body.dark-mode textarea {
     background-color: #2c2c2c;
-    color: var(--text-color);
-    border-color: var(--border-color);
+    color: #ffffff;
+    border-color: #4a4a4a;
 }
 
 body.dark-mode .type-button,
@@ -374,116 +267,133 @@ body.dark-mode .generation-button,
 body.dark-mode .custom-option-button,
 body.dark-mode .depth-button {
     background-color: #3a3a3a;
-    color: var(--text-color);
+    color: #e0e0e0;
 }
 
 body.dark-mode .type-button.active,
 body.dark-mode .generation-button.active,
-body.dark-mode .custom-option-button.active,
-body.dark-mode .depth-button.active {
-    background-color: var(--primary-color);
-    color: var(--button-active-text);
-}
-
-body.dark-mode #preview {
-    background-color: #2c2c2c;
-    color: var(--text-color);
-}
-
-body.dark-mode table {
-    border-color: var(--border-color);
-}
-
-body.dark-mode th {
-    background-color: var(--primary-dark);
-    color: var(--button-active-text);
-}
-
-body.dark-mode td {
-    border-color: var(--border-color);
-}
-
-body.dark-mode #copyStatus {
-    color: var(--primary-color);
-}
-
-body.dark-mode #error {
-    color: var(--secondary-color);
-}
-
-body.dark-mode footer {
-    background-color: #1e1e1e;
-    color: #a0a0a0;
-}
-
-body.dark-mode .social-links a {
-    color: #a0a0a0;
-}
-
-body.dark-mode .social-links a:hover {
-    color: var(--primary-color);
-}
-
-body.dark-mode .tab-button {
-    background-color: #3a3a3a;
-    color: var(--text-color);
-}
-
-body.dark-mode .tab-button:hover,
-body.dark-mode .tab-button.active {
-    background-color: var(--primary-color);
+body.dark-mode .custom-option-button.active {
+    background-color: #4CAF50;
     color: #ffffff;
 }
 
-/* Responsive design adjustments */
-@media screen and (max-width: 600px) {
+body.dark-mode .depth-button.active {
+    background-color: #2196F3;
+    color: #ffffff;
+}
+
+body.dark-mode #preview,
+body.dark-mode #drillHoleInfoSummary {
+    background-color: #2c2c2c;
+    color: #ffffff;
+}
+
+body.dark-mode table {
+    border-color: #4a4a4a;
+}
+
+body.dark-mode th {
+    background-color: #2c2c2c;
+    color: #ffffff;
+}
+
+body.dark-mode td {
+    border-color: #4a4a4a;
+}
+
+body.dark-mode #copyStatus {
+    color: #4CAF50;
+}
+
+body.dark-mode #error {
+    color: #ff6b6b;
+}
+
+body.dark-mode footer {
+    color: #a0a0a0;
+}
+
+body.dark-mode .icon-button {
+    color: #e0e0e0;
+}
+
+/* Media query for larger screens */
+@media screen and (min-width: 768px) {
+    body {
+        padding: 20px;
+        font-size: 16px;
+    }
+
+    .container {
+        max-width: 800px;
+        padding: 20px;
+    }
+
+    h1, h2 {
+        font-size: 1.3em;
+    }
+
     .input-group {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding-bottom: 5px;
+        margin-bottom: 12px;
     }
 
-    .input-group label {
-        flex: 0 0 auto;
-        margin-right: 5px;
+    label {
+        flex: 0 0 120px;
     }
 
-    .input-group input[type="number"],
-    .input-group input[type="text"] {
-        width: 60px;
-        flex: 0 0 auto;
-    }
-
-    .input-group input[type="range"] {
-        width: 100px;
-        flex: 0 0 auto;
-    }
-
-    .action-buttons {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding-bottom: 5px;
-    }
-
-    .action-buttons button {
-        flex: 0 0 auto;
-        white-space: nowrap;
-    }
-
-    .tab-container {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding-bottom: 5px;
-    }
-
-    .tab-button {
-        flex: 0 0 auto;
+    input[type="number"], input[type="text"], input[type="range"] {
+        width: calc(100% - 130px);
+        padding: 6px;
     }
 
     .type-button,
     .generation-button,
     .custom-option-button,
     .depth-button {
-        flex: 0 0 auto;
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+
+    th, td {
+        padding: 6px;
+    }
+
+    #preview {
+        font-size: 1.2em;
+        padding: 12px;
+    }
+
+    #comment {
+        height: 60px;
+    }
+
+    .action-buttons button {
+        padding: 8px 12px;
+        font-size: 1em;
+    }
+}
+
+/* Media query for extra large screens */
+@media screen and (min-width: 1200px) {
+    .container {
+        max-width: 1000px;
+    }
+
+    .type-selector,
+    .generation-selector,
+    .custom-type-selector {
+        justify-content: flex-start;
+    }
+
+    .type-button,
+    .generation-button,
+    .custom-option-button,
+    .depth-button {
+        flex-grow: 0;
+        margin-right: 8px;
     }
 }
