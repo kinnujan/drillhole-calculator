@@ -56,7 +56,7 @@ export function saveSettings(settings) {
 
 export function loadSettings() {
     console.log("Loading settings from local storage...");
-    const currentVersion = 3; // Increment this when making changes to settings structure
+    const currentVersion = 4; // Increment this when making changes to settings structure
     try {
         const savedSettings = localStorage.getItem('appSettings');
         let parsedSettings = savedSettings ? JSON.parse(savedSettings) : null;
@@ -65,12 +65,18 @@ export function loadSettings() {
             parsedSettings = {
                 version: currentVersion,
                 darkMode: parsedSettings ? parsedSettings.darkMode : false,
-                strikeMode: parsedSettings ? parsedSettings.strikeMode : 'negative',
-                measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
-                generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
-                customTypes: parsedSettings ? parsedSettings.customTypes : []
+                strikeMode: 'negative', // Always set to 'negative' for existing users
+                measurementTypes: parsedSettings && parsedSettings.measurementTypes ? parsedSettings.measurementTypes : ['bedding', 'foliation', 'fault', 'shear', 'vein'],
+                generationTypes: parsedSettings && parsedSettings.generationTypes ? parsedSettings.generationTypes : ['S0', 'S0/1', 'S1', 'S2', 'S3'],
+                customTypes: parsedSettings && parsedSettings.customTypes ? parsedSettings.customTypes : []
             };
             // Save the updated settings
+            localStorage.setItem('appSettings', JSON.stringify(parsedSettings));
+        }
+
+        // Ensure strikeMode is always set to 'negative'
+        if (parsedSettings.strikeMode !== 'negative') {
+            parsedSettings.strikeMode = 'negative';
             localStorage.setItem('appSettings', JSON.stringify(parsedSettings));
         }
 
