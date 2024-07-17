@@ -3,6 +3,7 @@
     --primary-color: #3498db;
     --primary-dark: #2980b9;
     --secondary-color: #e74c3c;
+    --destructive-color: #c0392b;
     --background-color: #f0f4f8;
     --text-color: #333333;
     --border-color: #dddddd;
@@ -27,7 +28,7 @@ body {
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -42,7 +43,7 @@ h1, h2 {
     margin-bottom: 10px; 
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .input-group label { 
@@ -200,8 +201,10 @@ footer {
     text-align: center;
 }
 
-#clearMeasurements {
-    background-color: var(--secondary-color);
+#clearMeasurements,
+#resetApp,
+[id^="delete"] {
+    background-color: var(--destructive-color);
 }
 
 /* Tab styles */
@@ -285,7 +288,8 @@ footer {
     font-size: 0.9em;
     transition: background-color 0.3s ease;
     margin-top: 10px;
-    width: 100%;
+    width: auto;
+    display: inline-block;
 }
 
 .setting-group button:hover {
@@ -344,6 +348,7 @@ body.dark-mode {
     --primary-color: #64b5f6;
     --primary-dark: #42a5f5;
     --secondary-color: #ff7043;
+    --destructive-color: #ff5252;
 }
 
 body.dark-mode .container {
@@ -433,49 +438,52 @@ body.dark-mode .tab-button.active {
 /* Responsive design adjustments */
 @media screen and (max-width: 600px) {
     .input-group {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 5px;
     }
 
     .input-group label {
-        flex: 0 0 100%;
-        margin-bottom: 5px;
+        flex: 0 0 auto;
+        margin-right: 5px;
     }
 
     .input-group input[type="number"],
     .input-group input[type="text"] {
         width: 60px;
+        flex: 0 0 auto;
     }
 
     .input-group input[type="range"] {
-        flex: 1 0 100%;
-        margin-bottom: 5px;
+        width: 100px;
+        flex: 0 0 auto;
     }
 
     .action-buttons {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 5px;
     }
 
     .action-buttons button {
-        flex: 1 0 30%;
-        margin: 5px 1%;
+        flex: 0 0 auto;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .tab-container {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 5px;
     }
 
     .tab-button {
-        flex: 1 0 auto;
-        margin-bottom: 5px;
+        flex: 0 0 auto;
     }
 
     .type-button,
     .generation-button,
     .custom-option-button,
     .depth-button {
-        flex: 1 0 auto;
+        flex: 0 0 auto;
     }
 }
