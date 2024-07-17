@@ -1,4 +1,4 @@
-import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType } from './measurements.js';
+import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
@@ -327,6 +327,3 @@ export function resetUISelections() {
         btn.classList.remove('active');
     });
 }
-
-// Import these functions from measurements.js
-import { addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData } from './measurements.js';

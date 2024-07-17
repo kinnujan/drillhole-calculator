@@ -1,8 +1,7 @@
 import { updateTypeSelectorButtons, updateGenerationSelectorButtons, updateCustomTypeSelectorButtons } from './ui.js';
-import { saveSettings, loadSettings } from './storage.js';
+import { saveSettings, loadSettings, saveMeasurements } from './storage.js';
 import { handleError } from './utils.js';
 import { DEFAULT_SETTINGS } from './constants.js';
-import { saveMeasurements } from './measurements.js';
 
 /**
  * Sets up the settings UI and event listeners
