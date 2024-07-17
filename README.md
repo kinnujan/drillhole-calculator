@@ -47,7 +47,7 @@ Alternatively, you can use the app directly in your web browser without installa
 
 ## Contributing
 
-Contributions to the Drill Hole Orientation Calculator are welcome! Please feel free to submit pull requests, create issues or spread the word.
+Contributions to the Drill Hole Calculator are welcome! Please feel free to submit pull requests, create issues or spread the word.
 
 ## License
 
