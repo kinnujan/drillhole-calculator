@@ -2,6 +2,13 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
+// Add utility function for haptic feedback
+function triggerHapticFeedback(duration = 10) {
+    if ('vibrate' in navigator) {
+        navigator.vibrate(duration);
+    }
+}
+
 export async function setupUI() {
     console.log("Setting up UI...");
     setupTabs();
@@ -25,7 +32,10 @@ function setupMeasurementHandlers() {
     handlers.forEach(({ id, handler }) => {
         const element = document.getElementById(id);
         if (element) {
-            element.addEventListener('click', handler);
+            element.addEventListener('click', () => {
+                triggerHapticFeedback();
+                handler();
+            });
         } else {
             console.warn(`Button with id '${id}' not found.`);
         }
@@ -38,6 +48,7 @@ function setupDepthButtons() {
     const depthButtons = document.querySelectorAll('.depth-button');
     depthButtons.forEach(button => {
         button.addEventListener('click', () => {
+            triggerHapticFeedback();
             const amount = parseFloat(button.getAttribute('data-amount'));
             const depthInput = document.getElementById('depth');
             if (depthInput) {
@@ -61,6 +72,7 @@ function setupTabs() {
 
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
+            triggerHapticFeedback();
             const tabName = button.getAttribute('data-tab');
             
             tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -134,6 +146,7 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
         button.setAttribute(`data-${dataAttribute}`, option);
         button.textContent = option;
         button.onclick = () => {
+            triggerHapticFeedback();
             // Remove 'active' class from all buttons in this container
             container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
             // Add 'active' class to clicked button
@@ -151,6 +164,7 @@ async function syncInputs() {
         const input = document.getElementById(id);
         if (slider && input) {
             slider.addEventListener('input', async () => {
+                triggerHapticFeedback(5); // Shorter vibration for continuous feedback
                 input.value = slider.value;
                 updatePreview();
                 if (id === 'holeDip' || id === 'holeAzimuth') {

@@ -9,6 +9,19 @@ async function init() {
         await loadMeasurements();
         updatePreview();
         await setupSettings();
+        
+        // Check for Vibration API support
+        if ('vibrate' in navigator) {
+            console.log('Vibration API is supported');
+        } else {
+            console.warn('Vibration API is not supported on this device');
+            // Optionally, you can display a message to the user
+            const message = document.createElement('div');
+            message.textContent = 'Haptic feedback is not supported on this device.';
+            message.style.cssText = 'background-color: #ffff99; padding: 10px; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 1000;';
+            document.body.prepend(message);
+            setTimeout(() => message.remove(), 5000); // Remove the message after 5 seconds
+        }
     } catch (error) {
         handleError(error, "An error occurred during initialization.");
     }
