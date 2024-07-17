@@ -53,9 +53,10 @@ export function saveSettings(settings) {
         console.error("Error saving settings:", error);
     }
 }
+
 export function loadSettings() {
     console.log("Loading settings from local storage...");
-    const currentVersion = 2; // Increment this when making changes to settings structure
+    const currentVersion = 3; // Increment this when making changes to settings structure
     try {
         const savedSettings = localStorage.getItem('appSettings');
         let parsedSettings = savedSettings ? JSON.parse(savedSettings) : null;
@@ -64,6 +65,7 @@ export function loadSettings() {
             parsedSettings = {
                 version: currentVersion,
                 darkMode: parsedSettings ? parsedSettings.darkMode : false,
+                strikeMode: parsedSettings ? parsedSettings.strikeMode : 'negative',
                 measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
                 generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
                 customTypes: parsedSettings ? parsedSettings.customTypes : []
@@ -79,6 +81,7 @@ export function loadSettings() {
         return {
             version: currentVersion,
             darkMode: false,
+            strikeMode: 'negative',
             measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
             generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
             customTypes: []

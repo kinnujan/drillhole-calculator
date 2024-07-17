@@ -5,6 +5,7 @@ export function setupSettings() {
     console.log("Setting up settings...");
     const settings = loadSettings();
     setupDarkMode(settings.darkMode);
+    setupStrikeMode(settings.strikeMode);
     setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
     
     document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
@@ -23,6 +24,17 @@ function setupDarkMode(initialState) {
         document.body.classList.toggle('dark-mode', darkModeToggle.checked);
         const settings = loadSettings();
         settings.darkMode = darkModeToggle.checked;
+        saveSettings(settings);
+    });
+}
+
+function setupStrikeMode(initialState) {
+    const strikeModeSelect = document.getElementById('strikeMode');
+    strikeModeSelect.value = initialState || 'negative';
+
+    strikeModeSelect.addEventListener('change', () => {
+        const settings = loadSettings();
+        settings.strikeMode = strikeModeSelect.value;
         saveSettings(settings);
     });
 }
@@ -158,6 +170,7 @@ function setupResetButton() {
             // Reset settings to default
             const defaultSettings = {
                 darkMode: false,
+                strikeMode: 'negative',
                 measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
                 generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
                 customTypes: []

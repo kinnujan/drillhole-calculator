@@ -41,7 +41,8 @@ function addMeasurement() {
     document.getElementById('error').textContent = '';
 
     const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
-    const strike = (dipDirection + 90) % 360;
+    const settings = loadSettings();
+    const strike = calculateStrike(dipDirection, settings.strikeMode);
     
     const result = {
         holeId,
@@ -149,6 +150,14 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
     }
 
     return [dipOutputFINAL, dipdirectionOutputFINAL];
+}
+
+function calculateStrike(dipDirection, strikeMode) {
+    if (strikeMode === 'negative') {
+        return (dipDirection - 90 + 360) % 360;
+    } else {
+        return (dipDirection + 90) % 360;
+    }
 }
 
 function validateInputs(holeDip, holeAzimuth, alpha, beta) {
