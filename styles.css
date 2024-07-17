@@ -221,6 +221,24 @@ footer {
 .help-content li {
     margin-bottom: 10px;
 }
+/* Footer styles */
+footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+}
+
+.social-links a {
+    margin-left: 10px;
+    color: #333;
+    font-size: 20px;
+}
+
+.social-links a:hover {
+    color: #4CAF50;
+}
 
 /* Dark Mode Styles */
 body.dark-mode {
