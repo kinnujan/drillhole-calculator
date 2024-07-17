@@ -8,7 +8,25 @@ export async function setupUI() {
     await setupTypeSelectors();
     await syncInputs();
     setupDepthButtons();
+    setupMeasurementHandlers();
     console.log("UI setup complete.");
+}
+
+function setupMeasurementHandlers() {
+    console.log("Setting up measurement handlers...");
+    const addMeasurementBtn = document.getElementById('addMeasurement');
+    const copyResultsBtn = document.getElementById('copyResults');
+    const saveAsCSVBtn = document.getElementById('saveAsCSV');
+    const clearMeasurementsBtn = document.getElementById('clearMeasurements');
+    const exportDataBtn = document.getElementById('exportData');
+
+    if (addMeasurementBtn) addMeasurementBtn.addEventListener('click', addMeasurement);
+    if (copyResultsBtn) copyResultsBtn.addEventListener('click', copyResults);
+    if (saveAsCSVBtn) saveAsCSVBtn.addEventListener('click', saveAsCSV);
+    if (clearMeasurementsBtn) clearMeasurementsBtn.addEventListener('click', clearMeasurementsWithConfirmation);
+    if (exportDataBtn) exportDataBtn.addEventListener('click', exportData);
+
+    console.log("Measurement handlers set up.");
 }
 
 function setupDepthButtons() {
@@ -242,3 +260,6 @@ export function resetUISelections() {
         btn.classList.remove('active');
     });
 }
+
+// Import these functions from measurements.js
+import { addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData } from './measurements.js';

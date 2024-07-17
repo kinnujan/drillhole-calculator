@@ -1,4 +1,4 @@
-import { loadMeasurements, setupMeasurementHandlers } from './measurements.js';
+import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
 import { setupSettings } from './settings.js';
 import { handleError } from './utils.js';
@@ -6,7 +6,6 @@ import { handleError } from './utils.js';
 window.onload = async function() {
     try {
         await setupUI();
-        setupMeasurementHandlers();
         await loadMeasurements();
         updatePreview();
         await setupSettings();

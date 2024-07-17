@@ -19,17 +19,7 @@ export async function loadMeasurements() {
     }
 }
 
-export function setupMeasurementHandlers() {
-    console.log("Setting up measurement handlers...");
-    document.getElementById('addMeasurement').addEventListener('click', addMeasurement);
-    document.getElementById('copyResults').addEventListener('click', copyResults);
-    document.getElementById('saveAsCSV').addEventListener('click', saveAsCSV);
-    document.getElementById('clearMeasurements').addEventListener('click', clearMeasurementsWithConfirmation);
-    document.getElementById('exportData').addEventListener('click', exportData);
-    console.log("Measurement handlers set up.");
-}
-
-async function addMeasurement() {
+export async function addMeasurement() {
     console.log("Adding new measurement...");
     const holeId = document.getElementById('holeId').value;
     const holeDip = parseFloat(document.getElementById('holeDip').value);
@@ -177,7 +167,7 @@ function resetSelections() {
     resetUISelections();
 }
 
-async function copyResults() {
+export async function copyResults() {
     console.log("Copying results to clipboard...");
     const csvContent = await getCSVContent();
 
@@ -216,7 +206,7 @@ async function fallbackCopyTextToClipboard(text) {
     }
 }
 
-async function saveAsCSV() {
+export async function saveAsCSV() {
     console.log("Saving results as CSV...");
     const csvContent = await getCSVContent();
     const filename = `drill_hole_measurements_${new Date().toISOString().slice(0,10)}.csv`;
@@ -297,7 +287,7 @@ async function getCSVContent() {
     return csvContent;
 }
 
-async function clearMeasurementsWithConfirmation() {
+export async function clearMeasurementsWithConfirmation() {
     console.log("Clearing measurements with confirmation...");
     if (confirm("Are you sure you want to clear all measurements? This action cannot be undone.")) {
         try {
@@ -339,7 +329,7 @@ export function setSelectedCustomType(typeName, option) {
     console.log(`Selected custom type ${typeName} set to:`, option);
 }
 
-async function exportData() {
+export async function exportData() {
     try {
         const csvContent = await getCSVContent();
         await copyResults();
