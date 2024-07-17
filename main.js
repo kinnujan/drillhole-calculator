@@ -5,7 +5,7 @@ import { handleError } from './utils.js';
 
 window.onload = async function() {
     try {
-        setupUI();
+        await setupUI();
         setupMeasurementHandlers();
         await loadMeasurements();
         updatePreview();
@@ -16,11 +16,12 @@ window.onload = async function() {
 };
 
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js').then(function(registration) {
+    window.addEventListener('load', async function() {
+        try {
+            const registration = await navigator.serviceWorker.register('sw.js');
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function(err) {
+        } catch (err) {
             handleError(err, 'ServiceWorker registration failed.');
-        });
+        }
     });
 }

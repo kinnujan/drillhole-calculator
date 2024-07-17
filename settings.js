@@ -11,7 +11,7 @@ export async function setupSettings() {
     console.log("Setting up settings...");
     try {
         const settings = await loadSettings();
-        setupDarkMode(settings.darkMode);
+        await setupDarkMode(settings.darkMode);
         setupStrikeMode(settings.strikeMode);
         setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
         
@@ -29,16 +29,22 @@ export async function setupSettings() {
  * Sets up the dark mode toggle
  * @param {boolean} initialState - Initial state of dark mode
  */
-function setupDarkMode(initialState) {
+async function setupDarkMode(initialState) {
     const darkModeToggle = document.getElementById('darkMode');
     darkModeToggle.checked = initialState;
     document.body.classList.toggle('dark-mode', initialState);
 
     darkModeToggle.addEventListener('change', async () => {
-        document.body.classList.toggle('dark-mode', darkModeToggle.checked);
-        const settings = await loadSettings();
-        settings.darkMode = darkModeToggle.checked;
-        await saveSettings(settings);
+        const isDarkMode = darkModeToggle.checked;
+        document.body.classList.toggle('dark-mode', isDarkMode);
+        try {
+            const settings = await loadSettings();
+            settings.darkMode = isDarkMode;
+            await saveSettings(settings);
+            console.log(`Dark mode ${isDarkMode ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            handleError(error, "Error saving dark mode setting");
+        }
     });
 }
 

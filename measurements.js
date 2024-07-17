@@ -12,7 +12,7 @@ export async function loadMeasurements() {
     console.log("Loading measurements...");
     try {
         measurements = await loadMeasurementsFromStorage();
-        updateResultsTable();
+        await updateResultsTable();
         console.log("Measurements loaded.");
     } catch (error) {
         handleError(error, "Error loading measurements");
@@ -69,7 +69,7 @@ async function addMeasurement() {
         await saveMeasurements(measurements);
         await saveDrillHoleInfo({ holeId, holeDip, holeAzimuth });
 
-        updateResultsTable();
+        await updateResultsTable();
 
         resetInputFields();
         resetSelections();
@@ -81,14 +81,20 @@ async function addMeasurement() {
 }
 
 export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth) {
+    console.log("Calculating dip direction with inputs:", { inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth });
+
     const alphaRad = toRadians(inputAlpha);
     const betaRad = toRadians(inputBeta);
     const holeDipRad = toRadians(-inputHoleDip);
     const holeAzimuthRad = toRadians(inputHoleAzimuth);
 
+    console.log("Radians:", { alphaRad, betaRad, holeDipRad, holeAzimuthRad });
+
     const sinBeta = -Math.sin(betaRad);
     const cosBeta = -Math.cos(betaRad);
     const tanAlpha = -1 / Math.tan(alphaRad);
+
+    console.log("Trigonometric values:", { sinBeta, cosBeta, tanAlpha });
 
     let normalX, normalY, normalZ;
     if (sinBeta === 0) {
@@ -101,17 +107,25 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
         normalZ = sinBeta / normalX;
     }
 
+    console.log("Normal vector:", { normalX, normalY, normalZ });
+
     const rotatedX = normalX;
     const rotatedY = normalY * Math.cos(Math.PI / 2 - holeDipRad) - normalZ * Math.sin(Math.PI / 2 - holeDipRad);
     const rotatedZ = normalY * Math.sin(Math.PI / 2 - holeDipRad) + normalZ * Math.cos(Math.PI / 2 - holeDipRad);
+
+    console.log("Rotated vector:", { rotatedX, rotatedY, rotatedZ });
 
     const finalX = rotatedX * Math.cos(-holeAzimuthRad) - rotatedY * Math.sin(-holeAzimuthRad);
     const finalY = rotatedX * Math.sin(-holeAzimuthRad) + rotatedY * Math.cos(-holeAzimuthRad);
     const finalZ = rotatedZ;
 
+    console.log("Final vector:", { finalX, finalY, finalZ });
+
     const dipDirectionX = finalZ * finalX;
     const dipDirectionY = finalZ * finalY;
     const dipComponent = -(finalX ** 2 + finalY ** 2);
+
+    console.log("Dip direction components:", { dipDirectionX, dipDirectionY, dipComponent });
 
     const isNonStandardOrientation = (dipDirectionX === 0 && dipDirectionY === 0 && dipComponent === 0) ? 3 : 1;
 
@@ -132,6 +146,8 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
         const quadrant3 = toDegrees(Math.PI + dipDirectionAngle);
         const quadrant4 = toDegrees(2 * Math.PI - dipDirectionAngle);
 
+        console.log("Quadrants:", { quadrant1, quadrant2, quadrant3, quadrant4 });
+
         if (dipDirectionX > 0) {
             dipdirectionOutputFINAL = dipDirectionY > 0 ? quadrant1 : quadrant2;
         } else {
@@ -140,6 +156,8 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
 
         dipOutputFINAL = toDegrees(Math.atan(-dipComponent / Math.sqrt(dipDirectionX ** 2 + dipDirectionY ** 2)));
     }
+
+    console.log("Final output:", { dipOutputFINAL, dipdirectionOutputFINAL });
 
     return [dipOutputFINAL, dipdirectionOutputFINAL];
 }
@@ -285,9 +303,9 @@ async function clearMeasurementsWithConfirmation() {
         try {
             measurements = [];
             await saveMeasurements(measurements);
-            updateResultsTable();
+            await updateResultsTable();
             document.getElementById('copyStatus').textContent = 'All measurements cleared.';
-            resetDrillHoleInfo();
+            await resetDrillHoleInfo();
             console.log("All measurements cleared.");
         } catch (error) {
             handleError(error, "An error occurred while clearing measurements.");
@@ -297,13 +315,13 @@ async function clearMeasurementsWithConfirmation() {
     }
 }
 
-function resetDrillHoleInfo() {
+async function resetDrillHoleInfo() {
     document.getElementById('holeId').value = '';
     document.getElementById('holeDip').value = '0';
     document.getElementById('holeAzimuth').value = '0';
     document.getElementById('holeDipSlider').value = '0';
     document.getElementById('holeAzimuthSlider').value = '0';
-    saveDrillHoleInfo({ holeId: '', holeDip: 0, holeAzimuth: 0 });
+    await saveDrillHoleInfo({ holeId: '', holeDip: 0, holeAzimuth: 0 });
 }
 
 export function setSelectedType(type) {
