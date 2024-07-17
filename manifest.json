@@ -1,7 +1,7 @@
 {
-  "name": "Drill Hole Orientation Calculator",
-  "short_name": "DHO Calc",
-  "description": "Calculate and manage drill hole orientations",
+  "name": "Drill Hole Calculator",
+  "short_name": "DH Calc",
+  "description": "Calculate real world directions out of drill hole measurements",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
