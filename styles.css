@@ -323,7 +323,16 @@ body.dark-mode #error {
 }
 
 body.dark-mode footer {
+    background-color: #1e1e1e;
     color: #a0a0a0;
+}
+
+body.dark-mode .social-links a {
+    color: #a0a0a0;
+}
+
+body.dark-mode .social-links a:hover {
+    color: #4CAF50;
 }
 
 /* Media query for larger screens */
