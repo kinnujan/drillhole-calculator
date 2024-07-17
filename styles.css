@@ -1,20 +1,20 @@
 /* Updated color palette */
 :root {
-    --primary-color: #4CAF50;
-    --primary-dark: #3e8e41;
-    --secondary-color: #2196F3;
+    --primary-color: #3498db;
+    --primary-dark: #2980b9;
+    --secondary-color: #e74c3c;
     --background-color: #f0f4f8;
     --text-color: #333333;
     --border-color: #dddddd;
     --input-bg: #ffffff;
     --button-bg: #e0e0e0;
     --button-text: #333333;
-    --button-active: #4CAF50;
+    --button-active: #3498db;
     --button-active-text: #ffffff;
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 10px;
     background-color: var(--background-color);
@@ -53,7 +53,7 @@ input[type="number"],
 input[type="text"],
 textarea {
     width: calc(100% - 130px);
-    padding: 5px;
+    padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 0.9em;
@@ -69,7 +69,7 @@ input[type="range"] {
 .custom-type-selector {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin: 10px 0;
 }
 
@@ -84,7 +84,7 @@ input[type="range"] {
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
-    flex-grow: 1;
+    flex-grow: 0;
     text-align: center;
     transition: background-color 0.3s ease;
 }
@@ -98,7 +98,7 @@ input[type="range"] {
 }
 
 #error { 
-    color: red; 
+    color: var(--secondary-color);
     margin-top: 10px; 
     font-size: 0.9em; 
 }
@@ -112,7 +112,7 @@ table {
 
 th, td { 
     border: 1px solid var(--border-color);
-    padding: 4px; 
+    padding: 8px; 
     text-align: left; 
 }
 
@@ -169,7 +169,7 @@ footer {
 .action-buttons button {
     flex: 1;
     margin: 0 5px;
-    padding: 8px;
+    padding: 10px;
     background-color: var(--secondary-color);
     color: var(--button-active-text);
     border: none;
@@ -180,7 +180,7 @@ footer {
 }
 
 #clearMeasurements {
-    background-color: #ff4444;
+    background-color: var(--secondary-color);
 }
 
 /* Tab styles */
@@ -198,6 +198,7 @@ footer {
     cursor: pointer;
     font-size: 0.9em;
     transition: background-color 0.3s ease, color 0.3s ease;
+    color: var(--text-color);
 }
 
 .tab-button:hover {
@@ -218,8 +219,52 @@ footer {
     display: block;
 }
 
+/* Improved Settings styles */
 .setting-group {
     margin-bottom: 20px;
+    background-color: var(--input-bg);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.setting-group h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.setting-group label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.setting-group input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.setting-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+.setting-group button {
+    background-color: var(--primary-color);
+    color: var(--button-active-text);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.setting-group button:hover {
+    background-color: var(--primary-dark);
 }
 
 .help-content {
@@ -271,6 +316,9 @@ body.dark-mode {
     --button-bg: #2c2c2c;
     --button-text: #e0e0e0;
     --border-color: #4a4a4a;
+    --primary-color: #64b5f6;
+    --primary-dark: #42a5f5;
+    --secondary-color: #ff7043;
 }
 
 body.dark-mode .container {
@@ -279,12 +327,13 @@ body.dark-mode .container {
 
 body.dark-mode h1, 
 body.dark-mode h2 {
-    color: var(--text-color);
+    color: var(--primary-color);
 }
 
 body.dark-mode input[type="number"],
 body.dark-mode input[type="text"],
-body.dark-mode textarea {
+body.dark-mode textarea,
+body.dark-mode select {
     background-color: #2c2c2c;
     color: var(--text-color);
     border-color: var(--border-color);
@@ -329,7 +378,7 @@ body.dark-mode #copyStatus {
 }
 
 body.dark-mode #error {
-    color: #ff6b6b;
+    color: var(--secondary-color);
 }
 
 body.dark-mode footer {
@@ -345,14 +394,26 @@ body.dark-mode .social-links a:hover {
     color: var(--primary-color);
 }
 
+body.dark-mode .tab-button {
+    background-color: #3a3a3a;
+    color: var(--text-color);
+}
+
+body.dark-mode .tab-button:hover,
+body.dark-mode .tab-button.active {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
 /* Responsive design adjustments */
 @media screen and (max-width: 600px) {
     .input-group {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
     }
 
-    label {
+    .input-group label {
+        flex: 0 0 100%;
         margin-bottom: 5px;
     }
 
@@ -378,5 +439,12 @@ body.dark-mode .social-links a:hover {
     .tab-button {
         flex: 1 0 auto;
         margin-bottom: 5px;
+    }
+
+    .type-button,
+    .generation-button,
+    .custom-option-button,
+    .depth-button {
+        flex-grow: 1;
     }
 }
