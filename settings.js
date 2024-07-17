@@ -14,6 +14,7 @@ export async function setupSettings() {
         await setupDarkMode(settings.darkMode);
         setupStrikeMode(settings.strikeMode);
         setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
+        setupHapticFeedback(settings.hapticFeedback);
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
@@ -44,6 +45,27 @@ async function setupDarkMode(initialState) {
             console.log(`Dark mode ${isDarkMode ? 'enabled' : 'disabled'}`);
         } catch (error) {
             handleError(error, "Error saving dark mode setting");
+        }
+    });
+}
+
+/**
+ * Sets up the haptic feedback toggle
+ * @param {boolean} initialState - Initial state of haptic feedback
+ */
+async function setupHapticFeedback(initialState) {
+    const hapticFeedbackToggle = document.getElementById('hapticFeedback');
+    hapticFeedbackToggle.checked = initialState;
+
+    hapticFeedbackToggle.addEventListener('change', async () => {
+        const isHapticFeedbackEnabled = hapticFeedbackToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.hapticFeedback = isHapticFeedbackEnabled;
+            await saveSettings(settings);
+            console.log(`Haptic feedback ${isHapticFeedbackEnabled ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            handleError(error, "Error saving haptic feedback setting");
         }
     });
 }

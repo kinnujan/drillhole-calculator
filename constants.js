@@ -21,7 +21,8 @@ export const DEFAULT_SETTINGS = {
     strikeMode: 'negative',
     measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
     generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
-    customTypes: []
+    customTypes: [],
+    hapticFeedback: true
 };
 
-export const CURRENT_SETTINGS_VERSION = 4;
+export const CURRENT_SETTINGS_VERSION = 5;
