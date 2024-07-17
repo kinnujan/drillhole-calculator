@@ -1,96 +1,118 @@
-export function saveMeasurements(measurements) {
+import { handleError } from './utils.js';
+import { DEFAULT_SETTINGS, CURRENT_SETTINGS_VERSION } from './constants.js';
+
+/**
+ * Saves measurements to local storage
+ * @param {Array} measurements - Array of measurement objects
+ * @returns {Promise<void>}
+ */
+export async function saveMeasurements(measurements) {
     console.log("Saving measurements to local storage...");
     try {
-        localStorage.setItem('drillHoleMeasurements', JSON.stringify(measurements));
+        await localStorage.setItem('drillHoleMeasurements', JSON.stringify(measurements));
         console.log("Measurements saved successfully.");
     } catch (error) {
-        console.error("Error saving measurements:", error);
+        handleError(error, "Error saving measurements");
     }
 }
 
-export function loadMeasurementsFromStorage() {
+/**
+ * Loads measurements from local storage
+ * @returns {Promise<Array>} Array of measurement objects
+ */
+export async function loadMeasurementsFromStorage() {
     console.log("Loading measurements from local storage...");
     try {
-        const savedMeasurements = localStorage.getItem('drillHoleMeasurements');
+        const savedMeasurements = await localStorage.getItem('drillHoleMeasurements');
         const parsedMeasurements = savedMeasurements ? JSON.parse(savedMeasurements) : [];
         console.log("Measurements loaded successfully.");
         return parsedMeasurements;
     } catch (error) {
-        console.error("Error loading measurements:", error);
+        handleError(error, "Error loading measurements");
         return [];
     }
 }
 
-export function saveDrillHoleInfo(info) {
+/**
+ * Saves drill hole info to local storage
+ * @param {Object} info - Drill hole info object
+ * @returns {Promise<void>}
+ */
+export async function saveDrillHoleInfo(info) {
     console.log("Saving drill hole info to local storage...");
     try {
-        localStorage.setItem('drillHoleInfo', JSON.stringify(info));
+        await localStorage.setItem('drillHoleInfo', JSON.stringify(info));
         console.log("Drill hole info saved successfully.");
     } catch (error) {
-        console.error("Error saving drill hole info:", error);
+        handleError(error, "Error saving drill hole info");
     }
 }
 
-export function loadDrillHoleInfo() {
+/**
+ * Loads drill hole info from local storage
+ * @returns {Promise<Object|null>} Drill hole info object or null
+ */
+export async function loadDrillHoleInfo() {
     console.log("Loading drill hole info from local storage...");
     try {
-        const savedDrillHoleInfo = localStorage.getItem('drillHoleInfo');
+        const savedDrillHoleInfo = await localStorage.getItem('drillHoleInfo');
         const parsedDrillHoleInfo = savedDrillHoleInfo ? JSON.parse(savedDrillHoleInfo) : null;
         console.log("Drill hole info loaded successfully.");
         return parsedDrillHoleInfo;
     } catch (error) {
-        console.error("Error loading drill hole info:", error);
+        handleError(error, "Error loading drill hole info");
         return null;
     }
 }
 
-export function saveSettings(settings) {
+/**
+ * Saves settings to local storage
+ * @param {Object} settings - Settings object
+ * @returns {Promise<void>}
+ */
+export async function saveSettings(settings) {
     console.log("Saving settings to local storage...");
     try {
-        localStorage.setItem('appSettings', JSON.stringify(settings));
+        await localStorage.setItem('appSettings', JSON.stringify(settings));
         console.log("Settings saved successfully.");
     } catch (error) {
-        console.error("Error saving settings:", error);
+        handleError(error, "Error saving settings");
     }
 }
 
-export function loadSettings() {
+/**
+ * Loads settings from local storage
+ * @returns {Promise<Object>} Settings object
+ */
+export async function loadSettings() {
     console.log("Loading settings from local storage...");
-    const currentVersion = 4; // Increment this when making changes to settings structure
     try {
-        const savedSettings = localStorage.getItem('appSettings');
+        const savedSettings = await localStorage.getItem('appSettings');
         let parsedSettings = savedSettings ? JSON.parse(savedSettings) : null;
 
-        if (!parsedSettings || parsedSettings.version < currentVersion) {
+        if (!parsedSettings || parsedSettings.version < CURRENT_SETTINGS_VERSION) {
+            // Merge existing settings with default settings
             parsedSettings = {
-                version: currentVersion,
-                darkMode: parsedSettings ? parsedSettings.darkMode : false,
-                strikeMode: 'negative', // Always set to 'negative' for existing users
-                measurementTypes: parsedSettings && parsedSettings.measurementTypes ? parsedSettings.measurementTypes : ['bedding', 'foliation', 'fault', 'shear', 'vein'],
-                generationTypes: parsedSettings && parsedSettings.generationTypes ? parsedSettings.generationTypes : ['S0', 'S0/1', 'S1', 'S2', 'S3'],
-                customTypes: parsedSettings && parsedSettings.customTypes ? parsedSettings.customTypes : []
+                ...DEFAULT_SETTINGS,
+                ...parsedSettings,
+                version: CURRENT_SETTINGS_VERSION,
+                hapticFeedback: parsedSettings?.hapticFeedback ?? DEFAULT_SETTINGS.hapticFeedback
             };
             // Save the updated settings
-            localStorage.setItem('appSettings', JSON.stringify(parsedSettings));
+            await saveSettings(parsedSettings);
         }
 
-        // Ensure strikeMode is always set to 'negative'
-        if (parsedSettings.strikeMode !== 'negative') {
-            parsedSettings.strikeMode = 'negative';
-            localStorage.setItem('appSettings', JSON.stringify(parsedSettings));
+        // Ensure all default settings are present
+        for (const key in DEFAULT_SETTINGS) {
+            if (parsedSettings[key] === undefined) {
+                parsedSettings[key] = DEFAULT_SETTINGS[key];
+            }
         }
 
         console.log("Settings loaded successfully.");
         return parsedSettings;
     } catch (error) {
-        console.error("Error loading settings:", error);
-        return {
-            version: currentVersion,
-            darkMode: false,
-            strikeMode: 'negative',
-            measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
-            generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
-            customTypes: []
-        };
+        handleError(error, "Error loading settings");
+        return DEFAULT_SETTINGS;
     }
 }

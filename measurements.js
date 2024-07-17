@@ -1,95 +1,93 @@
 import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { updateResultsTable, updatePreview, resetUISelections } from './ui.js';
+import { toRadians, toDegrees, calculateStrike, validateInputs, handleError } from './utils.js';
+import { ERROR_MESSAGES, CSV_MIME_TYPE } from './constants.js';
 
 let measurements = [];
 let selectedType = '';
 let selectedGeneration = '';
 let selectedCustomTypes = {};
 
-export function loadMeasurements() {
+export async function loadMeasurements() {
     console.log("Loading measurements...");
-    measurements = loadMeasurementsFromStorage();
-    updateResultsTable();
-    console.log("Measurements loaded.");
+    try {
+        measurements = await loadMeasurementsFromStorage();
+        await updateResultsTable();
+        console.log("Measurements loaded.");
+    } catch (error) {
+        handleError(error, "Error loading measurements");
+    }
 }
 
-export function setupMeasurementHandlers() {
-    console.log("Setting up measurement handlers...");
-    document.getElementById('addMeasurement').addEventListener('click', addMeasurement);
-    document.getElementById('copyResults').addEventListener('click', copyResults);
-    document.getElementById('saveAsCSV').addEventListener('click', saveAsCSV);
-    document.getElementById('clearMeasurements').addEventListener('click', clearMeasurementsWithConfirmation);
-    console.log("Measurement handlers set up.");
-}
-
-function addMeasurement() {
+export async function addMeasurement() {
     console.log("Adding new measurement...");
-    const holeId = document.getElementById('holeId').value;
-    const holeDip = parseFloat(document.getElementById('holeDip').value);
-    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
-    const depth = parseFloat(document.getElementById('depth').value) || 0;
-    const alpha = parseFloat(document.getElementById('alpha').value);
-    const beta = parseFloat(document.getElementById('beta').value);
-    const comment = document.getElementById('comment').value;
+    const holeId = document.getElementById('holeId')?.value || '';
+    const holeDip = parseFloat(document.getElementById('holeDip')?.value || '0');
+    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth')?.value || '0');
+    const depth = parseFloat(document.getElementById('depth')?.value || '0');
+    const alpha = parseFloat(document.getElementById('alpha')?.value || '0');
+    const beta = parseFloat(document.getElementById('beta')?.value || '0');
+    const comment = document.getElementById('comment')?.value || '';
 
     const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
     if (errorMessage) {
-        document.getElementById('error').textContent = errorMessage;
-        console.log("Measurement validation failed:", errorMessage);
+        handleError(new Error(errorMessage), errorMessage);
         return;
     }
-    document.getElementById('error').textContent = '';
 
-    const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
-    const settings = loadSettings();
-    const strike = calculateStrike(dipDirection, settings.strikeMode);
-    
-    const result = {
-        holeId,
-        depth,
-        type: selectedType,
-        generation: selectedGeneration,
-        customTypes: { ...selectedCustomTypes },
-        alpha: alpha.toFixed(1),
-        beta: beta.toFixed(1),
-        dip: dip.toFixed(1),
-        dipDirection: dipDirection.toFixed(1),
-        strike: strike.toFixed(1),
-        comment
-    };
+    const errorElement = document.getElementById('error');
+    if (errorElement) errorElement.textContent = '';
 
-    measurements.push(result);
-    saveMeasurements(measurements);
-    saveDrillHoleInfo({ holeId, holeDip, holeAzimuth });
+    try {
+        const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+        const settings = await loadSettings();
+        const strike = calculateStrike(dipDirection, settings.strikeMode);
+        
+        const result = {
+            holeId,
+            depth,
+            type: selectedType,
+            generation: selectedGeneration,
+            customTypes: { ...selectedCustomTypes },
+            alpha: alpha.toFixed(1),
+            beta: beta.toFixed(1),
+            dip: dip.toFixed(1),
+            dipDirection: dipDirection.toFixed(1),
+            strike: strike.toFixed(1),
+            comment
+        };
 
-    updateResultsTable();
+        measurements.push(result);
+        await saveMeasurements(measurements);
+        await saveDrillHoleInfo({ holeId, holeDip, holeAzimuth });
 
-    document.getElementById('alpha').value = '0';
-    document.getElementById('beta').value = '0';
-    document.getElementById('alphaSlider').value = '0';
-    document.getElementById('betaSlider').value = '0';
-    document.getElementById('comment').value = '';
-    resetSelections();
-    updatePreview();
-    console.log("New measurement added:", result);
+        await updateResultsTable();
+
+        resetInputFields();
+        resetSelections();
+        updatePreview();
+        console.log("New measurement added:", result);
+    } catch (error) {
+        handleError(error, "An error occurred while adding the measurement.");
+    }
 }
 
 export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth) {
-    const toRadians = (angle) => angle * Math.PI / 180;
-    const toDegrees = (angle) => angle * 180 / Math.PI;
+    console.log("Calculating dip direction with inputs:", { inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth });
 
-    // Convert input angles to radians
     const alphaRad = toRadians(inputAlpha);
     const betaRad = toRadians(inputBeta);
     const holeDipRad = toRadians(-inputHoleDip);
     const holeAzimuthRad = toRadians(inputHoleAzimuth);
 
-    // Calculate trigonometric values
+    console.log("Radians:", { alphaRad, betaRad, holeDipRad, holeAzimuthRad });
+
     const sinBeta = -Math.sin(betaRad);
     const cosBeta = -Math.cos(betaRad);
     const tanAlpha = -1 / Math.tan(alphaRad);
 
-    // Calculate direction cosines of the normal to the plane
+    console.log("Trigonometric values:", { sinBeta, cosBeta, tanAlpha });
+
     let normalX, normalY, normalZ;
     if (sinBeta === 0) {
         normalX = 0;
@@ -101,43 +99,46 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
         normalZ = sinBeta / normalX;
     }
 
-    // Rotate the normal vector according to hole dip and azimuth
+    console.log("Normal vector:", { normalX, normalY, normalZ });
+
     const rotatedX = normalX;
     const rotatedY = normalY * Math.cos(Math.PI / 2 - holeDipRad) - normalZ * Math.sin(Math.PI / 2 - holeDipRad);
     const rotatedZ = normalY * Math.sin(Math.PI / 2 - holeDipRad) + normalZ * Math.cos(Math.PI / 2 - holeDipRad);
 
-    // Adjust for hole azimuth
+    console.log("Rotated vector:", { rotatedX, rotatedY, rotatedZ });
+
     const finalX = rotatedX * Math.cos(-holeAzimuthRad) - rotatedY * Math.sin(-holeAzimuthRad);
     const finalY = rotatedX * Math.sin(-holeAzimuthRad) + rotatedY * Math.cos(-holeAzimuthRad);
     const finalZ = rotatedZ;
 
-    // Calculate components for dip and dip direction
+    console.log("Final vector:", { finalX, finalY, finalZ });
+
     const dipDirectionX = finalZ * finalX;
     const dipDirectionY = finalZ * finalY;
     const dipComponent = -(finalX ** 2 + finalY ** 2);
 
-    // Check if the plane is horizontal or vertical
+    console.log("Dip direction components:", { dipDirectionX, dipDirectionY, dipComponent });
+
     const isNonStandardOrientation = (dipDirectionX === 0 && dipDirectionY === 0 && dipComponent === 0) ? 3 : 1;
 
     let dipOutputFINAL, dipdirectionOutputFINAL;
 
     if (isNonStandardOrientation > 1) {
         if (isNonStandardOrientation === 2) {
-            // Vertical plane
             dipOutputFINAL = 90;
             dipdirectionOutputFINAL = inputHoleAzimuth;
         } else {
-            // Horizontal plane
             dipOutputFINAL = 0;
             dipdirectionOutputFINAL = 0;
         }
     } else {
-        // Calculate dip direction
         const dipDirectionAngle = Math.atan(Math.abs(dipDirectionX / dipDirectionY));
         const quadrant1 = toDegrees(dipDirectionAngle);
         const quadrant2 = toDegrees(Math.PI - dipDirectionAngle);
         const quadrant3 = toDegrees(Math.PI + dipDirectionAngle);
         const quadrant4 = toDegrees(2 * Math.PI - dipDirectionAngle);
+
+        console.log("Quadrants:", { quadrant1, quadrant2, quadrant3, quadrant4 });
 
         if (dipDirectionX > 0) {
             dipdirectionOutputFINAL = dipDirectionY > 0 ? quadrant1 : quadrant2;
@@ -145,27 +146,28 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
             dipdirectionOutputFINAL = dipDirectionY > 0 ? quadrant4 : quadrant3;
         }
 
-        // Calculate dip
         dipOutputFINAL = toDegrees(Math.atan(-dipComponent / Math.sqrt(dipDirectionX ** 2 + dipDirectionY ** 2)));
     }
+
+    console.log("Final output:", { dipOutputFINAL, dipdirectionOutputFINAL });
 
     return [dipOutputFINAL, dipdirectionOutputFINAL];
 }
 
-function calculateStrike(dipDirection, strikeMode) {
-    if (strikeMode === 'negative') {
-        return (dipDirection - 90 + 360) % 360;
-    } else {
-        return (dipDirection + 90) % 360;
-    }
-}
-
-function validateInputs(holeDip, holeAzimuth, alpha, beta) {
-    if (holeDip < -90 || holeDip > 90) return "Hole Dip must be between -90° and 90°";
-    if (holeAzimuth < 0 || holeAzimuth > 360) return "Hole Azimuth must be between 0° and 360°";
-    if (alpha < 0 || alpha > 90) return "Alpha (Core Angle) must be between 0° and 90°";
-    if (beta < 0 || beta > 360) return "Beta must be between 0° and 360°";
-    return null;
+function resetInputFields() {
+    const elements = ['alpha', 'beta', 'alphaSlider', 'betaSlider', 'comment'];
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            if (id === 'comment') {
+                element.value = '';
+            } else {
+                element.value = '0';
+            }
+        } else {
+            console.warn(`Element with id '${id}' not found.`);
+        }
+    });
 }
 
 function resetSelections() {
@@ -175,24 +177,27 @@ function resetSelections() {
     resetUISelections();
 }
 
-function copyResults() {
+export async function copyResults() {
     console.log("Copying results to clipboard...");
-    const csvContent = getCSVContent();
+    const csvContent = await getCSVContent();
 
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(csvContent).then(() => {
-            document.getElementById('copyStatus').textContent = 'Results copied to clipboard!';
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(csvContent);
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'Results copied to clipboard!';
+            }
             console.log("Results copied to clipboard successfully.");
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-            fallbackCopyTextToClipboard(csvContent);
-        });
-    } else {
-        fallbackCopyTextToClipboard(csvContent);
+        } else {
+            await fallbackCopyTextToClipboard(csvContent);
+        }
+    } catch (err) {
+        handleError(err, 'Failed to copy results to clipboard.');
     }
 }
 
-function fallbackCopyTextToClipboard(text) {
+async function fallbackCopyTextToClipboard(text) {
     const textArea = document.createElement("textarea");
     textArea.value = text;
     textArea.style.position = "fixed";
@@ -205,46 +210,50 @@ function fallbackCopyTextToClipboard(text) {
     try {
         const successful = document.execCommand('copy');
         const msg = successful ? 'Results copied to clipboard!' : 'Unable to copy results';
-        document.getElementById('copyStatus').textContent = msg;
+        const copyStatus = document.getElementById('copyStatus');
+        if (copyStatus) {
+            copyStatus.textContent = msg;
+        }
         console.log(msg);
     } catch (err) {
-        console.error('Fallback: Oops, unable to copy', err);
-        document.getElementById('copyStatus').textContent = 'Unable to copy results';
+        handleError(err, 'Unable to copy results');
+    } finally {
+        document.body.removeChild(textArea);
     }
-
-    document.body.removeChild(textArea);
 }
 
-async function saveAsCSV() {
+export async function saveAsCSV() {
     console.log("Saving results as CSV...");
-    const csvContent = getCSVContent();
+    const csvContent = await getCSVContent();
     const filename = `drill_hole_measurements_${new Date().toISOString().slice(0,10)}.csv`;
 
-    if ('showSaveFilePicker' in window) {
-        try {
+    try {
+        if ('showSaveFilePicker' in window) {
             const handle = await window.showSaveFilePicker({
                 suggestedName: filename,
                 types: [{
                     description: 'CSV File',
-                    accept: {'text/csv': ['.csv']},
+                    accept: {[CSV_MIME_TYPE]: ['.csv']},
                 }],
             });
             const writable = await handle.createWritable();
             await writable.write(csvContent);
             await writable.close();
-            document.getElementById('copyStatus').textContent = 'File saved successfully!';
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'File saved successfully!';
+            }
             console.log("File saved successfully.");
-        } catch (err) {
-            console.error('Error saving file:', err);
+        } else {
             fallbackSaveAsCSV(csvContent, filename);
         }
-    } else {
-        fallbackSaveAsCSV(csvContent, filename);
+    } catch (err) {
+        handleError(err, 'Error saving file.');
     }
 }
 
 function fallbackSaveAsCSV(csvContent, filename) {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: CSV_MIME_TYPE });
     if (navigator.msSaveBlob) {
         navigator.msSaveBlob(blob, filename);
     } else {
@@ -259,12 +268,15 @@ function fallbackSaveAsCSV(csvContent, filename) {
             document.body.removeChild(link);
         }
     }
-    document.getElementById('copyStatus').textContent = 'File download initiated.';
+    const copyStatus = document.getElementById('copyStatus');
+    if (copyStatus) {
+        copyStatus.textContent = 'File download initiated.';
+    }
     console.log("File download initiated.");
 }
 
-function getCSVContent() {
-    const settings = loadSettings();
+async function getCSVContent() {
+    const settings = await loadSettings();
     const customTypeNames = settings.customTypes.map(ct => ct.name);
     
     let csvContent = "HoleID,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
@@ -297,23 +309,45 @@ function getCSVContent() {
     return csvContent;
 }
 
-function clearMeasurementsWithConfirmation() {
+export async function clearMeasurementsWithConfirmation() {
     console.log("Clearing measurements with confirmation...");
     if (confirm("Are you sure you want to clear all measurements? This action cannot be undone.")) {
-        measurements = [];
-        saveMeasurements(measurements);
-        updateResultsTable();
-        document.getElementById('copyStatus').textContent = 'All measurements cleared.';
-        document.getElementById('holeId').value = '';
-        document.getElementById('holeDip').value = '0';
-        document.getElementById('holeAzimuth').value = '0';
-        document.getElementById('holeDipSlider').value = '0';
-        document.getElementById('holeAzimuthSlider').value = '0';
-        saveDrillHoleInfo({ holeId: '', holeDip: 0, holeAzimuth: 0 });
-        console.log("All measurements cleared.");
+        try {
+            measurements = [];
+            await saveMeasurements(measurements);
+            await updateResultsTable();
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'All measurements cleared.';
+            }
+            await resetDrillHoleInfo();
+            console.log("All measurements cleared.");
+        } catch (error) {
+            handleError(error, "An error occurred while clearing measurements.");
+        }
     } else {
         console.log("Measurement clearing cancelled.");
     }
+}
+
+async function resetDrillHoleInfo() {
+    const elements = {
+        holeId: document.getElementById('holeId'),
+        holeDip: document.getElementById('holeDip'),
+        holeAzimuth: document.getElementById('holeAzimuth'),
+        holeDipSlider: document.getElementById('holeDipSlider'),
+        holeAzimuthSlider: document.getElementById('holeAzimuthSlider')
+    };
+
+    Object.entries(elements).forEach(([key, element]) => {
+        if (element) {
+            element.value = key === 'holeId' ? '' : '0';
+        } else {
+            console.warn(`Element with id '${key}' not found.`);
+        }
+    });
+
+    await saveDrillHoleInfo({ holeId: '', holeDip: 0, holeAzimuth: 0 });
 }
 
 export function setSelectedType(type) {
@@ -329,6 +363,16 @@ export function setSelectedGeneration(gen) {
 export function setSelectedCustomType(typeName, option) {
     selectedCustomTypes[typeName] = option;
     console.log(`Selected custom type ${typeName} set to:`, option);
+}
+
+export async function exportData() {
+    try {
+        const csvContent = await getCSVContent();
+        await copyResults();
+        await saveAsCSV();
+    } catch (error) {
+        handleError(error, "An error occurred while exporting data.");
+    }
 }
 
 export { measurements, selectedType, selectedGeneration, selectedCustomTypes };
