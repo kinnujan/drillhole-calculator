@@ -11,6 +11,8 @@ body {
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 100%;
+    margin: 0 auto;
 }
 
 h1, h2 { 
@@ -322,4 +324,90 @@ body.dark-mode #error {
 
 body.dark-mode footer {
     color: #a0a0a0;
+}
+
+/* Media query for larger screens */
+@media screen and (min-width: 768px) {
+    body {
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 800px;
+        padding: 20px;
+    }
+
+    h1, h2 {
+        font-size: 1.5em;
+    }
+
+    .input-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        flex: 0 0 150px;
+        font-size: 1em;
+    }
+
+    input[type="number"], input[type="text"], input[type="range"] {
+        width: calc(100% - 160px);
+        padding: 8px;
+    }
+
+    .type-button,
+    .generation-button,
+    .custom-option-button,
+    .depth-button {
+        padding: 10px;
+        font-size: 1em;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    #preview {
+        font-size: 1.4em;
+        padding: 15px;
+    }
+
+    #comment {
+        height: 80px;
+    }
+
+    .action-buttons button {
+        padding: 10px 15px;
+        font-size: 1em;
+    }
+
+    .tab-button {
+        padding: 12px 24px;
+        font-size: 1em;
+    }
+}
+
+/* Media query for extra large screens */
+@media screen and (min-width: 1200px) {
+    .container {
+        max-width: 1000px;
+    }
+
+    .type-selector,
+    .generation-selector,
+    .custom-type-selector {
+        justify-content: flex-start;
+    }
+
+    .type-button,
+    .generation-button,
+    .custom-option-button,
+    .depth-button {
+        flex-grow: 0;
+        margin-right: 10px;
+    }
 }
