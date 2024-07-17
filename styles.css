@@ -42,26 +42,37 @@ h1, h2 {
     margin-bottom: 10px; 
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
 }
 
-label { 
+.input-group label { 
     flex: 0 0 120px;
-    font-size: 0.9em; 
+    font-size: 0.9em;
+    margin-right: 10px;
 }
 
-input[type="number"], 
-input[type="text"],
-textarea {
-    width: calc(100% - 130px);
+.input-group input[type="number"],
+.input-group input[type="text"] {
+    width: 80px;
     padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 0.9em;
+    margin-right: 10px;
 }
 
-input[type="range"] { 
-    width: calc(100% - 130px);
-    vertical-align: middle; 
+.input-group input[type="range"] { 
+    flex: 1;
+    margin-right: 10px;
+}
+
+textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.9em;
+    resize: vertical;
 }
 
 .type-selector,
@@ -84,7 +95,7 @@ input[type="range"] {
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
-    flex-grow: 0;
+    flex-grow: 1;
     text-align: center;
     transition: background-color 0.3s ease;
 }
@@ -179,6 +190,16 @@ footer {
     transition: background-color 0.3s ease;
 }
 
+#addMeasurement {
+    background-color: var(--primary-color);
+    color: var(--button-active-text);
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    font-size: 1em;
+    text-align: center;
+}
+
 #clearMeasurements {
     background-color: var(--secondary-color);
 }
@@ -230,6 +251,7 @@ footer {
 
 .setting-group h3 {
     margin-top: 0;
+    margin-bottom: 15px;
     color: var(--primary-color);
 }
 
@@ -250,6 +272,7 @@ footer {
     border-radius: 4px;
     background-color: var(--input-bg);
     color: var(--text-color);
+    margin-bottom: 10px;
 }
 
 .setting-group button {
@@ -261,6 +284,8 @@ footer {
     cursor: pointer;
     font-size: 0.9em;
     transition: background-color 0.3s ease;
+    margin-top: 10px;
+    width: 100%;
 }
 
 .setting-group button:hover {
@@ -408,7 +433,6 @@ body.dark-mode .tab-button.active {
 /* Responsive design adjustments */
 @media screen and (max-width: 600px) {
     .input-group {
-        flex-direction: row;
         flex-wrap: wrap;
     }
 
@@ -417,19 +441,26 @@ body.dark-mode .tab-button.active {
         margin-bottom: 5px;
     }
 
-    input[type="number"], 
-    input[type="text"],
-    input[type="range"],
-    textarea {
-        width: 100%;
+    .input-group input[type="number"],
+    .input-group input[type="text"] {
+        width: 60px;
+    }
+
+    .input-group input[type="range"] {
+        flex: 1 0 100%;
+        margin-bottom: 5px;
     }
 
     .action-buttons {
-        flex-direction: column;
+        flex-wrap: wrap;
     }
 
     .action-buttons button {
-        margin: 5px 0;
+        flex: 1 0 30%;
+        margin: 5px 1%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .tab-container {
@@ -445,6 +476,6 @@ body.dark-mode .tab-button.active {
     .generation-button,
     .custom-option-button,
     .depth-button {
-        flex-grow: 1;
+        flex: 1 0 auto;
     }
 }
