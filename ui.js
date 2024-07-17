@@ -1,14 +1,16 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
+import { handleError } from './utils.js';
 
-export function setupUI() {
+export async function setupUI() {
     console.log("Setting up UI...");
     setupTabs();
-    setupTypeSelectors();
-    syncInputs();
-    setupDepthButtons(); // Add this line
+    await setupTypeSelectors();
+    await syncInputs();
+    setupDepthButtons();
     console.log("UI setup complete.");
 }
+
 function setupDepthButtons() {
     const depthButtons = document.querySelectorAll('.depth-button');
     depthButtons.forEach(button => {
@@ -25,6 +27,7 @@ function setupDepthButtons() {
         });
     });
 }
+
 function setupTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -42,11 +45,15 @@ function setupTabs() {
     });
 }
 
-function setupTypeSelectors() {
-    const settings = loadSettings();
-    updateTypeSelectorButtons(settings.measurementTypes);
-    updateGenerationSelectorButtons(settings.generationTypes);
-    updateCustomTypeSelectorButtons(settings.customTypes);
+async function setupTypeSelectors() {
+    try {
+        const settings = await loadSettings();
+        updateTypeSelectorButtons(settings.measurementTypes);
+        updateGenerationSelectorButtons(settings.generationTypes);
+        updateCustomTypeSelectorButtons(settings.customTypes);
+    } catch (error) {
+        handleError(error, "Error setting up type selectors");
+    }
 }
 
 export function updateTypeSelectorButtons(types) {
@@ -101,27 +108,27 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
     });
 }
 
-function syncInputs() {
+async function syncInputs() {
     const inputs = ['holeDip', 'holeAzimuth', 'alpha', 'beta'];
     inputs.forEach(id => {
         const slider = document.getElementById(id + 'Slider');
         const input = document.getElementById(id);
-        slider.addEventListener('input', () => {
+        slider.addEventListener('input', async () => {
             input.value = slider.value;
             updatePreview();
             if (id === 'holeDip' || id === 'holeAzimuth') {
-                saveDrillHoleInfo({
+                await saveDrillHoleInfo({
                     holeId: document.getElementById('holeId').value,
                     holeDip: document.getElementById('holeDip').value,
                     holeAzimuth: document.getElementById('holeAzimuth').value
                 });
             }
         });
-        input.addEventListener('input', () => {
+        input.addEventListener('input', async () => {
             slider.value = input.value;
             updatePreview();
             if (id === 'holeDip' || id === 'holeAzimuth') {
-                saveDrillHoleInfo({
+                await saveDrillHoleInfo({
                     holeId: document.getElementById('holeId').value,
                     holeDip: document.getElementById('holeDip').value,
                     holeAzimuth: document.getElementById('holeAzimuth').value
@@ -130,8 +137,8 @@ function syncInputs() {
         });
     });
 
-    document.getElementById('holeId').addEventListener('input', () => {
-        saveDrillHoleInfo({
+    document.getElementById('holeId').addEventListener('input', async () => {
+        await saveDrillHoleInfo({
             holeId: document.getElementById('holeId').value,
             holeDip: document.getElementById('holeDip').value,
             holeAzimuth: document.getElementById('holeAzimuth').value
@@ -139,13 +146,17 @@ function syncInputs() {
     });
 
     // Load saved drill hole info
-    const savedInfo = loadDrillHoleInfo();
-    if (savedInfo) {
-        document.getElementById('holeId').value = savedInfo.holeId;
-        document.getElementById('holeDip').value = savedInfo.holeDip;
-        document.getElementById('holeAzimuth').value = savedInfo.holeAzimuth;
-        document.getElementById('holeDipSlider').value = savedInfo.holeDip;
-        document.getElementById('holeAzimuthSlider').value = savedInfo.holeAzimuth;
+    try {
+        const savedInfo = await loadDrillHoleInfo();
+        if (savedInfo) {
+            document.getElementById('holeId').value = savedInfo.holeId;
+            document.getElementById('holeDip').value = savedInfo.holeDip;
+            document.getElementById('holeAzimuth').value = savedInfo.holeAzimuth;
+            document.getElementById('holeDipSlider').value = savedInfo.holeDip;
+            document.getElementById('holeAzimuthSlider').value = savedInfo.holeAzimuth;
+        }
+    } catch (error) {
+        handleError(error, "Error loading drill hole info");
     }
 }
 
@@ -165,7 +176,7 @@ export function updatePreview() {
     previewElement.textContent = previewText;
 }
 
-export function updateResultsTable() {
+export async function updateResultsTable() {
     const resultsTable = document.getElementById('resultsTable');
     const thead = resultsTable.querySelector('thead');
     const tbody = resultsTable.querySelector('tbody');
@@ -183,38 +194,42 @@ export function updateResultsTable() {
         headerRow.appendChild(th);
     });
 
-    // Add custom type columns
-    const settings = loadSettings();
-    settings.customTypes.forEach(customType => {
-        const th = document.createElement('th');
-        th.textContent = customType.name;
-        headerRow.appendChild(th);
-    });
-
-    thead.appendChild(headerRow);
-
-    // Populate table body
-    measurements.forEach((measurement) => {
-        const row = tbody.insertRow();
-        row.insertCell(0).textContent = measurement.depth.toFixed(2);
-        row.insertCell(1).textContent = measurement.type;
-        row.insertCell(2).textContent = measurement.generation;
-        row.insertCell(3).textContent = measurement.dip + '°';
-        row.insertCell(4).textContent = measurement.dipDirection + '°';
-        
-        const commentCell = row.insertCell(5);
-        commentCell.textContent = (measurement.comment.length > 20 ? 
-            measurement.comment.substring(0, 20) + '...' : 
-            measurement.comment);
-        commentCell.title = measurement.comment; // Show full comment on hover
-
-        // Add custom type values
+    try {
+        // Add custom type columns
+        const settings = await loadSettings();
         settings.customTypes.forEach(customType => {
-            const cell = row.insertCell();
-            const customValue = measurement.customTypes && measurement.customTypes[customType.name];
-            cell.textContent = customValue || '-';
+            const th = document.createElement('th');
+            th.textContent = customType.name;
+            headerRow.appendChild(th);
         });
-    });
+
+        thead.appendChild(headerRow);
+
+        // Populate table body
+        measurements.forEach((measurement) => {
+            const row = tbody.insertRow();
+            row.insertCell(0).textContent = measurement.depth.toFixed(2);
+            row.insertCell(1).textContent = measurement.type;
+            row.insertCell(2).textContent = measurement.generation;
+            row.insertCell(3).textContent = measurement.dip + '°';
+            row.insertCell(4).textContent = measurement.dipDirection + '°';
+            
+            const commentCell = row.insertCell(5);
+            commentCell.textContent = (measurement.comment.length > 20 ? 
+                measurement.comment.substring(0, 20) + '...' : 
+                measurement.comment);
+            commentCell.title = measurement.comment; // Show full comment on hover
+
+            // Add custom type values
+            settings.customTypes.forEach(customType => {
+                const cell = row.insertCell();
+                const customValue = measurement.customTypes && measurement.customTypes[customType.name];
+                cell.textContent = customValue || '-';
+            });
+        });
+    } catch (error) {
+        handleError(error, "Error updating results table");
+    }
 }
 
 export function adjustDepth(amount) {
