@@ -14,17 +14,22 @@ export async function setupUI() {
 
 function setupMeasurementHandlers() {
     console.log("Setting up measurement handlers...");
-    const addMeasurementBtn = document.getElementById('addMeasurement');
-    const copyResultsBtn = document.getElementById('copyResults');
-    const saveAsCSVBtn = document.getElementById('saveAsCSV');
-    const clearMeasurementsBtn = document.getElementById('clearMeasurements');
-    const exportDataBtn = document.getElementById('exportData');
+    const handlers = [
+        { id: 'addMeasurement', handler: addMeasurement },
+        { id: 'copyResults', handler: copyResults },
+        { id: 'saveAsCSV', handler: saveAsCSV },
+        { id: 'clearMeasurements', handler: clearMeasurementsWithConfirmation },
+        { id: 'exportData', handler: exportData }
+    ];
 
-    if (addMeasurementBtn) addMeasurementBtn.addEventListener('click', addMeasurement);
-    if (copyResultsBtn) copyResultsBtn.addEventListener('click', copyResults);
-    if (saveAsCSVBtn) saveAsCSVBtn.addEventListener('click', saveAsCSV);
-    if (clearMeasurementsBtn) clearMeasurementsBtn.addEventListener('click', clearMeasurementsWithConfirmation);
-    if (exportDataBtn) exportDataBtn.addEventListener('click', exportData);
+    handlers.forEach(({ id, handler }) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('click', handler);
+        } else {
+            console.warn(`Button with id '${id}' not found.`);
+        }
+    });
 
     console.log("Measurement handlers set up.");
 }
@@ -35,13 +40,17 @@ function setupDepthButtons() {
         button.addEventListener('click', () => {
             const amount = parseFloat(button.getAttribute('data-amount'));
             const depthInput = document.getElementById('depth');
-            depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
-            
-            // Add visual feedback
-            button.classList.add('active');
-            setTimeout(() => {
-                button.classList.remove('active');
-            }, 200);
+            if (depthInput) {
+                depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
+                
+                // Add visual feedback
+                button.classList.add('active');
+                setTimeout(() => {
+                    button.classList.remove('active');
+                }, 200);
+            } else {
+                console.warn("Depth input not found.");
+            }
         });
     });
 }
@@ -58,7 +67,12 @@ function setupTabs() {
             tabContents.forEach(content => content.classList.remove('active'));
 
             button.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
+            const tabContent = document.getElementById(tabName);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            } else {
+                console.warn(`Tab content with id '${tabName}' not found.`);
+            }
         });
     });
 }
@@ -84,6 +98,10 @@ export function updateGenerationSelectorButtons(types) {
 
 export function updateCustomTypeSelectorButtons(customTypes) {
     const container = document.querySelector('.custom-type-selectors');
+    if (!container) {
+        console.warn("Custom type selectors container not found.");
+        return;
+    }
     container.innerHTML = ''; // Clear existing custom type selectors
 
     customTypes.forEach(customType => {
@@ -106,7 +124,7 @@ export function updateCustomTypeSelectorButtons(customTypes) {
 function updateSelectorButtons(containerSelector, options, dataAttribute, onClickHandler) {
     const container = document.querySelector(containerSelector);
     if (!container) {
-        console.log(`Container not found: ${containerSelector}`);
+        console.warn(`Container not found: ${containerSelector}`);
         return;
     }
     container.innerHTML = '';
@@ -131,47 +149,66 @@ async function syncInputs() {
     inputs.forEach(id => {
         const slider = document.getElementById(id + 'Slider');
         const input = document.getElementById(id);
-        slider.addEventListener('input', async () => {
-            input.value = slider.value;
-            updatePreview();
-            if (id === 'holeDip' || id === 'holeAzimuth') {
-                await saveDrillHoleInfo({
-                    holeId: document.getElementById('holeId').value,
-                    holeDip: document.getElementById('holeDip').value,
-                    holeAzimuth: document.getElementById('holeAzimuth').value
-                });
-            }
-        });
-        input.addEventListener('input', async () => {
-            slider.value = input.value;
-            updatePreview();
-            if (id === 'holeDip' || id === 'holeAzimuth') {
-                await saveDrillHoleInfo({
-                    holeId: document.getElementById('holeId').value,
-                    holeDip: document.getElementById('holeDip').value,
-                    holeAzimuth: document.getElementById('holeAzimuth').value
-                });
-            }
-        });
+        if (slider && input) {
+            slider.addEventListener('input', async () => {
+                input.value = slider.value;
+                updatePreview();
+                if (id === 'holeDip' || id === 'holeAzimuth') {
+                    await saveDrillHoleInfo({
+                        holeId: document.getElementById('holeId')?.value || '',
+                        holeDip: document.getElementById('holeDip')?.value || '0',
+                        holeAzimuth: document.getElementById('holeAzimuth')?.value || '0'
+                    });
+                }
+            });
+            input.addEventListener('input', async () => {
+                slider.value = input.value;
+                updatePreview();
+                if (id === 'holeDip' || id === 'holeAzimuth') {
+                    await saveDrillHoleInfo({
+                        holeId: document.getElementById('holeId')?.value || '',
+                        holeDip: document.getElementById('holeDip')?.value || '0',
+                        holeAzimuth: document.getElementById('holeAzimuth')?.value || '0'
+                    });
+                }
+            });
+        } else {
+            console.warn(`Input or slider for '${id}' not found.`);
+        }
     });
 
-    document.getElementById('holeId').addEventListener('input', async () => {
-        await saveDrillHoleInfo({
-            holeId: document.getElementById('holeId').value,
-            holeDip: document.getElementById('holeDip').value,
-            holeAzimuth: document.getElementById('holeAzimuth').value
+    const holeIdInput = document.getElementById('holeId');
+    if (holeIdInput) {
+        holeIdInput.addEventListener('input', async () => {
+            await saveDrillHoleInfo({
+                holeId: holeIdInput.value,
+                holeDip: document.getElementById('holeDip')?.value || '0',
+                holeAzimuth: document.getElementById('holeAzimuth')?.value || '0'
+            });
         });
-    });
+    } else {
+        console.warn("Hole ID input not found.");
+    }
 
     // Load saved drill hole info
     try {
         const savedInfo = await loadDrillHoleInfo();
         if (savedInfo) {
-            document.getElementById('holeId').value = savedInfo.holeId;
-            document.getElementById('holeDip').value = savedInfo.holeDip;
-            document.getElementById('holeAzimuth').value = savedInfo.holeAzimuth;
-            document.getElementById('holeDipSlider').value = savedInfo.holeDip;
-            document.getElementById('holeAzimuthSlider').value = savedInfo.holeAzimuth;
+            const elements = {
+                holeId: document.getElementById('holeId'),
+                holeDip: document.getElementById('holeDip'),
+                holeAzimuth: document.getElementById('holeAzimuth'),
+                holeDipSlider: document.getElementById('holeDipSlider'),
+                holeAzimuthSlider: document.getElementById('holeAzimuthSlider')
+            };
+
+            Object.entries(elements).forEach(([key, element]) => {
+                if (element && savedInfo[key] !== undefined) {
+                    element.value = savedInfo[key];
+                } else {
+                    console.warn(`Element for '${key}' not found or saved value is undefined.`);
+                }
+            });
         }
     } catch (error) {
         handleError(error, "Error loading drill hole info");
@@ -179,26 +216,46 @@ async function syncInputs() {
 }
 
 export function updatePreview() {
-    const holeDip = parseFloat(document.getElementById('holeDip').value);
-    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
-    const alpha = parseFloat(document.getElementById('alpha').value);
-    const beta = parseFloat(document.getElementById('beta').value);
+    const elements = {
+        holeDip: document.getElementById('holeDip'),
+        holeAzimuth: document.getElementById('holeAzimuth'),
+        alpha: document.getElementById('alpha'),
+        beta: document.getElementById('beta'),
+        preview: document.getElementById('preview')
+    };
 
-    const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
-    const strike = (dipDirection + 90) % 360;
+    if (Object.values(elements).every(el => el)) {
+        const holeDip = parseFloat(elements.holeDip.value);
+        const holeAzimuth = parseFloat(elements.holeAzimuth.value);
+        const alpha = parseFloat(elements.alpha.value);
+        const beta = parseFloat(elements.beta.value);
 
-    const previewElement = document.getElementById('preview');
-    
-    let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
-    
-    previewElement.textContent = previewText;
+        const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+        const strike = (dipDirection + 90) % 360;
+        
+        let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
+        
+        elements.preview.textContent = previewText;
+    } else {
+        console.warn("One or more elements required for preview update not found.");
+    }
 }
 
 export async function updateResultsTable() {
     const resultsTable = document.getElementById('resultsTable');
+    if (!resultsTable) {
+        console.warn("Results table not found.");
+        return;
+    }
+
     const thead = resultsTable.querySelector('thead');
     const tbody = resultsTable.querySelector('tbody');
     
+    if (!thead || !tbody) {
+        console.warn("Table head or body not found.");
+        return;
+    }
+
     // Clear existing content
     thead.innerHTML = '';
     tbody.innerHTML = '';
@@ -252,7 +309,11 @@ export async function updateResultsTable() {
 
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
-    depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
+    if (depthInput) {
+        depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
+    } else {
+        console.warn("Depth input not found.");
+    }
 }
 
 export function resetUISelections() {

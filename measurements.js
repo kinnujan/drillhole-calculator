@@ -21,20 +21,22 @@ export async function loadMeasurements() {
 
 export async function addMeasurement() {
     console.log("Adding new measurement...");
-    const holeId = document.getElementById('holeId').value;
-    const holeDip = parseFloat(document.getElementById('holeDip').value);
-    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth').value);
-    const depth = parseFloat(document.getElementById('depth').value) || 0;
-    const alpha = parseFloat(document.getElementById('alpha').value);
-    const beta = parseFloat(document.getElementById('beta').value);
-    const comment = document.getElementById('comment').value;
+    const holeId = document.getElementById('holeId')?.value || '';
+    const holeDip = parseFloat(document.getElementById('holeDip')?.value || '0');
+    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth')?.value || '0');
+    const depth = parseFloat(document.getElementById('depth')?.value || '0');
+    const alpha = parseFloat(document.getElementById('alpha')?.value || '0');
+    const beta = parseFloat(document.getElementById('beta')?.value || '0');
+    const comment = document.getElementById('comment')?.value || '';
 
     const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
     if (errorMessage) {
         handleError(new Error(errorMessage), errorMessage);
         return;
     }
-    document.getElementById('error').textContent = '';
+
+    const errorElement = document.getElementById('error');
+    if (errorElement) errorElement.textContent = '';
 
     try {
         const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
@@ -153,11 +155,19 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
 }
 
 function resetInputFields() {
-    document.getElementById('alpha').value = '0';
-    document.getElementById('beta').value = '0';
-    document.getElementById('alphaSlider').value = '0';
-    document.getElementById('betaSlider').value = '0';
-    document.getElementById('comment').value = '';
+    const elements = ['alpha', 'beta', 'alphaSlider', 'betaSlider', 'comment'];
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            if (id === 'comment') {
+                element.value = '';
+            } else {
+                element.value = '0';
+            }
+        } else {
+            console.warn(`Element with id '${id}' not found.`);
+        }
+    });
 }
 
 function resetSelections() {
@@ -174,7 +184,10 @@ export async function copyResults() {
     try {
         if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(csvContent);
-            document.getElementById('copyStatus').textContent = 'Results copied to clipboard!';
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'Results copied to clipboard!';
+            }
             console.log("Results copied to clipboard successfully.");
         } else {
             await fallbackCopyTextToClipboard(csvContent);
@@ -197,7 +210,10 @@ async function fallbackCopyTextToClipboard(text) {
     try {
         const successful = document.execCommand('copy');
         const msg = successful ? 'Results copied to clipboard!' : 'Unable to copy results';
-        document.getElementById('copyStatus').textContent = msg;
+        const copyStatus = document.getElementById('copyStatus');
+        if (copyStatus) {
+            copyStatus.textContent = msg;
+        }
         console.log(msg);
     } catch (err) {
         handleError(err, 'Unable to copy results');
@@ -223,7 +239,10 @@ export async function saveAsCSV() {
             const writable = await handle.createWritable();
             await writable.write(csvContent);
             await writable.close();
-            document.getElementById('copyStatus').textContent = 'File saved successfully!';
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'File saved successfully!';
+            }
             console.log("File saved successfully.");
         } else {
             fallbackSaveAsCSV(csvContent, filename);
@@ -249,7 +268,10 @@ function fallbackSaveAsCSV(csvContent, filename) {
             document.body.removeChild(link);
         }
     }
-    document.getElementById('copyStatus').textContent = 'File download initiated.';
+    const copyStatus = document.getElementById('copyStatus');
+    if (copyStatus) {
+        copyStatus.textContent = 'File download initiated.';
+    }
     console.log("File download initiated.");
 }
 
@@ -294,7 +316,10 @@ export async function clearMeasurementsWithConfirmation() {
             measurements = [];
             await saveMeasurements(measurements);
             await updateResultsTable();
-            document.getElementById('copyStatus').textContent = 'All measurements cleared.';
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'All measurements cleared.';
+            }
             await resetDrillHoleInfo();
             console.log("All measurements cleared.");
         } catch (error) {
@@ -306,11 +331,22 @@ export async function clearMeasurementsWithConfirmation() {
 }
 
 async function resetDrillHoleInfo() {
-    document.getElementById('holeId').value = '';
-    document.getElementById('holeDip').value = '0';
-    document.getElementById('holeAzimuth').value = '0';
-    document.getElementById('holeDipSlider').value = '0';
-    document.getElementById('holeAzimuthSlider').value = '0';
+    const elements = {
+        holeId: document.getElementById('holeId'),
+        holeDip: document.getElementById('holeDip'),
+        holeAzimuth: document.getElementById('holeAzimuth'),
+        holeDipSlider: document.getElementById('holeDipSlider'),
+        holeAzimuthSlider: document.getElementById('holeAzimuthSlider')
+    };
+
+    Object.entries(elements).forEach(([key, element]) => {
+        if (element) {
+            element.value = key === 'holeId' ? '' : '0';
+        } else {
+            console.warn(`Element with id '${key}' not found.`);
+        }
+    });
+
     await saveDrillHoleInfo({ holeId: '', holeDip: 0, holeAzimuth: 0 });
 }
 

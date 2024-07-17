@@ -3,7 +3,7 @@ import { setupUI, updatePreview } from './ui.js';
 import { setupSettings } from './settings.js';
 import { handleError } from './utils.js';
 
-window.onload = async function() {
+async function init() {
     try {
         await setupUI();
         await loadMeasurements();
@@ -12,7 +12,17 @@ window.onload = async function() {
     } catch (error) {
         handleError(error, "An error occurred during initialization.");
     }
-};
+}
+
+function domReady(fn) {
+    if (document.readyState !== 'loading') {
+        fn();
+    } else {
+        document.addEventListener('DOMContentLoaded', fn);
+    }
+}
+
+domReady(init);
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async function() {
