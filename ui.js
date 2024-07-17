@@ -1,6 +1,6 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
-import { handleError } from './utils.js';
+import { handleError, calculateStrike } from './utils.js';
 
 export async function setupUI() {
     console.log("Setting up UI...");
@@ -215,7 +215,7 @@ async function syncInputs() {
     }
 }
 
-export function updatePreview() {
+export async function updatePreview() {
     const elements = {
         holeDip: document.getElementById('holeDip'),
         holeAzimuth: document.getElementById('holeAzimuth'),
@@ -231,11 +231,17 @@ export function updatePreview() {
         const beta = parseFloat(elements.beta.value);
 
         const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
-        const strike = (dipDirection + 90) % 360;
         
-        let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
-        
-        elements.preview.textContent = previewText;
+        try {
+            const settings = await loadSettings();
+            const strike = calculateStrike(dipDirection, settings.strikeMode);
+            
+            let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
+            
+            elements.preview.textContent = previewText;
+        } catch (error) {
+            handleError(error, "Error updating preview");
+        }
     } else {
         console.warn("One or more elements required for preview update not found.");
     }
