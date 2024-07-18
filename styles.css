@@ -224,6 +224,7 @@ footer {
 .angle-input {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .angle-number {
@@ -378,6 +379,28 @@ body.dark-mode .settings-header {
 
 body.dark-mode .setting-description {
     color: #a0a0a0;
+}
+
+/* Mobile portrait mode styles */
+@media screen and (max-width: 767px) and (orientation: portrait) {
+    .angle-input {
+        flex-wrap: wrap;
+    }
+
+    .angle-input label {
+        flex: 0 0 100%;
+        margin-bottom: 4px;
+    }
+
+    .angle-input .angle-number {
+        width: calc(25% - 5px);
+        margin-right: 5px;
+    }
+
+    .angle-input .angle-slider {
+        width: 75%;
+        flex-grow: 0;
+    }
 }
 
 /* Media query for larger screens */
