@@ -228,25 +228,21 @@ export async function saveAsCSV() {
     const filename = `drill_hole_measurements_${new Date().toISOString().slice(0,10)}.csv`;
 
     try {
-        if ('showSaveFilePicker' in window) {
-            const handle = await window.showSaveFilePicker({
-                suggestedName: filename,
-                types: [{
-                    description: 'CSV File',
-                    accept: {[CSV_MIME_TYPE]: ['.csv']},
-                }],
-            });
-            const writable = await handle.createWritable();
-            await writable.write(csvContent);
-            await writable.close();
-            const copyStatus = document.getElementById('copyStatus');
-            if (copyStatus) {
-                copyStatus.textContent = 'File saved successfully!';
-            }
-            console.log("File saved successfully.");
-        } else {
-            fallbackSaveAsCSV(csvContent, filename);
+        const blob = new Blob([csvContent], { type: CSV_MIME_TYPE });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        const copyStatus = document.getElementById('copyStatus');
+        if (copyStatus) {
+            copyStatus.textContent = 'File download initiated.';
         }
+        console.log("File download initiated.");
     } catch (err) {
         handleError(err, 'Error saving file.');
     }

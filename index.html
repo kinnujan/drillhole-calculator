@@ -14,32 +14,38 @@
 </head>
 <body>
     <div class="container">
-        <h1>Drill Hole Orientation Calculator</h1>
-        
-        <div class="tab-container">
-            <button class="tab-button active" data-tab="app">App</button>
-            <button class="tab-button" data-tab="help">Help</button>
-            <button class="tab-button" data-tab="settings">Settings</button>
+        <div class="header">
+            <h1 class="app-title">Drill Hole Calculator</h1>
+            <div id="drillHoleInfoSummary" class="hidden">
+                <span id="holeIdSummary"></span>
+                <span id="holeDipSummary"></span>
+                <span id="holeAzimuthSummary"></span>
+            </div>
+            <div class="header-buttons">
+                <button id="drillHoleInfoToggle" class="icon-button"><i class="fas fa-chevron-down"></i></button>
+                <button id="settingsButton" class="icon-button"><i class="fas fa-cog"></i></button>
+            </div>
         </div>
 
-        <div id="app" class="tab-content active">
-            <div class="input-section">
-                <h2>Drill Hole Information</h2>
-                <div class="input-group">
-                    <label for="holeId">Hole ID:</label>
-                    <input type="text" id="holeId">
-                </div>
-                <div class="input-group">
-                    <label for="holeDip">Hole Dip (°):</label>
-                    <input type="range" id="holeDipSlider" min="-90" max="90" step="0.1" value="0">
-                    <input type="number" id="holeDip" min="-90" max="90" step="0.1" value="0">
-                </div>
-                <div class="input-group">
-                    <label for="holeAzimuth">Hole Azimuth (°):</label>
-                    <input type="range" id="holeAzimuthSlider" min="0" max="360" step="0.1" value="0">
-                    <input type="number" id="holeAzimuth" min="0" max="360" step="0.1" value="0">
-                </div>
+        <div id="drillHoleInfo" class="collapsible">
+            <div class="input-group">
+                <label for="holeId">Hole ID:</label>
+                <input type="text" id="holeId">
+            </div>
+            <div class="input-group angle-input">
+                <label for="holeDip">Hole Dip (°):</label>
+                <input type="number" id="holeDip" min="-90" max="90" step="0.1" value="0" class="angle-number">
+                <input type="range" id="holeDipSlider" min="-90" max="90" step="0.1" value="0" class="angle-slider">
+            </div>
+            <div class="input-group angle-input">
+                <label for="holeAzimuth">Hole Azimuth (°):</label>
+                <input type="number" id="holeAzimuth" min="0" max="360" step="0.1" value="0" class="angle-number">
+                <input type="range" id="holeAzimuthSlider" min="0" max="360" step="0.1" value="0" class="angle-slider">
+            </div>
+        </div>
 
+        <div id="app">
+            <div class="input-section">
                 <h2>Measurement</h2>
                 <div class="input-group">
                     <label for="depth">Depth (m):</label>
@@ -56,22 +62,21 @@
                 <div class="type-selector"></div>
                 <div class="generation-selector"></div>
                 <div class="custom-type-selectors"></div>
-                <div class="input-group">
-                    <label for="alpha">Alpha (°):</label>
-                    <input type="range" id="alphaSlider" min="0" max="90" step="1" value="0">
-                    <input type="number" id="alpha" min="0" max="90" step="1" value="0">
-                </div>
-                <div class="input-group">
-                    <label for="beta">Beta (°):</label>
-                    <input type="range" id="betaSlider" min="0" max="360" step="1" value="0">
-                    <input type="number" id="beta" min="0" max="360" step="1" value="0">
-                </div>
-                
                 <div id="preview"></div>
+                <div class="input-group angle-input">
+                    <label for="alpha">Alpha (°):</label>
+                    <input type="number" id="alpha" min="0" max="90" step="1" value="0" class="angle-number">
+                    <input type="range" id="alphaSlider" min="0" max="90" step="1" value="0" class="angle-slider">
+                </div>
+                <div class="input-group angle-input">
+                    <label for="beta">Beta (°):</label>
+                    <input type="number" id="beta" min="0" max="360" step="1" value="0" class="angle-number">
+                    <input type="range" id="betaSlider" min="0" max="360" step="1" value="0" class="angle-slider">
+                </div>
                 
                 <textarea id="comment" placeholder="Add a comment..."></textarea>
                 
-                <button id="addMeasurement">Add Measurement</button>
+                <button id="addMeasurement" class="primary-button">Add Measurement</button>
             </div>
 
             <div class="results-section">
@@ -92,94 +97,61 @@
             </div>
         </div>
 
-        <div id="settings" class="tab-content">
-            <h2>Settings</h2>
-            <div class="setting-group">
-                <label for="darkMode">Dark Mode:</label>
-                <input type="checkbox" id="darkMode">
+        <div id="settingsPage" class="hidden">
+            <div class="settings-header">
+                <button id="backToMain" class="icon-button"><i class="fas fa-arrow-left"></i></button>
+                <h2>Settings</h2>
             </div>
-            <div class="setting-group">
-                <label for="hapticFeedback">Haptic Feedback:</label>
-                <input type="checkbox" id="hapticFeedback">
-            </div>
-            <div class="setting-group">
-                <label for="strikeMode">Strike Mode:</label>
-                <select id="strikeMode">
-                    <option value="negative">-90° (default)</option>
-                    <option value="positive">+90°</option>
-                </select>
-            </div>
-            <div class="setting-group">
-                <h3>Reset Application</h3>
-                <button id="resetApp" class="danger-button">Reset All Settings and Data</button>
-            </div>
-            <div class="setting-group">
-                <label>Measurement Types:</label>
-                <div id="measurementTypes"></div>
-                <button id="addMeasurementType">Add Measurement Type</button>
-            </div>
-            <div class="setting-group">
-                <label>Generation Types:</label>
-                <div id="generationTypes"></div>
-                <button id="addGenerationType">Add Generation Type</button>
-            </div>
-            <div class="setting-group">
-                <label>Custom Types:</label>
-                <div id="customTypes"></div>
-                <button id="addCustomType">Add Custom Type</button>
+            <div class="settings-content">
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label for="darkMode">Dark Mode:</label>
+                        <input type="checkbox" id="darkMode">
+                        <p class="setting-description">Enable dark mode for a more comfortable viewing experience in low-light conditions.</p>
+                    </div>
+                    <div class="setting-group">
+                        <label for="hapticFeedback">Haptic Feedback:</label>
+                        <input type="checkbox" id="hapticFeedback">
+                        <p class="setting-description">Enable vibration feedback for button presses and other interactions (if supported by your device).</p>
+                    </div>
+                    <div class="setting-group">
+                        <label for="strikeMode">Strike Mode:</label>
+                        <select id="strikeMode">
+                            <option value="negative">-90° (default)</option>
+                            <option value="positive">+90°</option>
+                        </select>
+                        <p class="setting-description">Choose the strike mode for measurements. -90° is the default, but some geologists prefer +90°.</p>
+                    </div>
+                    <div class="setting-group">
+                        <h3>Reset Application</h3>
+                        <button id="resetApp" class="danger-button">Reset All Settings and Data</button>
+                        <p class="setting-description">Warning: This will clear all your settings, custom types, and stored measurements. Use with caution!</p>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>Measurement Types:</label>
+                    <div id="measurementTypes"></div>
+                    <button id="addMeasurementType">Add Measurement Type</button>
+                    <p class="setting-description">Manage the types of measurements you can record (e.g., Foliation, Lineation). Add custom measurement types as needed.</p>
+                </div>
+                <div class="setting-group">
+                    <label>Generation Types:</label>
+                    <div id="generationTypes"></div>
+                    <button id="addGenerationType">Add Generation Type</button>
+                    <p class="setting-description">Manage generation types to classify measurements (e.g., S1, S2 for different foliation generations).</p>
+                </div>
+                <div class="setting-group">
+                    <label>Custom Types:</label>
+                    <div id="customTypes"></div>
+                    <button id="addCustomType">Add Custom Type</button>
+                    <p class="setting-description">Create and manage custom classification types for your measurements to suit your specific project needs.</p>
+                </div>
             </div>
         </div>
 
         <div id="copyStatus"></div>
         <div id="error"></div>
     </div>
-    <div id="help" class="tab-content">
-    <h2>Help & Information</h2>
-    <div class="help-content">
-        <h3>About the App</h3>
-        <p>This app is designed to calculate geological planes from alpha and beta measurements.</p>
-        
-        <h3>Key Features</h3>
-        <ul>
-            <li>Calculate dip and dip direction from alpha and beta measurements</li>
-            <li>Works in browser or as a mobile app</li>
-            <li>Local data storage (saved on your device, not on a server)</li>
-            <li>Export results as CSV</li>
-            <li>Use on-the-fly to convert alpha and beta to real-world orientations</li>
-        </ul>
-
-        <h3>How to Use</h3>
-        <ol>
-            <li>Enter the Hole ID, Hole Dip, and Hole Azimuth</li>
-            <li>Input the depth of the measurement</li>
-            <li>Measure alpha and beta angles:
-                <ul>
-                    <li><strong>Important:</strong> The orientation line must be drawn from the bottom of the core</li>
-                    <li>All measurements should be taken from this bottom orientation line</li>
-                    <li>Alpha: Measure the angle</li>
-                    <li>Beta: Measure the angle around the core circumference, from the orientation line to the down-dip direction of the plane</li>
-                </ul>
-            </li>
-            <li>Select the measurement type and generation</li>
-            <li>Click "Add Measurement" to save the data</li>
-            <li>View results in the table below</li>
-            <li>Use "Copy Results" or "Save as CSV" to export your data</li>
-        </ol>
-
-        <h3>Data Storage</h3>
-        <p>All data is stored locally on your device. No information is sent to or stored on any external servers.</p>
-
-        <h3>Offline Use</h3>
-        <p>This app can be installed on your phone and used offline. To install:</p>
-        <ul>
-            <li>On Android: Look for the "Add to Home Screen" prompt</li>
-            <li>On iOS: Use the "Share" button and select "Add to Home Screen"</li>
-        </ul>
-
-        <h3>Disclaimer</h3>
-        <p>This app is provided "as is", without warranty of any kind. Users are responsible for verifying results for critical applications.</p>
-    </div>
-</div>
     <footer>
         <span>Done by Janne v.15</span>
         <div class="social-links">

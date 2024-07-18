@@ -3,7 +3,7 @@ body {
     margin: 0;
     padding: 10px;
     background-color: #f0f4f8;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .container {
@@ -17,31 +17,31 @@ body {
 
 h1, h2 { 
     color: #333; 
-    font-size: 1.2em; 
-    margin: 10px 0; 
-    text-align: center;
+    font-size: 1.1em; 
+    margin: 8px 0; 
+    text-align: left;
 }
 
 .input-group { 
-    margin-bottom: 10px; 
+    margin-bottom: 8px; 
     display: flex;
     align-items: center;
 }
 
 label { 
-    flex: 0 0 120px;
+    flex: 0 0 100px;
     font-size: 0.9em; 
 }
 
 input[type="number"], input[type="text"] { 
-    width: calc(100% - 130px);
-    padding: 5px;
+    width: calc(100% - 110px);
+    padding: 4px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
 input[type="range"] { 
-    width: calc(100% - 130px);
+    width: calc(100% - 110px);
     vertical-align: middle; 
 }
 
@@ -51,20 +51,20 @@ input[type="range"] {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    margin: 10px 0;
+    margin: 8px 0;
 }
 
 .type-button,
 .generation-button,
 .custom-option-button,
 .depth-button {
-    padding: 8px;
+    padding: 6px;
     margin: 2px;
     background-color: #e0e0e0;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.8em;
     flex-grow: 1;
     text-align: center;
     transition: background-color 0.3s ease;
@@ -84,14 +84,14 @@ input[type="range"] {
 
 #error { 
     color: red; 
-    margin-top: 10px; 
+    margin-top: 8px; 
     font-size: 0.9em; 
 }
 
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    margin-top: 10px; 
+    margin-top: 8px; 
     font-size: 0.8em; 
 }
 
@@ -108,34 +108,34 @@ th {
 .depth-buttons { 
     display: flex; 
     justify-content: space-between; 
-    margin-top: 5px; 
+    margin-top: 4px; 
 }
 
 #preview {
-    font-size: 1.2em;
+    font-size: 1.1em;
     text-align: center;
-    margin: 10px 0;
-    padding: 10px;
+    margin: 8px 0;
+    padding: 8px;
     background-color: #e0e0e0;
     border-radius: 8px;
 }
 
 #comment {
     width: 100%;
-    height: 60px;
-    margin-top: 10px;
+    height: 50px;
+    margin-top: 8px;
     resize: vertical;
 }
 
 #copyStatus {
     text-align: center;
-    margin-top: 10px;
+    margin-top: 8px;
     font-style: italic;
 }
 
 footer {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 16px;
     font-size: 0.8em;
     color: #666;
 }
@@ -147,99 +147,148 @@ footer {
 .action-buttons {
     display: flex;
     justify-content: space-between;
-    margin-top: 20px;
+    margin-top: 16px;
 }
 
-.action-buttons button {
+.action-buttons button, #addMeasurement {
     flex: 1;
-    margin: 0 5px;
+    margin: 0 4px;
+    font-size: 0.9em;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: #2196F3;
+    color: white;
+}
+
+.action-buttons button:hover, #addMeasurement:hover {
+    background-color: #1e87db;
 }
 
 #clearMeasurements {
     background-color: #ff4444;
-    color: white;
 }
 
-.tab-container {
+#clearMeasurements:hover {
+    background-color: #ff3333;
+}
+
+.header {
     display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
-.tab-button {
-    padding: 10px 20px;
-    background-color: #e0e0e0;
+.app-title {
+    margin: 0;
+    font-size: 1.2em;
+    flex-grow: 1;
+}
+
+.header-buttons {
+    display: flex;
+}
+
+.icon-button {
+    background: none;
     border: none;
-    border-radius: 5px 5px 0 0;
+    font-size: 1.2em;
     cursor: pointer;
+    padding: 5px;
 }
 
-.tab-button.active {
-    background-color: #4CAF50;
-    color: white;
+.collapsible {
+    margin-bottom: 10px;
 }
 
-.tab-content {
+#drillHoleInfoSummary {
+    background-color: #f0f0f0;
+    padding: 5px;
+    border-radius: 4px;
+    margin: 0 10px;
+    font-size: 0.9em;
+    flex-grow: 1;
+}
+
+#drillHoleInfoSummary span {
+    margin-right: 10px;
+}
+
+.hidden {
     display: none;
 }
 
-.tab-content.active {
-    display: block;
+.angle-input {
+    display: flex;
+    align-items: center;
+}
+
+.angle-number {
+    width: 60px;
+    margin-right: 10px;
+}
+
+.angle-slider {
+    flex-grow: 1;
+}
+
+/* Settings Page Styles */
+#settingsPage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-header h2 {
+    margin: 0 0 0 10px;
+}
+
+.settings-content {
+    padding: 20px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
 }
 
 .setting-group {
     margin-bottom: 20px;
 }
-.danger-button {
-    background-color: #ff4444;
-    color: white;
-    padding: 10px 20px;
+
+.setting-group h3 {
+    margin-top: 0;
+}
+
+#backToMain {
+    background: none;
     border: none;
-    border-radius: 4px;
+    font-size: 1.5em;
     cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s;
-}
-
-.danger-button:hover {
-    background-color: #ff6666;
-}
-.help-content {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    line-height: 1.6;
-}
-
-.help-content h3 {
-    margin-top: 20px;
+    padding: 5px;
     color: #4CAF50;
 }
 
-.help-content ul, .help-content ol {
-    margin-left: 20px;
-}
-
-.help-content li {
-    margin-bottom: 10px;
-}
-/* Footer styles */
-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #f0f0f0;
-}
-
-.social-links a {
-    margin-left: 10px;
-    color: #333;
-    font-size: 20px;
-}
-
-.social-links a:hover {
-    color: #4CAF50;
+.setting-description {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
 }
 
 /* Dark Mode Styles */
@@ -248,21 +297,12 @@ body.dark-mode {
     color: #e0e0e0;
 }
 
-body.dark-mode .help-content h3 {
-    color: #81c784;
-}
-
-body.dark-mode .container {
+body.dark-mode .container,
+body.dark-mode .modal-content,
+body.dark-mode #settingsPage {
     background-color: #1e1e1e;
 }
 
-body.dark-mode .danger-button {
-    background-color: #cc0000;
-}
-
-body.dark-mode .danger-button:hover {
-    background-color: #ff0000;
-}
 body.dark-mode h1, 
 body.dark-mode h2 {
     color: #ffffff;
@@ -296,7 +336,8 @@ body.dark-mode .depth-button.active {
     color: #ffffff;
 }
 
-body.dark-mode #preview {
+body.dark-mode #preview,
+body.dark-mode #drillHoleInfoSummary {
     background-color: #2c2c2c;
     color: #ffffff;
 }
@@ -323,22 +364,27 @@ body.dark-mode #error {
 }
 
 body.dark-mode footer {
-    background-color: #1e1e1e;
     color: #a0a0a0;
 }
 
-body.dark-mode .social-links a {
-    color: #a0a0a0;
+body.dark-mode .icon-button,
+body.dark-mode #backToMain {
+    color: #e0e0e0;
 }
 
-body.dark-mode .social-links a:hover {
-    color: #4CAF50;
+body.dark-mode .settings-header {
+    border-bottom-color: #4a4a4a;
+}
+
+body.dark-mode .setting-description {
+    color: #a0a0a0;
 }
 
 /* Media query for larger screens */
 @media screen and (min-width: 768px) {
     body {
         padding: 20px;
+        font-size: 16px;
     }
 
     .container {
@@ -347,29 +393,28 @@ body.dark-mode .social-links a:hover {
     }
 
     h1, h2 {
-        font-size: 1.5em;
+        font-size: 1.3em;
     }
 
     .input-group {
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }
 
     label {
-        flex: 0 0 150px;
-        font-size: 1em;
+        flex: 0 0 120px;
     }
 
     input[type="number"], input[type="text"], input[type="range"] {
-        width: calc(100% - 160px);
-        padding: 8px;
+        width: calc(100% - 130px);
+        padding: 6px;
     }
 
     .type-button,
     .generation-button,
     .custom-option-button,
     .depth-button {
-        padding: 10px;
-        font-size: 1em;
+        padding: 8px;
+        font-size: 0.9em;
     }
 
     table {
@@ -377,26 +422,35 @@ body.dark-mode .social-links a:hover {
     }
 
     th, td {
-        padding: 8px;
+        padding: 6px;
     }
 
     #preview {
-        font-size: 1.4em;
-        padding: 15px;
+        font-size: 1.2em;
+        padding: 12px;
     }
 
     #comment {
-        height: 80px;
+        height: 60px;
     }
 
-    .action-buttons button {
-        padding: 10px 15px;
+    .action-buttons button, #addMeasurement {
+        padding: 10px 16px;
         font-size: 1em;
     }
 
-    .tab-button {
-        padding: 12px 24px;
-        font-size: 1em;
+    #settingsPage {
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .angle-number {
+        width: 80px;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
@@ -417,6 +471,37 @@ body.dark-mode .social-links a:hover {
     .custom-option-button,
     .depth-button {
         flex-grow: 0;
-        margin-right: 10px;
+        margin-right: 8px;
+    }
+
+    #settingsPage {
+        max-width: 800px;
+    }
+
+    /* Improved layout for wide screens */
+    .main-content {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .input-section {
+        flex: 0 0 48%;
+    }
+
+    .results-section {
+        flex: 0 0 48%;
+    }
+
+    .action-buttons {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .action-buttons button, #addMeasurement {
+        margin: 0 4px;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr 1fr 1fr;
     }
 }

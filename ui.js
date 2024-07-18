@@ -16,12 +16,40 @@ async function triggerHapticFeedback(duration = 10) {
 
 export async function setupUI() {
     console.log("Setting up UI...");
-    setupTabs();
+    setupDrillHoleInfoToggle();
     await setupTypeSelectors();
     await syncInputs();
     setupDepthButtons();
     setupMeasurementHandlers();
     console.log("UI setup complete.");
+}
+
+function setupDrillHoleInfoToggle() {
+    const toggle = document.getElementById('drillHoleInfoToggle');
+    const drillHoleInfo = document.getElementById('drillHoleInfo');
+    const drillHoleInfoSummary = document.getElementById('drillHoleInfoSummary');
+
+    toggle.addEventListener('click', () => {
+        drillHoleInfo.classList.toggle('hidden');
+        drillHoleInfoSummary.classList.toggle('hidden');
+        toggle.innerHTML = drillHoleInfo.classList.contains('hidden') ? 
+            '<i class="fas fa-chevron-down"></i>' : 
+            '<i class="fas fa-chevron-up"></i>';
+        updateDrillHoleInfoSummary();
+    });
+}
+
+function updateDrillHoleInfoSummary() {
+    const holeId = document.getElementById('holeId').value;
+    const holeDip = document.getElementById('holeDip').value;
+    const holeAzimuth = document.getElementById('holeAzimuth').value;
+    const summary = document.getElementById('drillHoleInfoSummary');
+
+    summary.innerHTML = `
+        <span id="holeIdSummary">ID: ${holeId}</span>
+        <span id="holeDipSummary">Dip: ${holeDip}°</span>
+        <span id="holeAzimuthSummary">Azimuth: ${holeAzimuth}°</span>
+    `;
 }
 
 function setupMeasurementHandlers() {
@@ -66,29 +94,6 @@ function setupDepthButtons() {
                 }, 200);
             } else {
                 console.warn("Depth input not found.");
-            }
-        });
-    });
-}
-
-function setupTabs() {
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabButtons.forEach(button => {
-        button.addEventListener('click', async () => {
-            await triggerHapticFeedback();
-            const tabName = button.getAttribute('data-tab');
-            
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-
-            button.classList.add('active');
-            const tabContent = document.getElementById(tabName);
-            if (tabContent) {
-                tabContent.classList.add('active');
-            } else {
-                console.warn(`Tab content with id '${tabName}' not found.`);
             }
         });
     });
@@ -178,6 +183,7 @@ async function syncInputs() {
                         holeDip: document.getElementById('holeDip')?.value || '0',
                         holeAzimuth: document.getElementById('holeAzimuth')?.value || '0'
                     });
+                    updateDrillHoleInfoSummary();
                 }
             });
             input.addEventListener('input', async () => {
@@ -189,6 +195,7 @@ async function syncInputs() {
                         holeDip: document.getElementById('holeDip')?.value || '0',
                         holeAzimuth: document.getElementById('holeAzimuth')?.value || '0'
                     });
+                    updateDrillHoleInfoSummary();
                 }
             });
         } else {
@@ -204,6 +211,7 @@ async function syncInputs() {
                 holeDip: document.getElementById('holeDip')?.value || '0',
                 holeAzimuth: document.getElementById('holeAzimuth')?.value || '0'
             });
+            updateDrillHoleInfoSummary();
         });
     } else {
         console.warn("Hole ID input not found.");
@@ -228,6 +236,7 @@ async function syncInputs() {
                     console.warn(`Element for '${key}' not found or saved value is undefined.`);
                 }
             });
+            updateDrillHoleInfoSummary();
         }
     } catch (error) {
         handleError(error, "Error loading drill hole info");
