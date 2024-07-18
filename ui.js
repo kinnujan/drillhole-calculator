@@ -1,7 +1,6 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
-
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
     try {
@@ -13,7 +12,6 @@ async function triggerHapticFeedback(duration = 10) {
         handleError(error, "Error triggering haptic feedback");
     }
 }
-
 export async function setupUI() {
     console.log("Setting up UI...");
     setupModalFunctionality();
@@ -34,41 +32,27 @@ function setupModalFunctionality() {
     const closeHelp = document.getElementById('closeHelp');
 
     console.log("Setting up modal functionality");
-    console.log("Help button:", helpButton);
-    console.log("Help modal:", helpModal);
 
-    settingsButton.addEventListener('click', () => showModal(settingsModal));
-    helpButton.addEventListener('click', () => {
-        console.log("Help button clicked");
-        showModal(helpModal);
-    });
-    closeSettings.addEventListener('click', () => hideModal(settingsModal));
-    closeHelp.addEventListener('click', () => hideModal(helpModal));
+    settingsButton.addEventListener('click', () => toggleModal(settingsModal));
+    helpButton.addEventListener('click', () => toggleModal(helpModal));
+    closeSettings.addEventListener('click', () => toggleModal(settingsModal));
+    closeHelp.addEventListener('click', () => toggleModal(helpModal));
 
     window.addEventListener('click', (event) => {
         if (event.target === settingsModal) {
-            hideModal(settingsModal);
+            toggleModal(settingsModal);
         }
         if (event.target === helpModal) {
-            hideModal(helpModal);
+            toggleModal(helpModal);
         }
     });
 }
 
-function showModal(modal) {
-    console.log("Showing modal:", modal.id);
-    modal.classList.remove('hidden');
-    modal.classList.add('visible');
-    console.log("Modal visible?", modal.classList.contains('visible'));
-}
-
-function hideModal(modal) {
-    console.log("Hiding modal:", modal.id);
-    modal.classList.remove('visible');
-    modal.classList.add('hidden');
+function toggleModal(modal) {
+    console.log("Toggling modal:", modal.id);
+    modal.classList.toggle('hidden');
     console.log("Modal hidden?", modal.classList.contains('hidden'));
 }
-
 function setupDrillHoleInfoToggle() {
     const toggle = document.getElementById('drillHoleInfoToggle');
     const drillHoleInfo = document.getElementById('drillHoleInfo');
