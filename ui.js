@@ -57,10 +57,13 @@ function setupModalFunctionality() {
 
 function toggleModal(modal) {
     console.log("Toggling modal:", modal.id);
-    modal.classList.toggle('hidden');
+    if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+    } else {
+        modal.classList.add('hidden');
+    }
     console.log("Modal hidden?", modal.classList.contains('hidden'));
 }
-
 function setupDrillHoleInfoToggle() {
     const toggle = document.getElementById('drillHoleInfoToggle');
     const drillHoleInfo = document.getElementById('drillHoleInfo');
