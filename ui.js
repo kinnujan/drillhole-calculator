@@ -37,33 +37,38 @@ function setupModalFunctionality() {
     console.log("Help button:", helpButton);
     console.log("Help modal:", helpModal);
 
-    settingsButton.addEventListener('click', () => toggleModal(settingsModal));
+    settingsButton.addEventListener('click', () => showModal(settingsModal));
     helpButton.addEventListener('click', () => {
         console.log("Help button clicked");
-        toggleModal(helpModal);
+        showModal(helpModal);
     });
-    closeSettings.addEventListener('click', () => toggleModal(settingsModal));
-    closeHelp.addEventListener('click', () => toggleModal(helpModal));
+    closeSettings.addEventListener('click', () => hideModal(settingsModal));
+    closeHelp.addEventListener('click', () => hideModal(helpModal));
 
     window.addEventListener('click', (event) => {
         if (event.target === settingsModal) {
-            toggleModal(settingsModal);
+            hideModal(settingsModal);
         }
         if (event.target === helpModal) {
-            toggleModal(helpModal);
+            hideModal(helpModal);
         }
     });
 }
 
-function toggleModal(modal) {
-    console.log("Toggling modal:", modal.id);
-    if (modal.classList.contains('hidden')) {
-        modal.classList.remove('hidden');
-    } else {
-        modal.classList.add('hidden');
-    }
+function showModal(modal) {
+    console.log("Showing modal:", modal.id);
+    modal.classList.remove('hidden');
+    modal.classList.add('visible');
+    console.log("Modal visible?", modal.classList.contains('visible'));
+}
+
+function hideModal(modal) {
+    console.log("Hiding modal:", modal.id);
+    modal.classList.remove('visible');
+    modal.classList.add('hidden');
     console.log("Modal hidden?", modal.classList.contains('hidden'));
 }
+
 function setupDrillHoleInfoToggle() {
     const toggle = document.getElementById('drillHoleInfoToggle');
     const drillHoleInfo = document.getElementById('drillHoleInfo');
