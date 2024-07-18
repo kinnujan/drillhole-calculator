@@ -238,6 +238,50 @@ footer {
     display: none;
 }
 
+/* Settings Page Styles */
+#settingsPage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-header h2 {
+    margin: 0 0 0 10px;
+}
+
+.settings-content {
+    padding: 20px;
+}
+
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group h3 {
+    margin-top: 0;
+}
+
+#backToMain {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px;
+    color: #4CAF50;
+}
+
 /* Dark Mode Styles */
 body.dark-mode {
     background-color: #121212;
@@ -245,7 +289,8 @@ body.dark-mode {
 }
 
 body.dark-mode .container,
-body.dark-mode .modal-content {
+body.dark-mode .modal-content,
+body.dark-mode #settingsPage {
     background-color: #1e1e1e;
 }
 
@@ -313,8 +358,13 @@ body.dark-mode footer {
     color: #a0a0a0;
 }
 
-body.dark-mode .icon-button {
+body.dark-mode .icon-button,
+body.dark-mode #backToMain {
     color: #e0e0e0;
+}
+
+body.dark-mode .settings-header {
+    border-bottom-color: #4a4a4a;
 }
 
 /* Media query for larger screens */
@@ -375,6 +425,12 @@ body.dark-mode .icon-button {
         padding: 8px 12px;
         font-size: 1em;
     }
+
+    #settingsPage {
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
 }
 
 /* Media query for extra large screens */
@@ -395,5 +451,9 @@ body.dark-mode .icon-button {
     .depth-button {
         flex-grow: 0;
         margin-right: 8px;
+    }
+
+    #settingsPage {
+        max-width: 800px;
     }
 }

@@ -20,6 +20,22 @@ export async function setupSettings() {
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
         document.getElementById('addCustomType').addEventListener('click', addCustomType);
         setupResetButton();
+
+        // Set up settings button
+        const settingsButton = document.getElementById('settingsButton');
+        const settingsPage = document.getElementById('settingsPage');
+        const backToMain = document.getElementById('backToMain');
+
+        settingsButton.addEventListener('click', () => {
+            settingsPage.classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+        });
+
+        backToMain.addEventListener('click', () => {
+            settingsPage.classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        });
+
         console.log("Settings setup complete.");
     } catch (error) {
         handleError(error, "Error setting up settings");
