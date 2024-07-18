@@ -169,16 +169,22 @@ footer {
     margin-bottom: 10px;
 }
 
+.app-title {
+    margin: 0;
+    font-size: 1.2em;
+    flex-grow: 1;
+}
+
+.header-buttons {
+    display: flex;
+}
+
 .icon-button {
     background: none;
     border: none;
     font-size: 1.2em;
     cursor: pointer;
     padding: 5px;
-}
-
-.spacer {
-    flex-grow: 1;
 }
 
 .collapsible {
@@ -189,53 +195,31 @@ footer {
     background-color: #f0f0f0;
     padding: 5px;
     border-radius: 4px;
-    margin-bottom: 10px;
+    margin: 0 10px;
     font-size: 0.9em;
+    flex-grow: 1;
 }
 
 #drillHoleInfoSummary span {
     margin-right: 10px;
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 8px;
-}
-
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-}
-
 .hidden {
     display: none;
+}
+
+.angle-input {
+    display: flex;
+    align-items: center;
+}
+
+.angle-number {
+    width: 60px;
+    margin-right: 10px;
+}
+
+.angle-slider {
+    flex-grow: 1;
 }
 
 /* Settings Page Styles */
@@ -280,6 +264,12 @@ footer {
     cursor: pointer;
     padding: 5px;
     color: #4CAF50;
+}
+
+.setting-description {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
 }
 
 /* Dark Mode Styles */
@@ -367,6 +357,10 @@ body.dark-mode .settings-header {
     border-bottom-color: #4a4a4a;
 }
 
+body.dark-mode .setting-description {
+    color: #a0a0a0;
+}
+
 /* Media query for larger screens */
 @media screen and (min-width: 768px) {
     body {
@@ -431,6 +425,10 @@ body.dark-mode .settings-header {
         margin: 0 auto;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
+    .angle-number {
+        width: 80px;
+    }
 }
 
 /* Media query for extra large screens */
@@ -455,5 +453,28 @@ body.dark-mode .settings-header {
 
     #settingsPage {
         max-width: 800px;
+    }
+
+    /* Improved layout for wide screens */
+    .main-content {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .input-section {
+        flex: 0 0 48%;
+    }
+
+    .results-section {
+        flex: 0 0 48%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-buttons button {
+        margin: 4px 0;
     }
 }
