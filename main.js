@@ -5,6 +5,7 @@ import { handleError } from './utils.js';
 
 async function init() {
     try {
+        console.log('Initializing app...');
         await setupUI();
         await loadMeasurements();
         updatePreview();
@@ -22,6 +23,26 @@ async function init() {
             document.body.prepend(message);
             setTimeout(() => message.remove(), 5000); // Remove the message after 5 seconds
         }
+
+        // Add debug logs for settings and help buttons
+        const settingsButton = document.getElementById('settingsButton');
+        const helpButton = document.getElementById('helpButton');
+        
+        if (settingsButton) {
+            console.log('Settings button found');
+            settingsButton.addEventListener('click', () => console.log('Settings button clicked'));
+        } else {
+            console.warn('Settings button not found');
+        }
+        
+        if (helpButton) {
+            console.log('Help button found');
+            helpButton.addEventListener('click', () => console.log('Help button clicked'));
+        } else {
+            console.warn('Help button not found');
+        }
+
+        console.log('App initialization complete');
     } catch (error) {
         handleError(error, "An error occurred during initialization.");
     }

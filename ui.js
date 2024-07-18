@@ -33,8 +33,15 @@ function setupModalFunctionality() {
     const closeSettings = document.getElementById('closeSettings');
     const closeHelp = document.getElementById('closeHelp');
 
+    console.log("Setting up modal functionality");
+    console.log("Help button:", helpButton);
+    console.log("Help modal:", helpModal);
+
     settingsButton.addEventListener('click', () => toggleModal(settingsModal));
-    helpButton.addEventListener('click', () => toggleModal(helpModal));
+    helpButton.addEventListener('click', () => {
+        console.log("Help button clicked");
+        toggleModal(helpModal);
+    });
     closeSettings.addEventListener('click', () => toggleModal(settingsModal));
     closeHelp.addEventListener('click', () => toggleModal(helpModal));
 
@@ -49,7 +56,9 @@ function setupModalFunctionality() {
 }
 
 function toggleModal(modal) {
+    console.log("Toggling modal:", modal.id);
     modal.classList.toggle('hidden');
+    console.log("Modal hidden?", modal.classList.contains('hidden'));
 }
 
 function setupDrillHoleInfoToggle() {
