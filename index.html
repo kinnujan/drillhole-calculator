@@ -63,6 +63,7 @@
                 <div class="type-selector"></div>
                 <div class="generation-selector"></div>
                 <div class="custom-type-selectors"></div>
+                <div id="preview"></div>
                 <div class="input-group angle-input">
                     <label for="alpha">Alpha (°):</label>
                     <input type="number" id="alpha" min="0" max="90" step="1" value="0" class="angle-number">
@@ -74,9 +75,9 @@
                     <input type="range" id="betaSlider" min="0" max="360" step="1" value="0" class="angle-slider">
                 </div>
                 
-                <div id="preview"></div>
-                
                 <textarea id="comment" placeholder="Add a comment..."></textarea>
+                
+                <button id="addMeasurement" class="primary-button">Add Measurement</button>
             </div>
 
             <div class="results-section">
@@ -91,7 +92,6 @@
                 </table>
             </div>
             <div class="action-buttons">
-                <button id="addMeasurement" class="primary-button">Add Measurement</button>
                 <button id="copyResults">Copy Results</button>
                 <button id="saveAsCSV">Save as CSV</button>
                 <button id="clearMeasurements">Clear Measurements</button>
