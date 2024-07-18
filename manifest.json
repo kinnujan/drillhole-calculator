@@ -33,7 +33,7 @@
       "type": "image/png"
     }
   ],
-  "orientation": "any",
+  "orientation": "portrait",
   "categories": ["utilities", "productivity"],
   "lang": "en-US",
   "dir": "ltr",
