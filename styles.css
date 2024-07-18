@@ -249,6 +249,12 @@ footer {
     padding: 20px;
 }
 
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
 .setting-group {
     margin-bottom: 20px;
 }
@@ -429,6 +435,10 @@ body.dark-mode .setting-description {
     .angle-number {
         width: 80px;
     }
+
+    .settings-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 /* Media query for extra large screens */
@@ -476,5 +486,9 @@ body.dark-mode .setting-description {
 
     .action-buttons button {
         margin: 4px 0;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr 1fr 1fr;
     }
 }
