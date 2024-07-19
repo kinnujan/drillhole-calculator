@@ -574,6 +574,7 @@ body.dark-mode .data-storage-info {
 body.dark-mode .data-storage-info i {
     color: #4da6ff;
 }
+
 /* Custom color styles */
 .custom-color-enabled #preview,
 .custom-color-enabled #resultsTable tbody tr {
@@ -583,36 +584,79 @@ body.dark-mode .data-storage-info i {
         1px -1px 0 #000,
         -1px 1px 0 #000,
         1px 1px 0 #000,
-        0 0 3px #000;
+        0 0 3px #000,
+        0 0 5px #000;
+    font-weight: bold;
 }
 
 .custom-color-enabled #resultsTable th {
     background-color: #333;
     color: white;
+    font-weight: bold;
 }
 
 /* Improve contrast for dark mode */
 body.dark-mode .custom-color-enabled #preview,
 body.dark-mode .custom-color-enabled #resultsTable tbody tr {
+    color: #fff;
     text-shadow: 
-        -1px -1px 0 #fff,
-        1px -1px 0 #fff,
-        -1px 1px 0 #fff,
-        1px 1px 0 #fff,
-        0 0 3px #fff;
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 3px #000,
+        0 0 5px #000;
 }
 
 body.dark-mode .custom-color-enabled #resultsTable th {
     background-color: #1a1a1a;
+    color: #fff;
 }
 
 /* Additional styles to improve readability */
 .custom-color-enabled #resultsTable td {
-    padding: 8px;
+    padding: 10px;
+    text-align: center;
 }
 
 .custom-color-enabled #preview {
-    padding: 12px;
-    margin: 12px 0;
-    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    font-size: 1.2em;
+    line-height: 1.4;
 }
+
+/* Increase contrast for text */
+.custom-color-enabled #preview,
+.custom-color-enabled #resultsTable tbody tr {
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 3px #000,
+        0 0 5px #000,
+        0 0 7px #000;
+}
+
+/* Add a semi-transparent overlay to increase contrast */
+.custom-color-enabled #preview::before,
+.custom-color-enabled #resultsTable tbody tr::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.custom-color-enabled #preview,
+.custom-color-enabled #resultsTable tbody tr {
+    position: relative;
+}
+
+/* ... (rest of the styles remain unchanged) ... */

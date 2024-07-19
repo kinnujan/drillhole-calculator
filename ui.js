@@ -102,11 +102,11 @@ function calculateColor(dipDirection, dip) {
     // Calculate hue based on dip direction (0-360)
     const hue = dipDirection;
     
-    // Calculate saturation based on dip (0-90 degrees mapped to 60-100%)
-    const sat = 60 + (dip / 90) * 40;
+    // Calculate saturation based on dip (0-90 degrees mapped to 70-100%)
+    const sat = 70 + (dip / 90) * 30;
     
     // Adjust lightness based on dip (higher dip = darker color)
-    const lit = 60 - (dip / 90) * 30;
+    const lit = 50 - (dip / 90) * 25;
     
     return `hsl(${hue}, ${sat}%, ${lit}%)`;
 }
