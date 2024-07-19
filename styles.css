@@ -505,3 +505,6 @@ body.dark-mode .setting-description {
         grid-template-columns: 1fr 1fr 1fr;
     }
 }
+.social-links i {
+    font-size: 24px;
+  }
