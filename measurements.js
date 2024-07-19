@@ -45,6 +45,8 @@ export async function addMeasurement() {
         
         const result = {
             holeId,
+            holeDip: holeDip.toFixed(1),  // Add holeDip to the result
+            holeAzimuth: holeAzimuth.toFixed(1),  // Add holeAzimuth to the result
             depth,
             type: selectedType,
             generation: selectedGeneration,
@@ -275,7 +277,7 @@ async function getCSVContent() {
     const settings = await loadSettings();
     const customTypeNames = settings.customTypes.map(ct => ct.name);
     
-    let csvContent = "HoleID,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
+    let csvContent = "HoleID,HoleDip,HoleAzimuth,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
     customTypeNames.forEach(name => {
         csvContent += `,${name}`;
     });
@@ -284,6 +286,8 @@ async function getCSVContent() {
     measurements.forEach(function(measurement) {
         let row = [
             measurement.holeId,
+            measurement.holeDip,  // Add holeDip to CSV export
+            measurement.holeAzimuth,  // Add holeAzimuth to CSV export
             measurement.depth,
             measurement.type,
             measurement.generation,
