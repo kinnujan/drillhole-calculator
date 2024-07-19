@@ -282,7 +282,6 @@ async function syncInputs() {
         handleError(error, "Error loading drill hole info");
     }
 }
-
 export async function updatePreview() {
     const elements = {
         holeDip: document.getElementById('holeDip'),
@@ -312,16 +311,16 @@ export async function updatePreview() {
                 const color = calculateColor(dipDirection, dip);
                 elements.preview.style.backgroundColor = color;
                 elements.preview.classList.add('custom-color-enabled');
-                } else {
+            } else {
                 elements.preview.style.backgroundColor = '';
                 elements.preview.classList.remove('custom-color-enabled');
-                }
-            } catch (error) {
-            handleError(error, "Error updating preview");
             }
-        } else {
-            console.warn("One or more elements required for preview update not found.");
+        } catch (error) {
+            handleError(error, "Error updating preview");
         }
+    } else {
+        console.warn("One or more elements required for preview update not found.");
+    }
 }
 
 export async function updateResultsTable() {
@@ -354,51 +353,58 @@ export async function updateResultsTable() {
 
     try {
         // Add custom type columns
-    const settings = await loadSettings();
-    settings.customTypes.forEach(customType => {
-        const th = document.createElement('th');
-        th.textContent = customType.name;
-        headerRow.appendChild(th);
-    });
+        const settings = await loadSettings();
+        settings.customTypes.forEach(customType => {
+            const th = document.createElement('th');
+            th.textContent = customType.name;
+            headerRow.appendChild(th);
+        });
 
-    thead.appendChild(headerRow);
-    
-    // Populate table body
-    measurements.forEach((measurement) => {
-    const row = tbody.insertRow();
-    row.insertCell(0).textContent = measurement.depth.toFixed(2);
-    row.insertCell(1).textContent = measurement.type;
-    row.insertCell(2).textContent = measurement.generation;
-    row.insertCell(3).textContent = measurement.dip + '°';
-    row.insertCell(4).textContent = measurement.dipDirection + '°';
-    
-    const commentCell = row.insertCell(5);
-    commentCell.textContent = (measurement.comment.length > 20 ?
-    measurement.comment.substring(0, 20) + '...' :
-    measurement.comment);
-    commentCell.title = measurement.comment; // Show full comment on hover
-    
-    // Add custom type values
-    settings.customTypes.forEach(customType => {
-    const cell = row.insertCell();
-    const customValue = measurement.customTypes && measurement.customTypes[customType.name];
-    cell.textContent = customValue || '-';
-    });
-    
-    // Apply custom color if enabled
-    if (settings.customColorEnabled) {
-        const color = calculateColor(measurement.dipDirection, measurement.dip);
-        row.style.backgroundColor = color;
-        row.classList.add('custom-color-enabled');
+        thead.appendChild(headerRow);
+        
+        // Populate table body
+        measurements.forEach((measurement) => {
+            const row = tbody.insertRow();
+            row.insertCell(0).textContent = measurement.depth.toFixed(2);
+            row.insertCell(1).textContent = measurement.type;
+            row.insertCell(2).textContent = measurement.generation;
+            row.insertCell(3).textContent = measurement.dip + '°';
+            row.insertCell(4).textContent = measurement.dipDirection + '°';
+            
+            const commentCell = row.insertCell(5);
+            commentCell.textContent = (measurement.comment.length > 20 ?
+                measurement.comment.substring(0, 20) + '...' :
+                measurement.comment);
+            commentCell.title = measurement.comment; // Show full comment on hover
+            
+            // Add custom type values
+            settings.customTypes.forEach(customType => {
+                const cell = row.insertCell();
+                const customValue = measurement.customTypes && measurement.customTypes[customType.name];
+                cell.textContent = customValue || '-';
+            });
+            
+            // Apply custom color if enabled
+            if (settings.customColorEnabled) {
+                const color = calculateColor(measurement.dipDirection, measurement.dip);
+                row.style.backgroundColor = color;
+                row.classList.add('custom-color-enabled');
+            } else {
+                row.style.backgroundColor = '';
+                row.classList.remove('custom-color-enabled');
+            }
+        });
+
+        // Add or remove custom-color-enabled class to the table
+        if (settings.customColorEnabled) {
+            resultsTable.classList.add('custom-color-enabled');
         } else {
-        row.style.backgroundColor = '';
-        row.classList.remove('custom-color-enabled');
+            resultsTable.classList.remove('custom-color-enabled');
         }
-    });
     } catch (error) {
-    handleError(error, "Error updating results table");
+        handleError(error, "Error updating results table");
     }
-    }
+}
 
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
