@@ -1,4 +1,4 @@
-import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData } from './measurements.js';
+import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
@@ -11,6 +11,24 @@ async function triggerHapticFeedback(duration = 10) {
         }
     } catch (error) {
         handleError(error, "Error triggering haptic feedback");
+    }
+}
+
+export function enableUndoButton() {
+    const undoButton = document.getElementById('undoMeasurement');
+    if (undoButton) {
+        undoButton.disabled = false;
+    } else {
+        console.warn("Undo button not found.");
+    }
+}
+
+export function disableUndoButton() {
+    const undoButton = document.getElementById('undoMeasurement');
+    if (undoButton) {
+        undoButton.disabled = true;
+    } else {
+        console.warn("Undo button not found.");
     }
 }
 
@@ -56,6 +74,7 @@ function setupMeasurementHandlers() {
     console.log("Setting up measurement handlers...");
     const handlers = [
         { id: 'addMeasurement', handler: addMeasurement },
+        { id: 'undoMeasurement', handler: undoLastMeasurement },
         { id: 'copyResults', handler: copyResults },
         { id: 'saveAsCSV', handler: saveAsCSV },
         { id: 'clearMeasurements', handler: clearMeasurementsWithConfirmation },
@@ -157,11 +176,17 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
         button.textContent = option;
         button.onclick = async () => {
             await triggerHapticFeedback();
-            // Remove 'active' class from all buttons in this container
-            container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
-            // Add 'active' class to clicked button
-            button.classList.add('active');
-            onClickHandler(option);
+            if (button.classList.contains('active')) {
+                // If the button is already active, deselect it
+                button.classList.remove('active');
+                onClickHandler(null); // Call the handler with null to indicate deselection
+            } else {
+                // Remove 'active' class from all buttons in this container
+                container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
+                // Add 'active' class to clicked button
+                button.classList.add('active');
+                onClickHandler(option);
+            }
         };
         container.appendChild(button);
     });

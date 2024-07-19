@@ -22,7 +22,8 @@ export const DEFAULT_SETTINGS = {
     measurementTypes: ['bedding', 'foliation', 'fault', 'shear', 'vein'],
     generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
     customTypes: [],
-    hapticFeedback: true
+    hapticFeedback: true,
+    undoEnabled: true
 };
 
-export const CURRENT_SETTINGS_VERSION = 6; // Incremented from 5 to 6
+export const CURRENT_SETTINGS_VERSION = 7; // Incremented from 6 to 7

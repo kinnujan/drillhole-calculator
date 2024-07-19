@@ -15,6 +15,7 @@ export async function setupSettings() {
         setupStrikeMode(settings.strikeMode);
         setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
         setupHapticFeedback(settings.hapticFeedback);
+        setupUndoButton(settings.undoEnabled);
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
@@ -82,6 +83,32 @@ async function setupHapticFeedback(initialState) {
             console.log(`Haptic feedback ${isHapticFeedbackEnabled ? 'enabled' : 'disabled'}`);
         } catch (error) {
             handleError(error, "Error saving haptic feedback setting");
+        }
+    });
+}
+
+/**
+ * Sets up the undo button toggle
+ * @param {boolean} initialState - Initial state of undo button
+ */
+async function setupUndoButton(initialState) {
+    const undoButtonToggle = document.getElementById('undoEnabled');
+    undoButtonToggle.checked = initialState;
+
+    undoButtonToggle.addEventListener('change', async () => {
+        const isUndoEnabled = undoButtonToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.undoEnabled = isUndoEnabled;
+            await saveSettings(settings);
+            console.log(`Undo button ${isUndoEnabled ? 'enabled' : 'disabled'}`);
+            // Update UI to show/hide undo button based on the new setting
+            const undoButton = document.getElementById('undoMeasurement');
+            if (undoButton) {
+                undoButton.style.display = isUndoEnabled ? 'inline-block' : 'none';
+            }
+        } catch (error) {
+            handleError(error, "Error saving undo button setting");
         }
     });
 }
