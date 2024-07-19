@@ -310,13 +310,13 @@ export async function updatePreview() {
             elements.preview.textContent = previewText;
 
             if (settings.customColorEnabled) {
-            const color = calculateColor(dipDirection, dip);
-            elements.preview.style.backgroundColor = color;
-            elements.preview.style.color = 'white';
-            } else {
-            elements.preview.style.backgroundColor = '';
-            elements.preview.style.color = '';
-            }
+                const color = calculateColor(dipDirection, dip);
+                elements.preview.style.backgroundColor = color;
+                elements.preview.classList.add('custom-color-enabled');
+                } else {
+                elements.preview.style.backgroundColor = '';
+                elements.preview.classList.remove('custom-color-enabled');
+                }
             } catch (error) {
             handleError(error, "Error updating preview");
             }
@@ -388,10 +388,13 @@ export async function updateResultsTable() {
     
     // Apply custom color if enabled
     if (settings.customColorEnabled) {
-    const color = calculateColor(measurement.dipDirection, measurement.dip);
-    row.style.backgroundColor = color;
-    row.style.color = 'white';
-    }
+        const color = calculateColor(measurement.dipDirection, measurement.dip);
+        row.style.backgroundColor = color;
+        row.classList.add('custom-color-enabled');
+        } else {
+        row.style.backgroundColor = '';
+        row.classList.remove('custom-color-enabled');
+        }
     });
     } catch (error) {
     handleError(error, "Error updating results table");
@@ -418,9 +421,9 @@ document.addEventListener('customColorSettingChanged', async (event) => {
     await updatePreview();
     await updateResultsTable();
     
-    // Update existing rows in the results table
     const resultsTable = document.getElementById('resultsTable');
     if (resultsTable) {
+    resultsTable.classList.toggle('custom-color-enabled', isCustomColorEnabled);
     const tbody = resultsTable.querySelector('tbody');
     if (tbody) {
     const rows = tbody.querySelectorAll('tr');
@@ -430,10 +433,10 @@ document.addEventListener('customColorSettingChanged', async (event) => {
     if (isCustomColorEnabled) {
     const color = calculateColor(measurement.dipDirection, measurement.dip);
     row.style.backgroundColor = color;
-    row.style.color = 'white';
+    row.classList.add('custom-color-enabled');
     } else {
     row.style.backgroundColor = '';
-    row.style.color = '';
+    row.classList.remove('custom-color-enabled');
     }
     }
     });
