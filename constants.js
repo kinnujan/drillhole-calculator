@@ -27,4 +27,20 @@ export const DEFAULT_SETTINGS = {
     customColorEnabled: false
 };
 
-export const CURRENT_SETTINGS_VERSION = 8; // Incremented from 7 to 8
+export const CURRENT_SETTINGS_VERSION = 8;
+
+// Custom color function constants
+export const COLOR_MIN_SATURATION = 70;
+export const COLOR_MAX_SATURATION = 100;
+export const COLOR_MIN_LIGHTNESS = 25;
+export const COLOR_MAX_LIGHTNESS = 50;
+export const COLOR_TEXT_SHADOW = `
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 0 3px #000,
+    0 0 5px #000,
+    0 0 7px #000
+`;
+export const COLOR_OVERLAY_OPACITY = 0.3;

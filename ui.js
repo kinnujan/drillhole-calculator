@@ -1,3 +1,4 @@
+import { COLOR_MIN_SATURATION, COLOR_MAX_SATURATION, COLOR_MIN_LIGHTNESS, COLOR_MAX_LIGHTNESS } from './constants.js';
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
@@ -94,22 +95,22 @@ function setupMeasurementHandlers() {
     });
 
     console.log("Measurement handlers set up.");
-}
-function calculateColor(dipDirection, dip) {
+}function calculateColor(dipDirection, dip) {
     // Normalize dip direction to 0-360 range
     dipDirection = (dipDirection % 360 + 360) % 360;
     
     // Calculate hue based on dip direction (0-360)
     const hue = dipDirection;
     
-    // Calculate saturation based on dip (0-90 degrees mapped to 70-100%)
-    const sat = 70 + (dip / 90) * 30;
+    // Calculate saturation based on dip (0-90 degrees mapped to MIN-MAX%)
+    const sat = COLOR_MIN_SATURATION + (dip / 90) * (COLOR_MAX_SATURATION - COLOR_MIN_SATURATION);
     
     // Adjust lightness based on dip (higher dip = darker color)
-    const lit = 50 - (dip / 90) * 25;
+    const lit = COLOR_MAX_LIGHTNESS - (dip / 90) * (COLOR_MAX_LIGHTNESS - COLOR_MIN_LIGHTNESS);
     
     return `hsl(${hue}, ${sat}%, ${lit}%)`;
 }
+
 
 function setupDepthButtons() {
     const depthButtons = document.querySelectorAll('.depth-button');

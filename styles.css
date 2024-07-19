@@ -1,3 +1,5 @@
+@import url('./constants.js');
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -579,13 +581,7 @@ body.dark-mode .data-storage-info i {
 .custom-color-enabled #preview,
 .custom-color-enabled #resultsTable tbody tr {
     color: white;
-    text-shadow: 
-        -1px -1px 0 #000,
-        1px -1px 0 #000,
-        -1px 1px 0 #000,
-        1px 1px 0 #000,
-        0 0 3px #000,
-        0 0 5px #000;
+    text-shadow: var(--COLOR_TEXT_SHADOW);
     font-weight: bold;
 }
 
@@ -599,13 +595,7 @@ body.dark-mode .data-storage-info i {
 body.dark-mode .custom-color-enabled #preview,
 body.dark-mode .custom-color-enabled #resultsTable tbody tr {
     color: #fff;
-    text-shadow: 
-        -1px -1px 0 #000,
-        1px -1px 0 #000,
-        -1px 1px 0 #000,
-        1px 1px 0 #000,
-        0 0 3px #000,
-        0 0 5px #000;
+    text-shadow: var(--COLOR_TEXT_SHADOW);
 }
 
 body.dark-mode .custom-color-enabled #resultsTable th {
@@ -627,19 +617,6 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     line-height: 1.4;
 }
 
-/* Increase contrast for text */
-.custom-color-enabled #preview,
-.custom-color-enabled #resultsTable tbody tr {
-    text-shadow: 
-        -1px -1px 0 #000,
-        1px -1px 0 #000,
-        -1px 1px 0 #000,
-        1px 1px 0 #000,
-        0 0 3px #000,
-        0 0 5px #000,
-        0 0 7px #000;
-}
-
 /* Add a semi-transparent overlay to increase contrast */
 .custom-color-enabled #preview::before,
 .custom-color-enabled #resultsTable tbody tr::before {
@@ -649,7 +626,7 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, var(--COLOR_OVERLAY_OPACITY));
     z-index: -1;
     pointer-events: none;
 }
