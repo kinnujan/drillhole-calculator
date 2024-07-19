@@ -4,8 +4,7 @@
 
 The Drill Hole Calculator is a Progressive Web App (PWA) designed for geologists. This tool provides an easy-to-use interface for inputting measurement data, performing calculations of planes to real-world dip and dip direction, and storing results.
 
-![image](https://github.com/kinnujan/drillhole-calculator/assets/55635375/bbb588bf-0535-4bf6-978b-60bfd8958ab3)
-![image](https://github.com/kinnujan/drillhole-calculator/assets/55635375/da9d8dd3-dd1c-48be-8b51-e8c4473bf82b)
+![image](https://github.com/kinnujan/drillhole-calculator/blob/c20f6cdd064aee01c99288d0d48a1ca07515fd3b/dhcalc_screenshot.png)
 
 ## Features
 
