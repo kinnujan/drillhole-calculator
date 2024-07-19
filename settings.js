@@ -16,6 +16,7 @@ export async function setupSettings() {
         setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
         setupHapticFeedback(settings.hapticFeedback);
         setupUndoButton(settings.undoEnabled);
+        setupCustomColorToggle(settings.customColorEnabled);
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
@@ -109,6 +110,29 @@ async function setupUndoButton(initialState) {
             }
         } catch (error) {
             handleError(error, "Error saving undo button setting");
+        }
+    });
+}
+
+/**
+ * Sets up the custom color toggle
+ * @param {boolean} initialState - Initial state of custom color
+ */
+async function setupCustomColorToggle(initialState) {
+    const customColorToggle = document.getElementById('customColorEnabled');
+    customColorToggle.checked = initialState;
+
+    customColorToggle.addEventListener('change', async () => {
+        const isCustomColorEnabled = customColorToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.customColorEnabled = isCustomColorEnabled;
+            await saveSettings(settings);
+            console.log(`Custom color ${isCustomColorEnabled ? 'enabled' : 'disabled'}`);
+            // Update UI to reflect the new custom color setting
+            document.dispatchEvent(new CustomEvent('customColorSettingChanged', { detail: isCustomColorEnabled }));
+        } catch (error) {
+            handleError(error, "Error saving custom color setting");
         }
     });
 }

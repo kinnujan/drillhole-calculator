@@ -23,7 +23,8 @@ export const DEFAULT_SETTINGS = {
     generationTypes: ['S0', 'S0/1', 'S1', 'S2', 'S3'],
     customTypes: [],
     hapticFeedback: true,
-    undoEnabled: true
+    undoEnabled: true,
+    customColorEnabled: false
 };
 
-export const CURRENT_SETTINGS_VERSION = 7; // Incremented from 6 to 7
+export const CURRENT_SETTINGS_VERSION = 8; // Incremented from 7 to 8
