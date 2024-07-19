@@ -157,11 +157,17 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
         button.textContent = option;
         button.onclick = async () => {
             await triggerHapticFeedback();
-            // Remove 'active' class from all buttons in this container
-            container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
-            // Add 'active' class to clicked button
-            button.classList.add('active');
-            onClickHandler(option);
+            if (button.classList.contains('active')) {
+                // If the button is already active, deselect it
+                button.classList.remove('active');
+                onClickHandler(null); // Call the handler with null to indicate deselection
+            } else {
+                // Remove 'active' class from all buttons in this container
+                container.querySelectorAll(`.${dataAttribute}-button`).forEach(btn => btn.classList.remove('active'));
+                // Add 'active' class to clicked button
+                button.classList.add('active');
+                onClickHandler(option);
+            }
         };
         container.appendChild(button);
     });

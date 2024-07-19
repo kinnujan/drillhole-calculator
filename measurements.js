@@ -351,20 +351,25 @@ async function resetDrillHoleInfo() {
 }
 
 export function setSelectedType(type) {
-    selectedType = type;
-    console.log("Selected type set to:", type);
+    selectedType = type === null ? '' : type;
+    console.log("Selected type set to:", selectedType);
 }
 
 export function setSelectedGeneration(gen) {
-    selectedGeneration = gen;
-    console.log("Selected generation set to:", gen);
+    selectedGeneration = gen === null ? '' : gen;
+    console.log("Selected generation set to:", selectedGeneration);
 }
 
 export function setSelectedCustomType(typeName, option) {
+    if (option === null) {
+    delete selectedCustomTypes[typeName];
+    } else {
     selectedCustomTypes[typeName] = option;
-    console.log(`Selected custom type ${typeName} set to:`, option);
+    console.log(`Selected custom type ${typeName} set to:`, selectedCustomTypes[typeName]);
 }
 
+
+}
 export async function exportData() {
     try {
         const csvContent = await getCSVContent();
