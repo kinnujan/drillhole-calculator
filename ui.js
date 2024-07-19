@@ -1,4 +1,4 @@
-import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData } from './measurements.js';
+import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
@@ -11,6 +11,24 @@ async function triggerHapticFeedback(duration = 10) {
         }
     } catch (error) {
         handleError(error, "Error triggering haptic feedback");
+    }
+}
+
+export function enableUndoButton() {
+    const undoButton = document.getElementById('undoMeasurement');
+    if (undoButton) {
+        undoButton.disabled = false;
+    } else {
+        console.warn("Undo button not found.");
+    }
+}
+
+export function disableUndoButton() {
+    const undoButton = document.getElementById('undoMeasurement');
+    if (undoButton) {
+        undoButton.disabled = true;
+    } else {
+        console.warn("Undo button not found.");
     }
 }
 
@@ -56,6 +74,7 @@ function setupMeasurementHandlers() {
     console.log("Setting up measurement handlers...");
     const handlers = [
         { id: 'addMeasurement', handler: addMeasurement },
+        { id: 'undoMeasurement', handler: undoLastMeasurement },
         { id: 'copyResults', handler: copyResults },
         { id: 'saveAsCSV', handler: saveAsCSV },
         { id: 'clearMeasurements', handler: clearMeasurementsWithConfirmation },

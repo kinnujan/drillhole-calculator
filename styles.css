@@ -150,7 +150,7 @@ footer {
     margin-top: 16px;
 }
 
-.action-buttons button, #addMeasurement {
+.action-buttons button, #addMeasurement, #undoMeasurement {
     flex: 1;
     margin: 0 4px;
     font-size: 0.9em;
@@ -159,6 +159,9 @@ footer {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+}
+
+.action-buttons button, #addMeasurement {
     background-color: #2196F3;
     color: white;
 }
@@ -167,12 +170,33 @@ footer {
     background-color: #1e87db;
 }
 
+#undoMeasurement {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+#undoMeasurement:hover {
+    background-color: #e0e0e0;
+}
+
+#undoMeasurement:disabled {
+    background-color: #f0f0f0;
+    color: #999;
+    cursor: not-allowed;
+}
+
 #clearMeasurements {
     background-color: #ff4444;
 }
 
 #clearMeasurements:hover {
     background-color: #ff3333;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
 }
 
 .header {
@@ -380,6 +404,20 @@ body.dark-mode .setting-description {
     color: #a0a0a0;
 }
 
+body.dark-mode #undoMeasurement {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+}
+
+body.dark-mode #undoMeasurement:hover {
+    background-color: #3a3a3a;
+}
+
+body.dark-mode #undoMeasurement:disabled {
+    background-color: #2c2c2c;
+    color: #666;
+}
+
 /* Media query for larger screens */
 @media screen and (min-width: 768px) {
     body {
@@ -434,7 +472,7 @@ body.dark-mode .setting-description {
         height: 60px;
     }
 
-    .action-buttons button, #addMeasurement {
+    .action-buttons button, #addMeasurement, #undoMeasurement {
         padding: 10px 16px;
         font-size: 1em;
     }
@@ -497,7 +535,7 @@ body.dark-mode .setting-description {
         align-items: center;
     }
 
-    .action-buttons button, #addMeasurement {
+    .action-buttons button, #addMeasurement, #undoMeasurement {
         margin: 0 4px;
     }
 

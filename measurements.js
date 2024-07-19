@@ -1,5 +1,5 @@
 import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadSettings } from './storage.js';
-import { updateResultsTable, updatePreview, resetUISelections } from './ui.js';
+import { updateResultsTable, updatePreview, resetUISelections, enableUndoButton, disableUndoButton } from './ui.js';
 import { toRadians, toDegrees, calculateStrike, validateInputs, handleError } from './utils.js';
 import { ERROR_MESSAGES, CSV_MIME_TYPE } from './constants.js';
 
@@ -7,6 +7,7 @@ let measurements = [];
 let selectedType = '';
 let selectedGeneration = '';
 let selectedCustomTypes = {};
+let lastAddedMeasurement = null;
 
 export async function loadMeasurements() {
     console.log("Loading measurements...");
@@ -14,6 +15,7 @@ export async function loadMeasurements() {
         measurements = await loadMeasurementsFromStorage();
         await updateResultsTable();
         console.log("Measurements loaded.");
+        updateUndoButtonState();
     } catch (error) {
         handleError(error, "Error loading measurements");
     }
@@ -45,8 +47,8 @@ export async function addMeasurement() {
         
         const result = {
             holeId,
-            holeDip: holeDip.toFixed(1),  // Add holeDip to the result
-            holeAzimuth: holeAzimuth.toFixed(1),  // Add holeAzimuth to the result
+            holeDip: holeDip.toFixed(1),
+            holeAzimuth: holeAzimuth.toFixed(1),
             depth,
             type: selectedType,
             generation: selectedGeneration,
@@ -60,6 +62,7 @@ export async function addMeasurement() {
         };
 
         measurements.push(result);
+        lastAddedMeasurement = { ...result, index: measurements.length - 1 };
         await saveMeasurements(measurements);
         await saveDrillHoleInfo({ holeId, holeDip, holeAzimuth });
 
@@ -68,6 +71,7 @@ export async function addMeasurement() {
         resetInputFields();
         resetSelections();
         updatePreview();
+        enableUndoButton();
         console.log("New measurement added:", result);
     } catch (error) {
         handleError(error, "An error occurred while adding the measurement.");
@@ -154,6 +158,43 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
     console.log("Final output:", { dipOutputFINAL, dipdirectionOutputFINAL });
 
     return [dipOutputFINAL, dipdirectionOutputFINAL];
+}
+export async function undoLastMeasurement() {
+    console.log("Undoing last measurement...");
+    if (lastAddedMeasurement) {
+        measurements.pop();
+        await saveMeasurements(measurements);
+        await updateResultsTable();
+
+        // Restore the state of the last measurement
+        document.getElementById('holeId').value = lastAddedMeasurement.holeId;
+        document.getElementById('holeDip').value = lastAddedMeasurement.holeDip;
+        document.getElementById('holeAzimuth').value = lastAddedMeasurement.holeAzimuth;
+        document.getElementById('depth').value = lastAddedMeasurement.depth;
+        document.getElementById('alpha').value = lastAddedMeasurement.alpha;
+        document.getElementById('beta').value = lastAddedMeasurement.beta;
+        document.getElementById('comment').value = lastAddedMeasurement.comment;
+
+        selectedType = lastAddedMeasurement.type;
+        selectedGeneration = lastAddedMeasurement.generation;
+        selectedCustomTypes = { ...lastAddedMeasurement.customTypes };
+
+        updatePreview();
+        resetUISelections();
+        lastAddedMeasurement = null;
+        updateUndoButtonState();
+        console.log("Last measurement undone");
+    } else {
+        console.log("No measurement to undo");
+    }
+}
+
+function updateUndoButtonState() {
+    if (measurements.length > 0) {
+        enableUndoButton();
+    } else {
+        disableUndoButton();
+    }
 }
 
 function resetInputFields() {
@@ -314,6 +355,7 @@ export async function clearMeasurementsWithConfirmation() {
     if (confirm("Are you sure you want to clear all measurements? This action cannot be undone.")) {
         try {
             measurements = [];
+            lastAddedMeasurement = null;
             await saveMeasurements(measurements);
             await updateResultsTable();
             const copyStatus = document.getElementById('copyStatus');
@@ -321,6 +363,7 @@ export async function clearMeasurementsWithConfirmation() {
                 copyStatus.textContent = 'All measurements cleared.';
             }
             await resetDrillHoleInfo();
+            updateUndoButtonState();
             console.log("All measurements cleared.");
         } catch (error) {
             handleError(error, "An error occurred while clearing measurements.");
@@ -362,14 +405,13 @@ export function setSelectedGeneration(gen) {
 
 export function setSelectedCustomType(typeName, option) {
     if (option === null) {
-    delete selectedCustomTypes[typeName];
+        delete selectedCustomTypes[typeName];
     } else {
-    selectedCustomTypes[typeName] = option;
-    console.log(`Selected custom type ${typeName} set to:`, selectedCustomTypes[typeName]);
+        selectedCustomTypes[typeName] = option;
+        console.log(`Selected custom type ${typeName} set to:`, selectedCustomTypes[typeName]);
+    }
 }
 
-
-}
 export async function exportData() {
     try {
         const csvContent = await getCSVContent();
