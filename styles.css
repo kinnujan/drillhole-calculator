@@ -506,5 +506,24 @@ body.dark-mode .setting-description {
     }
 }
 .social-links i {
+  font-size: 24px;
+}
+.data-storage-info {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.data-storage-info i {
     font-size: 24px;
-  }
+    margin-right: 10px;
+    color: #007bff;
+}
+
+.data-storage-info p {
+    margin: 0;
+    font-size: 14px;
+}
