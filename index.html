@@ -6,6 +6,9 @@
     <title>Drill Hole Calculator</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4CAF50">
+    <meta name="description" content="Calculate real world directions out of drill hole measurements">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
@@ -170,7 +173,7 @@
         <div id="error"></div>
     </div>
     <footer>
-        <span>Done by Janne v.15</span>
+        <span>Done by Janne v.16</span>
         <div class="social-links">
             <a href="https://www.linkedin.com/in/kinnujan/" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
             <a href="https://github.com/kinnujan/drillhole-calculator/" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i></a>
@@ -178,5 +181,16 @@
         </div>
     </footer>
     <script type="module" src="main.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

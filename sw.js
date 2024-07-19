@@ -1,4 +1,4 @@
-const CACHE_NAME = 'drill-hole-orientation-calculator-v1';
+const CACHE_NAME = 'drill-hole-orientation-calculator-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -72,3 +72,34 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// Add offline fallback
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => {
+        return caches.match(event.request)
+          .then((response) => {
+            if (response) {
+              return response;
+            }
+            if (event.request.mode === 'navigate') {
+              return caches.match('/index.html');
+            }
+            return new Response('Offline content not available.');
+          });
+      })
+  );
+});
+
+// Periodic sync for background updates (if supported)
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'update-cache') {
+    event.waitUntil(updateCache());
+  }
+});
+
+async function updateCache() {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.addAll(urlsToCache);
+}
