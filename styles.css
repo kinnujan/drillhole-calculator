@@ -1,3 +1,4 @@
+/* ... (previous styles remain unchanged) ... */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -574,15 +575,45 @@ body.dark-mode .data-storage-info {
 body.dark-mode .data-storage-info i {
     color: #4da6ff;
 }
-
 /* Custom color styles */
 .custom-color-enabled #preview,
 .custom-color-enabled #resultsTable tbody tr {
     color: white;
-    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
 }
 
 .custom-color-enabled #resultsTable th {
     background-color: #333;
     color: white;
 }
+
+/* Improve contrast for dark mode */
+body.dark-mode .custom-color-enabled #preview,
+body.dark-mode .custom-color-enabled #resultsTable tbody tr {
+    text-shadow: 
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff;
+}
+
+body.dark-mode .custom-color-enabled #resultsTable th {
+    background-color: #1a1a1a;
+}
+
+/* Additional styles to improve readability */
+.custom-color-enabled #resultsTable td {
+    padding: 8px;
+}
+
+.custom-color-enabled #preview {
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 6px;
+}
+
+/* ... (rest of the styles remain unchanged) ... */

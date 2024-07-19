@@ -95,7 +95,6 @@ function setupMeasurementHandlers() {
 
     console.log("Measurement handlers set up.");
 }
-
 function calculateColor(dipDirection, dip) {
     // Normalize dip direction to 0-360 range
     dipDirection = (dipDirection % 360 + 360) % 360;
@@ -103,14 +102,14 @@ function calculateColor(dipDirection, dip) {
     // Calculate hue based on dip direction (0-360)
     const hue = dipDirection;
     
-    // Calculate saturation based on dip (0-90 degrees mapped to 50-100%)
-    const sat= 50 + (dip / 90) * 50;
+    // Calculate saturation based on dip (0-90 degrees mapped to 60-100%)
+    const sat = 60 + (dip / 90) * 40;
     
-    // Use a fixed lightness value
-    const lit = 50;
+    // Adjust lightness based on dip (higher dip = darker color)
+    const lit = 60 - (dip / 90) * 30;
     
     return `hsl(${hue}, ${sat}%, ${lit}%)`;
-    }
+}
 
 function setupDepthButtons() {
     const depthButtons = document.querySelectorAll('.depth-button');
