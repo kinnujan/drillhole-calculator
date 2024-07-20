@@ -328,6 +328,7 @@ export async function updatePreview() {
         console.warn("One or more elements required for preview update not found.");
     }
 }
+
 export async function updateResultsTable() {
     console.log("Updating results table");
     const resultsTable = document.getElementById('resultsTable');
@@ -354,7 +355,7 @@ export async function updateResultsTable() {
 
         // Create header row
         const headerRow = document.createElement('tr');
-        const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
+        const baseColumns = settings.customColorEnabled ? ['Color', 'Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'] : ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
         const allColumns = [...baseColumns, ...settings.customTypes.map(ct => ct.name)];
         
         allColumns.forEach(col => {
@@ -373,7 +374,7 @@ export async function updateResultsTable() {
             const row = document.createElement('tr');
             
             // Create an array of cell data
-            const cellData = [
+            let cellData = [
                 { value: measurement.depth, format: (v) => (v != null && !isNaN(v)) ? Number(v).toFixed(2) : '' },
                 { value: measurement.type, format: (v) => v || '' },
                 { value: measurement.generation, format: (v) => v || '' },
@@ -386,34 +387,36 @@ export async function updateResultsTable() {
                 }))
             ];
 
+            if (settings.customColorEnabled) {
+                const color = calculateColor(measurement.dipDirection, measurement.dip);
+                cellData.unshift({ value: color, format: (v) => `<div class="color-swatch" style="background-color: ${v};"></div>` });
+            }
+
             // Add cells to the row
             cellData.forEach((data, cellIndex) => {
                 const cell = document.createElement('td');
                 const formattedValue = data.format(data.value);
-                cell.textContent = formattedValue;
+                if (settings.customColorEnabled && cellIndex === 0) {
+                    cell.innerHTML = formattedValue;
+                } else {
+                    cell.textContent = formattedValue;
+                }
                 console.log(`Column ${cellIndex}:`, data.value, "Formatted:", formattedValue);
                 
-                if (cellIndex === 5 && measurement.comment) { // Comment cell
-                    cell.title = measurement.comment; // Show full comment on hover
-                    if (measurement.comment.length > 20) {
-                        cell.textContent = measurement.comment.substring(0, 20) + '...';
+                if ((settings.customColorEnabled && cellIndex === 6) || (!settings.customColorEnabled && cellIndex === 5)) { // Comment cell
+                    if (measurement.comment) {
+                        cell.title = measurement.comment; // Show full comment on hover
+                        if (measurement.comment.length > 20) {
+                            cell.textContent = measurement.comment.substring(0, 20) + '...';
+                        }
                     }
                 }
                 row.appendChild(cell);
             });
             
-            // Apply custom color if enabled
-            if (settings.customColorEnabled) {
-                const color = calculateColor(measurement.dipDirection, measurement.dip);
-                row.style.setProperty('--row-bg-color', color);
-                row.classList.add('custom-color-enabled');
-            }
-            
             tbody.appendChild(row);
         });
 
-        // Add or remove custom-color-enabled class to the table
-        resultsTable.classList.toggle('custom-color-enabled', settings.customColorEnabled);
     } catch (error) {
         handleError(error, "Error updating results table");
     }
@@ -438,26 +441,4 @@ document.addEventListener('customColorSettingChanged', async (event) => {
     const isCustomColorEnabled = event.detail;
     await updatePreview();
     await updateResultsTable();
-    
-    const resultsTable = document.getElementById('resultsTable');
-    if (resultsTable) {
-        resultsTable.classList.toggle('custom-color-enabled', isCustomColorEnabled);
-        const tbody = resultsTable.querySelector('tbody');
-        if (tbody) {
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach((row, index) => {
-                const measurement = measurements[index];
-                if (measurement) {
-                    if (isCustomColorEnabled) {
-                        const color = calculateColor(measurement.dipDirection, measurement.dip);
-                        row.style.backgroundColor = color;
-                        row.classList.add('custom-color-enabled');
-                    } else {
-                        row.style.backgroundColor = '';
-                        row.classList.remove('custom-color-enabled');
-                    }
-                }
-            });
-        }
-    }
 });
