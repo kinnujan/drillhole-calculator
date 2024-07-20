@@ -5,8 +5,13 @@
     --color-text-dark-mode: #ffffff;
     --color-text-outline: rgba(0, 0, 0, 0.5);
     --color-overlay-opacity: 0.2;
+    --color-background: #ffffff;
+    --color-background-dark: #121212;
+    --color-table-header: #f2f2f2;
+    --color-table-header-dark: #2c2c2c;
+    --color-table-border: #ddd;
+    --color-table-border-dark: #444;
 }
-
 
 body {
     font-family: Arial, sans-serif;
@@ -712,6 +717,30 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
     top: 0;
     z-index: 2;
 }
+#resultsTable {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#resultsTable th,
+#resultsTable td {
+    border: 1px solid var(--color-table-border);
+    padding: 8px;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#resultsTable th {
+    background-color: var(--color-table-header);
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
 
 /* Adjust column widths */
 #resultsTable th:nth-child(1),
@@ -733,8 +762,8 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 
 /* Custom color styles */
 #resultsTable.custom-color-enabled th {
-    background-color: #333;
-    color: white;
+    background-color: var(--color-table-header);
+    color: var(--color-text);
 }
 
 #resultsTable.custom-color-enabled tbody tr {
@@ -763,6 +792,32 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
     z-index: -1;
 }
 
+/* Dark mode styles */
+body.dark-mode {
+    background-color: var(--color-background-dark);
+    color: var(--color-text-dark-mode);
+}
+
+body.dark-mode #resultsTable th,
+body.dark-mode #resultsTable td {
+    border-color: var(--color-table-border-dark);
+}
+
+body.dark-mode #resultsTable th {
+    background-color: var(--color-table-header-dark);
+    color: var(--color-text-dark-mode);
+}
+
+body.dark-mode #resultsTable.custom-color-enabled th {
+    background-color: var(--color-table-header-dark);
+    color: var(--color-text-dark-mode);
+}
+
 body.dark-mode #resultsTable.custom-color-enabled tbody tr td {
     color: var(--color-text-dark-mode);
 }
+
+body.dark-mode #resultsTable.custom-color-enabled tbody tr td::before {
+    background-color: rgba(255, 255, 255, var(--color-overlay-opacity));
+}
+
