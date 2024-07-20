@@ -3,6 +3,7 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
+
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
     try {
@@ -304,9 +305,13 @@ export async function updatePreview() {
             const settings = await loadSettings();
             const strike = calculateStrike(dipDirection, settings.strikeMode);
 
-            let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
+            let previewText = `
+                <div><span class="preview-label">Dip: </span><span class="preview-value">${dip.toFixed(1)}°</span></div>
+                <div><span class="preview-label">Dip Direction: </span><span class="preview-value">${dipDirection.toFixed(1)}°</span></div>
+                <div><span class="preview-label">Strike: </span><span class="preview-value">${strike.toFixed(1)}°</span></div>
+            `;
 
-            elements.preview.textContent = previewText;
+            elements.preview.innerHTML = previewText;
 
             if (settings.customColorEnabled) {
                 const color = calculateColor(dipDirection, dip);
@@ -449,5 +454,3 @@ document.addEventListener('customColorSettingChanged', async (event) => {
         }
     }
 });
-
-// ... (keep all remaining existing code) ...

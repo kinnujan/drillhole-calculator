@@ -630,9 +630,10 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     color: #fff;
 }
 
-.custom-color-enabled #resultsTable td {
+.custom-color-enabled #resultsTable td,
+.custom-color-enabled #resultsTable th {
     padding: 10px;
-    text-align: center;
+    text-align: left;
 }
 
 .custom-color-enabled #preview {
@@ -641,6 +642,17 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     border-radius: 8px;
     font-size: 1.2em;
     line-height: 1.4;
+}
+
+/* Preview text styling */
+#preview .preview-label {
+    font-size: 0.8em;
+    font-weight: normal;
+}
+
+#preview .preview-value {
+    font-size: 1.2em;
+    font-weight: bold;
 }
 
 /* Ensure the custom color styles are applied */
@@ -668,3 +680,30 @@ body.dark-mode #preview.custom-color-enabled,
 body.dark-mode #resultsTable.custom-color-enabled tbody tr {
     color: var(--color-text-dark-mode);
 }
+
+/* Fix table alignment */
+#resultsTable {
+    table-layout: fixed;
+    width: 100%;
+}
+
+#resultsTable th,
+#resultsTable td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Adjust column widths */
+#resultsTable th:nth-child(1),
+#resultsTable td:nth-child(1) { width: 10%; } /* Depth */
+#resultsTable th:nth-child(2),
+#resultsTable td:nth-child(2) { width: 15%; } /* Type */
+#resultsTable th:nth-child(3),
+#resultsTable td:nth-child(3) { width: 10%; } /* Gen */
+#resultsTable th:nth-child(4),
+#resultsTable td:nth-child(4) { width: 10%; } /* Dip */
+#resultsTable th:nth-child(5),
+#resultsTable td:nth-child(5) { width: 15%; } /* DipDir */
+#resultsTable th:nth-child(6),
+#resultsTable td:nth-child(6) { width: 40%; } /* Comment */
