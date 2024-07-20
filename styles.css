@@ -7,6 +7,7 @@
     --color-overlay-opacity: 0.2;
 }
 
+
 ody {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -585,6 +586,7 @@ body.dark-mode .data-storage-info i {
 }
 
 
+
 /* Update the custom color styles */
 .custom-color-enabled #preview,
 .custom-color-enabled #resultsTable tbody tr {
@@ -716,3 +718,17 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 /* Custom types columns */
 #resultsTable th:nth-child(n+7),
 #resultsTable td:nth-child(n+7) { width: 10%; } /* Custom types */
+
+/* New styles for custom color rows */
+#resultsTable.custom-color-enabled tbody tr {
+    background-color: var(--row-bg-color);
+}
+
+#resultsTable.custom-color-enabled tbody tr:nth-child(even) {
+    background-color: var(--row-bg-color);
+    filter: brightness(95%);
+}
+
+#resultsTable.custom-color-enabled tbody tr td {
+    background-color: transparent;
+}

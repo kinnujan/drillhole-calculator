@@ -415,20 +415,16 @@ export async function updateResultsTable() {
             // Apply custom color if enabled
             if (settings.customColorEnabled) {
                 const color = calculateColor(measurement.dipDirection, measurement.dip);
-                row.style.backgroundColor = color;
+                row.style.setProperty('--row-bg-color', color);
                 row.classList.add('custom-color-enabled');
             } else {
-                row.style.backgroundColor = '';
+                row.style.removeProperty('--row-bg-color');
                 row.classList.remove('custom-color-enabled');
             }
         });
 
         // Add or remove custom-color-enabled class to the table
-        if (settings.customColorEnabled) {
-            resultsTable.classList.add('custom-color-enabled');
-        } else {
-            resultsTable.classList.remove('custom-color-enabled');
-        }
+        resultsTable.classList.toggle('custom-color-enabled', settings.customColorEnabled);
     } catch (error) {
         handleError(error, "Error updating results table");
     }
