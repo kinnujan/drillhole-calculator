@@ -368,17 +368,25 @@ export async function updateResultsTable() {
         // Populate table body
         measurements.forEach((measurement) => {
             const row = tbody.insertRow();
-            row.insertCell(0).textContent = measurement.depth.toFixed(2);
-            row.insertCell(1).textContent = measurement.type;
-            row.insertCell(2).textContent = measurement.generation;
-            row.insertCell(3).textContent = measurement.dip.toFixed(1) + '°';
-            row.insertCell(4).textContent = measurement.dipDirection.toFixed(1) + '°';
-            
-            const commentCell = row.insertCell(5);
-            commentCell.textContent = (measurement.comment.length > 20 ?
-                measurement.comment.substring(0, 20) + '...' :
-                measurement.comment);
-            commentCell.title = measurement.comment; // Show full comment on hover
+            const cells = [
+                typeof measurement.depth === 'number' ? measurement.depth.toFixed(2) : '',
+                measurement.type || '',
+                measurement.generation || '',
+                typeof measurement.dip === 'number' ? measurement.dip.toFixed(1) + '°' : '',
+                typeof measurement.dipDirection === 'number' ? measurement.dipDirection.toFixed(1) + '°' : '',
+                measurement.comment || ''
+            ];
+
+            cells.forEach((cellContent, index) => {
+                const cell = row.insertCell(index);
+                cell.textContent = cellContent;
+                if (index === 5 && measurement.comment) { // Comment cell
+                    cell.title = measurement.comment; // Show full comment on hover
+                    if (measurement.comment.length > 20) {
+                        cell.textContent = measurement.comment.substring(0, 20) + '...';
+                    }
+                }
+            });
             
             // Add custom type values
             settings.customTypes.forEach(customType => {
