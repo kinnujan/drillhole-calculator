@@ -429,23 +429,25 @@ document.addEventListener('customColorSettingChanged', async (event) => {
     
     const resultsTable = document.getElementById('resultsTable');
     if (resultsTable) {
-    resultsTable.classList.toggle('custom-color-enabled', isCustomColorEnabled);
-    const tbody = resultsTable.querySelector('tbody');
-    if (tbody) {
-    const rows = tbody.querySelectorAll('tr');
-    rows.forEach((row, index) => {
-    const measurement = measurements[index];
-    if (measurement) {
-    if (isCustomColorEnabled) {
-    const color = calculateColor(measurement.dipDirection, measurement.dip);
-    row.style.backgroundColor = color;
-    row.classList.add('custom-color-enabled');
-    } else {
-    row.style.backgroundColor = '';
-    row.classList.remove('custom-color-enabled');
+        resultsTable.classList.toggle('custom-color-enabled', isCustomColorEnabled);
+        const tbody = resultsTable.querySelector('tbody');
+        if (tbody) {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                const measurement = measurements[index];
+                if (measurement) {
+                    if (isCustomColorEnabled) {
+                        const color = calculateColor(measurement.dipDirection, measurement.dip);
+                        row.style.backgroundColor = color;
+                        row.classList.add('custom-color-enabled');
+                    } else {
+                        row.style.backgroundColor = '';
+                        row.classList.remove('custom-color-enabled');
+                    }
+                }
+            });
+        }
     }
-    }
-    });
-    }
-    }
-    });
+});
+
+// ... (keep all remaining existing code) ...
