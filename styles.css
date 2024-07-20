@@ -7,7 +7,7 @@
     --color-overlay-opacity: 0.2;
 }
 
-body {
+ody {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 10px;
@@ -584,12 +584,13 @@ body.dark-mode .data-storage-info i {
     color: #4da6ff;
 }
 
+
 /* Update the custom color styles */
 .custom-color-enabled #preview,
 .custom-color-enabled #resultsTable tbody tr {
     position: relative;
     color: var(--color-text);
-    font-weight: bold;
+    font-weight: normal;
 }
 
 .custom-color-enabled #preview::before,
@@ -642,24 +643,28 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     border-radius: 8px;
     font-size: 1.2em;
     line-height: 1.4;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 /* Preview text styling */
 #preview .preview-label {
     font-size: 0.8em;
     font-weight: normal;
+    margin-right: 5px;
 }
 
 #preview .preview-value {
     font-size: 1.2em;
     font-weight: bold;
+    margin-right: 15px;
 }
 
 /* Ensure the custom color styles are applied */
 #preview.custom-color-enabled,
 #resultsTable.custom-color-enabled tbody tr {
     color: var(--color-text);
-    font-weight: bold;
     position: relative;
     z-index: 1;
 }
@@ -707,3 +712,7 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 #resultsTable td:nth-child(5) { width: 15%; } /* DipDir */
 #resultsTable th:nth-child(6),
 #resultsTable td:nth-child(6) { width: 40%; } /* Comment */
+
+/* Custom types columns */
+#resultsTable th:nth-child(n+7),
+#resultsTable td:nth-child(n+7) { width: 10%; } /* Custom types */

@@ -284,6 +284,7 @@ async function syncInputs() {
         handleError(error, "Error loading drill hole info");
     }
 }
+
 export async function updatePreview() {
     const elements = {
         holeDip: document.getElementById('holeDip'),
@@ -306,9 +307,9 @@ export async function updatePreview() {
             const strike = calculateStrike(dipDirection, settings.strikeMode);
 
             let previewText = `
-                <div><span class="preview-label">Dip: </span><span class="preview-value">${dip.toFixed(1)}°</span></div>
-                <div><span class="preview-label">Dip Direction: </span><span class="preview-value">${dipDirection.toFixed(1)}°</span></div>
-                <div><span class="preview-label">Strike: </span><span class="preview-value">${strike.toFixed(1)}°</span></div>
+                <span class="preview-label">Dip: </span><span class="preview-value">${dip.toFixed(1)}°</span>
+                <span class="preview-label">Dip Direction: </span><span class="preview-value">${dipDirection.toFixed(1)}°</span>
+                <span class="preview-label">Strike: </span><span class="preview-value">${strike.toFixed(1)}°</span>
             `;
 
             elements.preview.innerHTML = previewText;
@@ -348,21 +349,17 @@ export async function updateResultsTable() {
     thead.innerHTML = '';
     tbody.innerHTML = '';
 
-    // Create header row
-    const headerRow = document.createElement('tr');
-    const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
-    baseColumns.forEach(col => {
-        const th = document.createElement('th');
-        th.textContent = col;
-        headerRow.appendChild(th);
-    });
-
     try {
-        // Add custom type columns
         const settings = await loadSettings();
-        settings.customTypes.forEach(customType => {
+
+        // Create header row
+        const headerRow = document.createElement('tr');
+        const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
+        const allColumns = [...baseColumns, ...settings.customTypes.map(ct => ct.name)];
+        
+        allColumns.forEach(col => {
             const th = document.createElement('th');
-            th.textContent = customType.name;
+            th.textContent = col;
             headerRow.appendChild(th);
         });
 
@@ -374,8 +371,8 @@ export async function updateResultsTable() {
             row.insertCell(0).textContent = measurement.depth.toFixed(2);
             row.insertCell(1).textContent = measurement.type;
             row.insertCell(2).textContent = measurement.generation;
-            row.insertCell(3).textContent = measurement.dip + '°';
-            row.insertCell(4).textContent = measurement.dipDirection + '°';
+            row.insertCell(3).textContent = measurement.dip.toFixed(1) + '°';
+            row.insertCell(4).textContent = measurement.dipDirection.toFixed(1) + '°';
             
             const commentCell = row.insertCell(5);
             commentCell.textContent = (measurement.comment.length > 20 ?
@@ -411,6 +408,7 @@ export async function updateResultsTable() {
         handleError(error, "Error updating results table");
     }
 }
+
 
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
