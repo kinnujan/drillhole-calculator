@@ -3,6 +3,7 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
+
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
     try {
@@ -375,11 +376,11 @@ export async function updateResultsTable() {
             
             // Add base columns
             [
-                { value: measurement.depth, format: (v) => typeof v === 'number' ? v.toFixed(2) : '' },
+                { value: measurement.depth, format: (v) => (v != null && !isNaN(v)) ? Number(v).toFixed(2) : '' },
                 { value: measurement.type, format: (v) => v || '' },
                 { value: measurement.generation, format: (v) => v || '' },
-                { value: measurement.dip, format: (v) => typeof v === 'number' ? v.toFixed(1) + '°' : '' },
-                { value: measurement.dipDirection, format: (v) => typeof v === 'number' ? v.toFixed(1) + '°' : '' },
+                { value: measurement.dip, format: (v) => (v != null && !isNaN(v)) ? Number(v).toFixed(1) + '°' : '' },
+                { value: measurement.dipDirection, format: (v) => (v != null && !isNaN(v)) ? Number(v).toFixed(1) + '°' : '' },
                 { value: measurement.comment, format: (v) => v || '' }
             ].forEach((column, colIndex) => {
                 const cell = row.insertCell();
@@ -396,12 +397,20 @@ export async function updateResultsTable() {
             });
             
             // Add custom type values
-            settings.customTypes.forEach(customType => {
-                const cell = row.insertCell();
-                const customValue = measurement.customTypes && measurement.customTypes[customType.name];
-                cell.textContent = customValue || '-';
-                console.log(`Custom type ${customType.name}:`, customValue);
-            });
+            if (measurement.customTypes) {
+                settings.customTypes.forEach(customType => {
+                    const cell = row.insertCell();
+                    const customValue = measurement.customTypes[customType.name];
+                    cell.textContent = customValue || '-';
+                    console.log(`Custom type ${customType.name}:`, customValue);
+                });
+            } else {
+                // If no custom types, add empty cells to maintain table structure
+                settings.customTypes.forEach(() => {
+                    const cell = row.insertCell();
+                    cell.textContent = '-';
+                });
+            }
             
             // Apply custom color if enabled
             if (settings.customColorEnabled) {
