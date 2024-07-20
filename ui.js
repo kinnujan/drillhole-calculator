@@ -4,6 +4,7 @@ import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js
 import { handleError, calculateStrike } from './utils.js';
 
 
+
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
     try {
@@ -374,43 +375,34 @@ export async function updateResultsTable() {
             console.log(`Processing measurement ${index}:`, measurement);
             const row = tbody.insertRow();
             
-            // Add base columns
-            [
+            // Create an array of cell data
+            const cellData = [
                 { value: measurement.depth, format: (v) => (v != null && !isNaN(v)) ? Number(v).toFixed(2) : '' },
                 { value: measurement.type, format: (v) => v || '' },
                 { value: measurement.generation, format: (v) => v || '' },
                 { value: measurement.dip, format: (v) => (v != null && !isNaN(v)) ? Number(v).toFixed(1) + '°' : '' },
                 { value: measurement.dipDirection, format: (v) => (v != null && !isNaN(v)) ? Number(v).toFixed(1) + '°' : '' },
-                { value: measurement.comment, format: (v) => v || '' }
-            ].forEach((column, colIndex) => {
-                const cell = row.insertCell();
-                const formattedValue = column.format(column.value);
+                { value: measurement.comment, format: (v) => v || '' },
+                ...settings.customTypes.map(customType => ({
+                    value: measurement.customTypes?.[customType.name],
+                    format: (v) => v || '-'
+                }))
+            ];
+
+            // Add cells to the row
+            cellData.forEach((data, cellIndex) => {
+                const cell = row.insertCell(cellIndex);
+                const formattedValue = data.format(data.value);
                 cell.textContent = formattedValue;
-                console.log(`Column ${colIndex}:`, column.value, "Formatted:", formattedValue);
+                console.log(`Column ${cellIndex}:`, data.value, "Formatted:", formattedValue);
                 
-                if (colIndex === 5 && measurement.comment) { // Comment cell
+                if (cellIndex === 5 && measurement.comment) { // Comment cell
                     cell.title = measurement.comment; // Show full comment on hover
                     if (measurement.comment.length > 20) {
                         cell.textContent = measurement.comment.substring(0, 20) + '...';
                     }
                 }
             });
-            
-            // Add custom type values
-            if (measurement.customTypes) {
-                settings.customTypes.forEach(customType => {
-                    const cell = row.insertCell();
-                    const customValue = measurement.customTypes[customType.name];
-                    cell.textContent = customValue || '-';
-                    console.log(`Custom type ${customType.name}:`, customValue);
-                });
-            } else {
-                // If no custom types, add empty cells to maintain table structure
-                settings.customTypes.forEach(() => {
-                    const cell = row.insertCell();
-                    cell.textContent = '-';
-                });
-            }
             
             // Apply custom color if enabled
             if (settings.customColorEnabled) {
