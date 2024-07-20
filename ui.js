@@ -328,7 +328,6 @@ export async function updatePreview() {
         console.warn("One or more elements required for preview update not found.");
     }
 }
-
 export async function updateResultsTable() {
     console.log("Updating results table");
     const resultsTable = document.getElementById('resultsTable');
@@ -345,13 +344,13 @@ export async function updateResultsTable() {
         return;
     }
 
-    // Clear existing content
-    thead.innerHTML = '';
-    tbody.innerHTML = '';
-
     try {
         const settings = await loadSettings();
         console.log("Loaded settings:", settings);
+
+        // Clear existing content
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
 
         // Create header row
         const headerRow = document.createElement('tr');
@@ -371,7 +370,7 @@ export async function updateResultsTable() {
         // Populate table body
         measurements.forEach((measurement, index) => {
             console.log(`Processing measurement ${index}:`, measurement);
-            const row = tbody.insertRow();
+            const row = document.createElement('tr');
             
             // Create an array of cell data
             const cellData = [
@@ -389,7 +388,7 @@ export async function updateResultsTable() {
 
             // Add cells to the row
             cellData.forEach((data, cellIndex) => {
-                const cell = row.insertCell();
+                const cell = document.createElement('td');
                 const formattedValue = data.format(data.value);
                 cell.textContent = formattedValue;
                 console.log(`Column ${cellIndex}:`, data.value, "Formatted:", formattedValue);
@@ -400,6 +399,7 @@ export async function updateResultsTable() {
                         cell.textContent = measurement.comment.substring(0, 20) + '...';
                     }
                 }
+                row.appendChild(cell);
             });
             
             // Apply custom color if enabled
@@ -407,10 +407,9 @@ export async function updateResultsTable() {
                 const color = calculateColor(measurement.dipDirection, measurement.dip);
                 row.style.setProperty('--row-bg-color', color);
                 row.classList.add('custom-color-enabled');
-            } else {
-                row.style.removeProperty('--row-bg-color');
-                row.classList.remove('custom-color-enabled');
             }
+            
+            tbody.appendChild(row);
         });
 
         // Add or remove custom-color-enabled class to the table
