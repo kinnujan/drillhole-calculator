@@ -632,15 +632,15 @@ body.dark-mode .data-storage-info i {
 /* Color cell styles */
 #resultsTable td.color-cell {
     padding: 0;
-    width: 24px; /* Fixed width for color cell */
-    min-width: 24px;
+    width: 14px; /* Fixed width for color cell */
+    min-width: 14px;
     max-width: 24px;
 }
 
 /* Column width adjustments */
 #resultsTable.custom-color-enabled th:first-child,
 #resultsTable.custom-color-enabled td:first-child { 
-    width: 24px; 
+    width: 14px; 
 }
 
 #resultsTable th:nth-child(1),
