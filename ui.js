@@ -3,7 +3,6 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
-
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
     try {
@@ -331,6 +330,7 @@ export async function updatePreview() {
 }
 
 export async function updateResultsTable() {
+    console.log("Updating results table");
     const resultsTable = document.getElementById('resultsTable');
     if (!resultsTable) {
         console.warn("Results table not found.");
@@ -351,6 +351,7 @@ export async function updateResultsTable() {
 
     try {
         const settings = await loadSettings();
+        console.log("Loaded settings:", settings);
 
         // Create header row
         const headerRow = document.createElement('tr');
@@ -365,22 +366,28 @@ export async function updateResultsTable() {
 
         thead.appendChild(headerRow);
         
+        console.log("Measurements:", measurements);
+        
         // Populate table body
-        measurements.forEach((measurement) => {
+        measurements.forEach((measurement, index) => {
+            console.log(`Processing measurement ${index}:`, measurement);
             const row = tbody.insertRow();
             
             // Add base columns
             [
-                typeof measurement.depth === 'number' ? measurement.depth.toFixed(2) : '',
-                measurement.type || '',
-                measurement.generation || '',
-                typeof measurement.dip === 'number' ? measurement.dip.toFixed(1) + '°' : '',
-                typeof measurement.dipDirection === 'number' ? measurement.dipDirection.toFixed(1) + '°' : '',
-                measurement.comment || ''
-            ].forEach((value, index) => {
+                { value: measurement.depth, format: (v) => typeof v === 'number' ? v.toFixed(2) : '' },
+                { value: measurement.type, format: (v) => v || '' },
+                { value: measurement.generation, format: (v) => v || '' },
+                { value: measurement.dip, format: (v) => typeof v === 'number' ? v.toFixed(1) + '°' : '' },
+                { value: measurement.dipDirection, format: (v) => typeof v === 'number' ? v.toFixed(1) + '°' : '' },
+                { value: measurement.comment, format: (v) => v || '' }
+            ].forEach((column, colIndex) => {
                 const cell = row.insertCell();
-                cell.textContent = value;
-                if (index === 5 && measurement.comment) { // Comment cell
+                const formattedValue = column.format(column.value);
+                cell.textContent = formattedValue;
+                console.log(`Column ${colIndex}:`, column.value, "Formatted:", formattedValue);
+                
+                if (colIndex === 5 && measurement.comment) { // Comment cell
                     cell.title = measurement.comment; // Show full comment on hover
                     if (measurement.comment.length > 20) {
                         cell.textContent = measurement.comment.substring(0, 20) + '...';
@@ -393,6 +400,7 @@ export async function updateResultsTable() {
                 const cell = row.insertCell();
                 const customValue = measurement.customTypes && measurement.customTypes[customType.name];
                 cell.textContent = customValue || '-';
+                console.log(`Custom type ${customType.name}:`, customValue);
             });
             
             // Apply custom color if enabled
@@ -416,7 +424,6 @@ export async function updateResultsTable() {
         handleError(error, "Error updating results table");
     }
 }
-
 
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
