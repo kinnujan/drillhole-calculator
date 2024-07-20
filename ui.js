@@ -368,18 +368,18 @@ export async function updateResultsTable() {
         // Populate table body
         measurements.forEach((measurement) => {
             const row = tbody.insertRow();
-            const cells = [
+            
+            // Add base columns
+            [
                 typeof measurement.depth === 'number' ? measurement.depth.toFixed(2) : '',
                 measurement.type || '',
                 measurement.generation || '',
                 typeof measurement.dip === 'number' ? measurement.dip.toFixed(1) + '°' : '',
                 typeof measurement.dipDirection === 'number' ? measurement.dipDirection.toFixed(1) + '°' : '',
                 measurement.comment || ''
-            ];
-
-            cells.forEach((cellContent, index) => {
-                const cell = row.insertCell(index);
-                cell.textContent = cellContent;
+            ].forEach((value, index) => {
+                const cell = row.insertCell();
+                cell.textContent = value;
                 if (index === 5 && measurement.comment) { // Comment cell
                     cell.title = measurement.comment; // Show full comment on hover
                     if (measurement.comment.length > 20) {
