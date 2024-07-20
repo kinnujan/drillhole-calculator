@@ -9,6 +9,7 @@ let selectedGeneration = '';
 let selectedCustomTypes = {};
 let lastAddedMeasurement = null;
 
+
 export async function loadMeasurements() {
     console.log("Loading measurements...");
     try {
@@ -160,7 +161,6 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
     return [dipOutputFINAL, dipdirectionOutputFINAL];
 }
 
-
 export async function undoLastMeasurement() {
     console.log("Undoing last measurement...");
     if (lastAddedMeasurement) {
@@ -214,12 +214,33 @@ export async function undoLastMeasurement() {
         updateGenerationSelectorButtons(settings.generationTypes);
         updateCustomTypeSelectorButtons(settings.customTypes);
 
+        // Explicitly set active state for the correct buttons
+        setActiveButton('type', selectedType);
+        setActiveButton('generation', selectedGeneration);
+        Object.entries(selectedCustomTypes).forEach(([customType, value]) => {
+            setActiveButton(`custom-type-${customType.replace(/\s+/g, '-').toLowerCase()}`, value);
+        });
+
         updatePreview();
         lastAddedMeasurement = null;
         updateUndoButtonState();
         console.log("Last measurement undone");
     } else {
         console.log("No measurement to undo");
+    }
+}
+
+function setActiveButton(containerClass, value) {
+    const container = document.querySelector(`.${containerClass}-selector`);
+    if (container) {
+        const buttons = container.querySelectorAll('button');
+        buttons.forEach(button => {
+            if (button.textContent === value) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
     }
 }
 
