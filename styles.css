@@ -634,5 +634,63 @@ body.dark-mode .custom-color-enabled #resultsTable th {
 .custom-color-enabled #preview,
 .custom-color-enabled #resultsTable tbody tr {
     position: relative;
+    color: var(--COLOR_TEXT);
+    text-shadow: none;
+    font-weight: bold;
+}
+
+.custom-color-enabled #resultsTable th {
+    background-color: #333;
+    color: white;
+    font-weight: bold;
+}
+
+/* Text outline for better visibility */
+.custom-color-enabled #preview,
+.custom-color-enabled #resultsTable tbody tr {
+    text-shadow: 
+        -1px -1px 0 var(--COLOR_TEXT_OUTLINE),
+        1px -1px 0 var(--COLOR_TEXT_OUTLINE),
+        -1px 1px 0 var(--COLOR_TEXT_OUTLINE),
+        1px 1px 0 var(--COLOR_TEXT_OUTLINE);
+}
+
+/* Improve contrast for dark mode */
+body.dark-mode .custom-color-enabled #preview,
+body.dark-mode .custom-color-enabled #resultsTable tbody tr {
+    color: var(--COLOR_TEXT_DARK_MODE);
+}
+
+body.dark-mode .custom-color-enabled #resultsTable th {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+/* Additional styles to improve readability */
+.custom-color-enabled #resultsTable td {
+    padding: 10px;
+    text-align: center;
+}
+
+.custom-color-enabled #preview {
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    font-size: 1.2em;
+    line-height: 1.4;
+}
+
+/* Add a semi-transparent overlay to increase contrast if needed */
+.custom-color-enabled #preview::before,
+.custom-color-enabled #resultsTable tbody tr::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, var(--COLOR_OVERLAY_OPACITY));
+    z-index: -1;
+    pointer-events: none;
 }
 
