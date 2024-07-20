@@ -768,11 +768,18 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 /* Color cell styles */
 #resultsTable td.color-cell {
     padding: 0;
+    width: 24px; /* Fixed width for color cell */
+    min-width: 24px;
+    max-width: 24px;
 }
 
 /* Adjust column widths */
-#resultsTable.custom-color-enabled th:nth-child(1),
-#resultsTable.custom-color-enabled td:nth-child(1) { width: 3%; } /* Color */
+#resultsTable.custom-color-enabled th:first-child,
+#resultsTable.custom-color-enabled td:first-child { 
+    width: 24px; 
+    min-width: 24px;
+    max-width: 24px;
+} /* Color */
 
 #resultsTable th:nth-child(1),
 #resultsTable td:nth-child(1),
@@ -802,7 +809,7 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 #resultsTable th:nth-child(6),
 #resultsTable td:nth-child(6),
 #resultsTable.custom-color-enabled th:nth-child(7),
-#resultsTable.custom-color-enabled td:nth-child(7) { width: 37%; } /* Comment */
+#resultsTable.custom-color-enabled td:nth-child(7) { width: calc(50% - 24px); } /* Comment */
 
 /* Custom types columns */
 #resultsTable th:nth-child(n+7),
