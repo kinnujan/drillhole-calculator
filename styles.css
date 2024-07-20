@@ -1,35 +1,80 @@
+@import url('./constants.js');
+
 :root {
-    --color-background-light: #ffffff;
-    --color-background-dark: #1a1a1a;
-    --color-text-light: #333333;
-    --color-text-dark: #ffffff;
-    --color-link: #007bff;
-    --color-table-border: #ccc;
-    --color-table-border-dark: #555;
+    --color-text: #000;
+    --color-text-dark-mode: #fff;
+    --color-background: #fff;
+    --color-background-dark: #121212;
     --color-table-header: #f2f2f2;
-    --color-table-header-dark: #2a2a2a;
-    --color-table-row-dark: #2e2e2e;
-    --color-text-outline: rgba(255, 255, 255, 0.5);
-    --color-overlay-opacity: 0.2;
+    --color-table-header-dark: #2c2c2c;
+    --color-table-border: #ddd;
+    --color-table-border-dark: #444;
 }
-/* General action button styles */
-.action-buttons button, 
-#addMeasurement, 
-#undoMeasurement {
-    margin: 0 4px;
+body {
+    background-color: #2c2c2c;
+    color: #ffffff;
 }
 
-/* Grid layout for settings */
-.settings-grid {
-    grid-template-columns: 1fr 1fr 1fr;
+body.dark-mode {
+    background-color: var(--color-background-dark);
+    color: var(--color-text-dark-mode);
 }
 
-/* Social links icon style */
-.social-links i {
-    font-size: 24px;
+body.dark-mode table {
+    border-color: #4a4a4a;
 }
 
-/* Data storage info styles */
+body.dark-mode th, body.dark-mode #resultsTable th {
+    background-color: #2c2c2c;
+    color: #ffffff;
+}
+
+body.dark-mode td, body.dark-mode #resultsTable td, 
+#resultsTable th, #resultsTable td {
+    border: 1px solid var(--color-table-border);
+    padding: 8px;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.dark-mode #copyStatus {
+    color: #4CAF50;
+}
+
+body.dark-mode #error {
+    color: #ff6b6b;
+}
+
+body.dark-mode footer, body.dark-mode .setting-description {
+    color: #a0a0a0;
+}
+
+body.dark-mode .icon-button,
+body.dark-mode #backToMain,
+body.dark-mode #undoMeasurement,
+body.dark-mode #undoMeasurement:hover {
+    color: #e0e0e0;
+}
+
+body.dark-mode #undoMeasurement {
+    background-color: #2c2c2c;
+}
+
+body.dark-mode #undoMeasurement:hover {
+    background-color: #3a3a3a;
+}
+
+body.dark-mode #undoMeasurement:disabled {
+    background-color: #2c2c2c;
+    color: #666;
+}
+
+body.dark-mode .settings-header {
+    border-bottom-color: #4a4a4a;
+}
+
 .data-storage-info {
     display: flex;
     align-items: center;
@@ -45,23 +90,7 @@
     color: #007bff;
 }
 
-.data-storage-info p {
-    margin: 0;
-    font-size: 14px;
-}
-
-/* Dark mode styling for data storage info */
-body.dark-mode .data-storage-info {
-    background-color: #2a2a2a;
-    color: #ffffff;
-}
-
-body.dark-mode .data-storage-info i {
-    color: #4da6ff;
-}
-
-/* Custom color styles */
-.custom-color-enabled #preview,
+.custom-color-enabled #preview, 
 .custom-color-enabled #resultsTable tbody tr {
     position: relative;
     color: var(--color-text);
@@ -72,18 +101,14 @@ body.dark-mode .data-storage-info i {
 .custom-color-enabled #resultsTable tbody tr::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background-color: rgba(0, 0, 0, var(--color-overlay-opacity));
-    z-index: -1;
-    pointer-events: none;
+    z-index: -1; pointer-events: none;
 }
 
 .custom-color-enabled #preview,
 .custom-color-enabled #resultsTable tbody tr {
-    text-shadow:
+    text-shadow: 
         -1px -1px 0 var(--color-text-outline),
         1px -1px 0 var(--color-text-outline),
         -1px 1px 0 var(--color-text-outline),
@@ -96,7 +121,6 @@ body.dark-mode .data-storage-info i {
     font-weight: bold;
 }
 
-/* Dark mode custom color styles */
 body.dark-mode .custom-color-enabled #preview,
 body.dark-mode .custom-color-enabled #resultsTable tbody tr {
     color: var(--color-text-dark-mode);
@@ -107,7 +131,64 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     color: #fff;
 }
 
-/* Preview styles */
+body.dark-mode #resultsTable th,
+body.dark-mode #resultsTable td {
+    border-color: var(--color-table-border-dark);
+}
+
+body.dark-mode #resultsTable th {
+    background-color: var(--color-table-header-dark);
+}
+
+#resultsTable {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#resultsTable th, #resultsTable td {
+    padding: 8px;
+}
+
+#resultsTable td.color-cell, 
+#resultsTable.custom-color-enabled td:first-child {
+    padding: 0;
+    width: 24px; 
+    min-width: 24px;
+    max-width: 24px;
+}
+
+#resultsTable th:nth-child(n+7),
+#resultsTable td:nth-child(n+7),
+#resultsTable.custom-color-enabled th:nth-child(n+8),
+#resultsTable.custom-color-enabled td:nth-child(n+8) {
+    width: 10%; 
+}
+
+/* Media Queries */
+@media screen and (min-width: 768px) {
+    body {
+        padding: 20px;
+        font-size: 16px;
+    }
+    .container {
+        max-width: 800px;
+        padding: 20px;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        margin: 20px 0;
+        color: var(--color-header-text);
+    }
+}
+
+@media screen and (max-width: 767px) {
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
 .custom-color-enabled #preview {
     padding: 15px;
     margin: 15px 0;
@@ -132,152 +213,41 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     margin-right: 15px;
 }
 
-/* Table styles */
-#resultsTable {
-    table-layout: fixed;
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-#resultsTable th,
-#resultsTable td {
-    border: 1px solid var(--color-table-border);
-    padding: 8px;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
+/* Top sticky styling for table headers */
 #resultsTable th {
-    background-color: var(--color-table-header);
-    font-weight: bold;
     position: sticky;
-    top: 0;
-    z-index: 2;
+    top: 0; 
+    z-index: 2; 
+    font-weight: bold;
+    background-color: var(--color-table-header);
 }
 
-/* Color cell styles */
-#resultsTable td.color-cell {
-    padding: 0;
-    width: 24px; /* Fixed width for color cell */
-    min-width: 24px;
-    max-width: 24px;
-}
-
-/* Adjust column widths */
-#resultsTable th:nth-child(1),
-#resultsTable td:nth-child(1) { 
-    width: 24px; 
-    min-width: 24px;
-    max-width: 24px; /* Color */
-}
-
-#resultsTable th:nth-child(2),
-#resultsTable td:nth-child(2) { 
-    width: 12%; /* Depth */
-}
-
-#resultsTable th:nth-child(3),
-#resultsTable td:nth-child(3) { 
-    width: 15%; /* Type */
-}
-
-#resultsTable th:nth-child(4),
-#resultsTable td:nth-child(4) { 
-    width: 20%; /* Owner */
-}
-
-#resultsTable th:nth-child(5),
-#resultsTable td:nth-child(5) { 
-    width: 15%; /* Date */
-}
-
-#resultsTable th:nth-child(6),
-#resultsTable td:nth-child(6) { 
-    width: 15%; /* Status */
-}
-
-/* Styling for dark mode table */
-body.dark-mode #resultsTable th,
-body.dark-mode #resultsTable td {
-    border-color: var(--color-table-border-dark);
-    background-color: var(--color-table-row-dark);
-}
-
-body.dark-mode #resultsTable th {
+#resultsTable.custom-color-enabled th {
     background-color: var(--color-table-header-dark);
+    color: var(--color-text-dark-mode);
 }
 
-/* General body styling */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background-color: var(--color-background-light); /* Default light mode background */
-    color: var(--color-text-light); /* Default light mode text color */
+/* Columns width adjustments */
+#resultsTable th:nth-child(1), #resultsTable td:nth-child(1) { width: 12%; }
+#resultsTable th:nth-child(2), #resultsTable td:nth-child(2) { width: 15%; }
+#resultsTable th:nth-child(3), #resultsTable td:nth-child(3) { width: 6%; }
+#resultsTable th:nth-child(4), #resultsTable td:nth-child(4) { width: 8%; }
+#resultsTable th:nth-child(5), #resultsTable td:nth-child(5) { width: 9%; }
+#resultsTable th:nth-child(6), #resultsTable td:nth-child(6) { width: calc(50% - 24px); }
+
+.custom-types {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
-/* Dark mode styling for the body */
-body.dark-mode {
-    background-color: var(--color-background-dark); /* Dark mode background */
-    color: var(--color-text-dark); /* Dark mode text color */
+/* Dark mode adjustments */
+body.dark-mode #resultsTable.custom-color-enabled tbody tr td {
+    color: var(--color-text-dark-mode);
 }
 
-/* Links styling */
-a {
-    color: var(--color-link);
-    text-decoration: none;
+body.dark-mode #resultsTable.custom-color-enabled tbody tr td::before {
+    background-color: rgba(255, 255, 255, var(--color-overlay-opacity));
 }
 
-a:hover {
-    text-decoration: underline;
-}
 
-/* Responsive styles */
-@media (max-width: 768px) {
-    .settings-grid {
-        grid-template-columns: 1fr; /* Stack on small screens */
-    }
-
-    #preview {
-        flex-direction: column;
-    }
-
-    #resultsTable th:nth-child(1),
-    #resultsTable td:nth-child(1) {
-        width: auto; /* Adjust for small screens */
-    }
-
-    #resultsTable th:nth-child(2),
-    #resultsTable td:nth-child(2),
-    #resultsTable th:nth-child(3),
-    #resultsTable td:nth-child(3),
-    #resultsTable th:nth-child(4),
-    #resultsTable td:nth-child(4),
-    #resultsTable th:nth-child(5),
-    #resultsTable td:nth-child(5),
-    #resultsTable th:nth-child(6),
-    #resultsTable td:nth-child(6) {
-        width: auto; /* Adjust widths accordingly */
-    }
-}
-
-/* Miscellaneous styles */
-.hidden {
-    display: none;
-}
-
-.visible {
-    display: block;
-}
-
-/* Utilities */
-.text-center {
-    text-align: center;
-}
-
-.text-right {
-    text-align: right;
-}
