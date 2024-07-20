@@ -774,15 +774,15 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 #resultsTable th:nth-child(1),
 #resultsTable td:nth-child(1) { width: 3%; } /* Color */
 #resultsTable th:nth-child(2),
-#resultsTable td:nth-child(2) { width: 10%; } /* Depth */
+#resultsTable td:nth-child(2) { width: 12%; } /* Depth */
 #resultsTable th:nth-child(3),
 #resultsTable td:nth-child(3) { width: 15%; } /* Type */
 #resultsTable th:nth-child(4),
-#resultsTable td:nth-child(4) { width: 10%; } /* Gen */
+#resultsTable td:nth-child(4) { width: 6%; } /* Gen */
 #resultsTable th:nth-child(5),
-#resultsTable td:nth-child(5) { width: 10%; } /* Dip */
+#resultsTable td:nth-child(5) { width: 8%; } /* Dip */
 #resultsTable th:nth-child(6),
-#resultsTable td:nth-child(6) { width: 15%; } /* DipDir */
+#resultsTable td:nth-child(6) { width: 9%; } /* DipDir */
 #resultsTable th:nth-child(7),
 #resultsTable td:nth-child(7) { width: 37%; } /* Comment */
 
