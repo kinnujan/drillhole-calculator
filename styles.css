@@ -579,57 +579,6 @@ body.dark-mode .data-storage-info i {
     color: #4da6ff;
 }
 
-.custom-color-enabled #preview,
-.custom-color-enabled #resultsTable tbody tr {
-    position: relative;
-    color: var(--color-text);
-    font-weight: normal;
-}
-
-.custom-color-enabled #preview::before,
-.custom-color-enabled #resultsTable tbody tr::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, var(--color-overlay-opacity));
-    z-index: -1;
-    pointer-events: none;
-}
-
-.custom-color-enabled #preview,
-.custom-color-enabled #resultsTable tbody tr {
-    text-shadow: 
-        -1px -1px 0 var(--color-text-outline),
-        1px -1px 0 var(--color-text-outline),
-        -1px 1px 0 var(--color-text-outline),
-        1px 1px 0 var(--color-text-outline);
-}
-
-.custom-color-enabled #resultsTable th {
-    background-color: #333;
-    color: white;
-    font-weight: bold;
-}
-
-body.dark-mode .custom-color-enabled #preview,
-body.dark-mode .custom-color-enabled #resultsTable tbody tr {
-    color: var(--color-text-dark-mode);
-}
-
-body.dark-mode .custom-color-enabled #resultsTable th {
-    background-color: #1a1a1a;
-    color: #fff;
-}
-
-.custom-color-enabled #resultsTable td,
-.custom-color-enabled #resultsTable th {
-    padding: 10px;
-    text-align: left;
-}
-
 .custom-color-enabled #preview {
     padding: 15px;
     margin: 15px 0;
@@ -654,31 +603,6 @@ body.dark-mode .custom-color-enabled #resultsTable th {
     margin-right: 15px;
 }
 
-/* Ensure the custom color styles are applied */
-#preview.custom-color-enabled,
-#resultsTable.custom-color-enabled tbody tr {
-    color: var(--color-text);
-    position: relative;
-    z-index: 1;
-}
-
-#preview.custom-color-enabled::before,
-#resultsTable.custom-color-enabled tbody tr::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, var(--color-overlay-opacity));
-    z-index: -1;
-}
-
-body.dark-mode #preview.custom-color-enabled,
-body.dark-mode #resultsTable.custom-color-enabled tbody tr {
-    color: var(--color-text-dark-mode);
-}
-
 #resultsTable {
     table-layout: fixed;
     width: 100%;
@@ -686,54 +610,7 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
     border-spacing: 0;
 }
 
-#resultsTable th,
-#resultsTable td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#resultsTable th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
-#resultsTable {
-    table-layout: fixed;
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-#resultsTable th,
-#resultsTable td {
-    border: 1px solid var(--color-table-border);
-    padding: 8px;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#resultsTable th {
-    background-color: var(--color-table-header);
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
-#resultsTable {
-    table-layout: fixed;
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
+/* Table header and cell styles */
 #resultsTable th,
 #resultsTable td {
     border: 1px solid var(--color-table-border);
@@ -760,13 +637,11 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
     max-width: 24px;
 }
 
-/* Adjust column widths */
+/* Column width adjustments */
 #resultsTable.custom-color-enabled th:first-child,
 #resultsTable.custom-color-enabled td:first-child { 
     width: 24px; 
-    min-width: 24px;
-    max-width: 24px;
-} /* Color */
+}
 
 #resultsTable th:nth-child(1),
 #resultsTable td:nth-child(1),
@@ -805,11 +680,6 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 #resultsTable.custom-color-enabled td:nth-child(n+8) { width: 10%; } /* Custom types */
 
 /* Dark mode styles */
-body.dark-mode {
-    background-color: var(--color-background-dark);
-    color: var(--color-text-dark-mode);
-}
-
 body.dark-mode #resultsTable th,
 body.dark-mode #resultsTable td {
     border-color: var(--color-table-border-dark);
