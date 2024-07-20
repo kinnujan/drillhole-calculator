@@ -3,8 +3,6 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 
-
-
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
     try {
@@ -391,7 +389,7 @@ export async function updateResultsTable() {
 
             // Add cells to the row
             cellData.forEach((data, cellIndex) => {
-                const cell = row.insertCell(cellIndex);
+                const cell = row.insertCell();
                 const formattedValue = data.format(data.value);
                 cell.textContent = formattedValue;
                 console.log(`Column ${cellIndex}:`, data.value, "Formatted:", formattedValue);
