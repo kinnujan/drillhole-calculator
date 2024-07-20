@@ -159,57 +159,62 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
 
     return [dipOutputFINAL, dipdirectionOutputFINAL];
 }
+
 export async function undoLastMeasurement() {
     console.log("Undoing last measurement...");
     if (lastAddedMeasurement) {
         measurements.pop();
         await saveMeasurements(measurements);
         await updateResultsTable();
-    
+
         // Restore the state of the last measurement
         const elements = {
-        holeId: document.getElementById('holeId'),
-        holeDip: document.getElementById('holeDip'),
-        holeDipSlider: document.getElementById('holeDipSlider'),
-        holeAzimuth: document.getElementById('holeAzimuth'),
-        holeAzimuthSlider: document.getElementById('holeAzimuthSlider'),
-        depth: document.getElementById('depth'),
-        alpha: document.getElementById('alpha'),
-        alphaSlider: document.getElementById('alphaSlider'),
-        beta: document.getElementById('beta'),
-        betaSlider: document.getElementById('betaSlider'),
-        comment: document.getElementById('comment')
-     };
-    
+            holeId: document.getElementById('holeId'),
+            holeDip: document.getElementById('holeDip'),
+            holeDipSlider: document.getElementById('holeDipSlider'),
+            holeAzimuth: document.getElementById('holeAzimuth'),
+            holeAzimuthSlider: document.getElementById('holeAzimuthSlider'),
+            depth: document.getElementById('depth'),
+            alpha: document.getElementById('alpha'),
+            alphaSlider: document.getElementById('alphaSlider'),
+            beta: document.getElementById('beta'),
+            betaSlider: document.getElementById('betaSlider'),
+            comment: document.getElementById('comment')
+        };
+
         // Update input fields and sliders
         Object.entries(elements).forEach(([key, element]) => {
-        if (element) {
-        const value = lastAddedMeasurement[key];
-        if (value !== undefined) {
-        element.value = value;
-        // Update slider if it exists
-        if (element.id.endsWith('Slider')) {
-        element.value = value;
-     }
-    }
+            if (element) {
+                let value = lastAddedMeasurement[key.replace('Slider', '')];
+                if (value !== undefined) {
+                    if (element.type === 'range' || element.type === 'number') {
+                        element.value = value;
+                    } else if (element.tagName.toLowerCase() === 'textarea' || element.type === 'text') {
+                        element.value = value;
+                    }
+                    
+                    // Trigger input event to ensure any listeners are updated
+                    const event = new Event('input', { bubbles: true });
+                    element.dispatchEvent(event);
+                }
+            } else {
+                console.warn(`Element with id '${key}' not found.`);
+            }
+        });
+
+        selectedType = lastAddedMeasurement.type;
+        selectedGeneration = lastAddedMeasurement.generation;
+        selectedCustomTypes = { ...lastAddedMeasurement.customTypes };
+
+        updatePreview();
+        resetUISelections();
+        lastAddedMeasurement = null;
+        updateUndoButtonState();
+        console.log("Last measurement undone");
     } else {
-    console.warn(`Element with id '${key}' not found.`);
+        console.log("No measurement to undo");
     }
-    });
-    
-    selectedType = lastAddedMeasurement.type;
-    selectedGeneration = lastAddedMeasurement.generation;
-    selectedCustomTypes = { ...lastAddedMeasurement.customTypes };
-    
-    updatePreview();
-    resetUISelections();
-    lastAddedMeasurement = null;
-    updateUndoButtonState();
-    console.log("Last measurement undone");
-    } else {
-    console.log("No measurement to undo");
-    }
-    }
+}
 
 function updateUndoButtonState() {
     if (measurements.length > 0) {
