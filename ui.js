@@ -355,7 +355,7 @@ export async function updateResultsTable() {
 
         // Create header row
         const headerRow = document.createElement('tr');
-        const baseColumns = settings.customColorEnabled ? ['Color', 'Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'] : ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
+        const baseColumns = settings.customColorEnabled ? ['', 'Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'] : ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
         const allColumns = [...baseColumns, ...settings.customTypes.map(ct => ct.name)];
         
         allColumns.forEach(col => {
@@ -389,25 +389,26 @@ export async function updateResultsTable() {
 
             if (settings.customColorEnabled) {
                 const color = calculateColor(measurement.dipDirection, measurement.dip);
-                cellData.unshift({ value: color, format: (v) => `<div class="color-swatch" style="background-color: ${v};"></div>` });
+                cellData.unshift({ value: color, format: (v) => '' }); // Empty string for color cell
             }
 
             // Add cells to the row
             cellData.forEach((data, cellIndex) => {
                 const cell = document.createElement('td');
-                const formattedValue = data.format(data.value);
                 if (settings.customColorEnabled && cellIndex === 0) {
-                    cell.innerHTML = formattedValue;
+                    cell.className = 'color-cell';
+                    cell.style.backgroundColor = data.value;
                 } else {
+                    const formattedValue = data.format(data.value);
                     cell.textContent = formattedValue;
-                }
-                console.log(`Column ${cellIndex}:`, data.value, "Formatted:", formattedValue);
-                
-                if ((settings.customColorEnabled && cellIndex === 6) || (!settings.customColorEnabled && cellIndex === 5)) { // Comment cell
-                    if (measurement.comment) {
-                        cell.title = measurement.comment; // Show full comment on hover
-                        if (measurement.comment.length > 20) {
-                            cell.textContent = measurement.comment.substring(0, 20) + '...';
+                    console.log(`Column ${cellIndex}:`, data.value, "Formatted:", formattedValue);
+                    
+                    if ((settings.customColorEnabled && cellIndex === 6) || (!settings.customColorEnabled && cellIndex === 5)) { // Comment cell
+                        if (data.value) {
+                            cell.title = data.value; // Show full comment on hover
+                            if (data.value.length > 20) {
+                                cell.textContent = data.value.substring(0, 20) + '...';
+                            }
                         }
                     }
                 }
