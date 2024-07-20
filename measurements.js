@@ -1,5 +1,5 @@
 import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadSettings } from './storage.js';
-import { updateResultsTable, updatePreview, resetUISelections, enableUndoButton, disableUndoButton } from './ui.js';
+import { updateResultsTable, updatePreview, resetUISelections, enableUndoButton, disableUndoButton, updateTypeSelectorButtons, updateGenerationSelectorButtons, updateCustomTypeSelectorButtons } from './ui.js';
 import { toRadians, toDegrees, calculateStrike, validateInputs, handleError } from './utils.js';
 import { ERROR_MESSAGES, CSV_MIME_TYPE } from './constants.js';
 
@@ -160,6 +160,7 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
     return [dipOutputFINAL, dipdirectionOutputFINAL];
 }
 
+
 export async function undoLastMeasurement() {
     console.log("Undoing last measurement...");
     if (lastAddedMeasurement) {
@@ -202,12 +203,18 @@ export async function undoLastMeasurement() {
             }
         });
 
+        // Restore button states
         selectedType = lastAddedMeasurement.type;
         selectedGeneration = lastAddedMeasurement.generation;
         selectedCustomTypes = { ...lastAddedMeasurement.customTypes };
 
+        // Update UI to reflect restored button states
+        const settings = await loadSettings();
+        updateTypeSelectorButtons(settings.measurementTypes);
+        updateGenerationSelectorButtons(settings.generationTypes);
+        updateCustomTypeSelectorButtons(settings.customTypes);
+
         updatePreview();
-        resetUISelections();
         lastAddedMeasurement = null;
         updateUndoButtonState();
         console.log("Last measurement undone");
