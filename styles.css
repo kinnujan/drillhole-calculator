@@ -7,8 +7,7 @@
     --color-overlay-opacity: 0.2;
 }
 
-
-ody {
+body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 10px;
@@ -688,17 +687,26 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
     color: var(--color-text-dark-mode);
 }
 
-/* Fix table alignment */
 #resultsTable {
     table-layout: fixed;
     width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 #resultsTable th,
 #resultsTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+#resultsTable th {
+    background-color: #f2f2f2;
+    font-weight: bold;
 }
 
 /* Adjust column widths */
@@ -719,16 +727,47 @@ body.dark-mode #resultsTable.custom-color-enabled tbody tr {
 #resultsTable th:nth-child(n+7),
 #resultsTable td:nth-child(n+7) { width: 10%; } /* Custom types */
 
-/* New styles for custom color rows */
+/* Custom color styles */
+#resultsTable.custom-color-enabled {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#resultsTable.custom-color-enabled th {
+    background-color: #333;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
 #resultsTable.custom-color-enabled tbody tr {
     background-color: var(--row-bg-color);
 }
 
 #resultsTable.custom-color-enabled tbody tr:nth-child(even) {
-    background-color: var(--row-bg-color);
     filter: brightness(95%);
 }
 
 #resultsTable.custom-color-enabled tbody tr td {
     background-color: transparent;
+    color: var(--color-text);
+    position: relative;
+    z-index: 1;
 }
+
+#resultsTable.custom-color-enabled tbody tr td::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, var(--color-overlay-opacity));
+    z-index: -1;
+}
+
+body.dark-mode #resultsTable.custom-color-enabled tbody tr td {
+    color: var(--color-text-dark-mode);
+}
+
