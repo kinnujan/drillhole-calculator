@@ -61,10 +61,45 @@ export async function importCSV(csvData) {
 
         console.log("Processed data:", data);
         localStorage.setItem('importedDrillHoleData', JSON.stringify(data));
+        setupHoleIdDropdown(data);  // Add this line to update the dropdown
         return data;
     } catch (error) {
         console.error("Error in importCSV:", error);
         throw error;
+    }
+}
+
+function setupHoleIdDropdown(data) {
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    if (!holeIdSelect) {
+        console.warn('Hole ID select element not found');
+        return;
+    }
+
+    holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
+    
+    if (data) {
+        Object.keys(data).forEach(holeId => {
+            holeIdSelect.appendChild(new Option(holeId, holeId));
+        });
+    }
+
+    holeIdSelect.addEventListener('change', updateHoleInfo);
+}
+
+function updateHoleInfo() {
+    const holeId = document.getElementById('holeIdSelect').value;
+    const holeData = getHoleData(holeId);
+    
+    if (holeData && holeData.length > 0) {
+        const firstEntry = holeData[0];
+        document.getElementById('holeId').value = holeId;
+        document.getElementById('holeDip').value = firstEntry.dip;
+        document.getElementById('holeDipSlider').value = firstEntry.dip;
+        document.getElementById('holeAzimuth').value = firstEntry.azimuth;
+        document.getElementById('holeAzimuthSlider').value = firstEntry.azimuth;
+        updateDrillHoleInfoSummary();
+        updatePreview();
     }
 }
 

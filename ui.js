@@ -45,35 +45,19 @@ export async function setupUI() {
 }
 
 
-function setupHoleIdDropdown() {
-    const holeIdSelect = document.getElementById('holeIdSelect');
-    if (!holeIdSelect) {
-        console.warn('Hole ID select element not found');
-        return;
-    }
-
-    const importedData = getImportedDrillHoleData();
-    
-    holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
-    
-    if (importedData) {
-        Object.keys(importedData).forEach(holeId => {
-            holeIdSelect.appendChild(new Option(holeId, holeId));
-        });
-    }
-
-    holeIdSelect.addEventListener('change', updateHoleInfo);
-}
+// Remove the setupHoleIdDropdown function as it's now in csv_import.js
 
 function updateHoleInfo() {
-    const holeId = document.getElementById('holeId').value;
+    const holeId = document.getElementById('holeIdSelect').value;
     const holeData = getHoleData(holeId);
     
-    if (holeData) {
-        document.getElementById('holeDip').value = holeData.dip;
-        document.getElementById('holeDipSlider').value = holeData.dip;
-        document.getElementById('holeAzimuth').value = holeData.azimuth;
-        document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
+    if (holeData && holeData.length > 0) {
+        const firstEntry = holeData[0];
+        document.getElementById('holeId').value = holeId;
+        document.getElementById('holeDip').value = firstEntry.dip;
+        document.getElementById('holeDipSlider').value = firstEntry.dip;
+        document.getElementById('holeAzimuth').value = firstEntry.azimuth;
+        document.getElementById('holeAzimuthSlider').value = firstEntry.azimuth;
         updateDrillHoleInfoSummary();
         updatePreview();
     }
