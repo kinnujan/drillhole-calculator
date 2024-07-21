@@ -14,16 +14,16 @@ export async function importCSV(csvData) {
             throw new Error('Invalid CSV data: empty or not an array');
         }
 
-        const headers = csvData[0].map(h => h.trim());
+        const headers = csvData[0].map(h => h.trim().toLowerCase());
         console.log("CSV headers:", headers);
 
         const data = {};
 
         // Get column indices based on user-selected fields
-        const holeIdIndex = headers.indexOf(surveyImportFields.holeId);
-        const depthIndex = headers.indexOf(surveyImportFields.depth);
-        const azimuthIndex = headers.indexOf(surveyImportFields.azimuth);
-        const dipIndex = headers.indexOf(surveyImportFields.dip);
+        const holeIdIndex = headers.indexOf(surveyImportFields.holeId.toLowerCase());
+        const depthIndex = headers.indexOf(surveyImportFields.depth.toLowerCase());
+        const azimuthIndex = headers.indexOf(surveyImportFields.azimuth.toLowerCase());
+        const dipIndex = headers.indexOf(surveyImportFields.dip.toLowerCase());
 
         console.log("Column indices:", { holeIdIndex, depthIndex, azimuthIndex, dipIndex });
 
@@ -61,7 +61,7 @@ export async function importCSV(csvData) {
 
         console.log("Processed data:", data);
         localStorage.setItem('importedDrillHoleData', JSON.stringify(data));
-        setupHoleIdDropdown(data);  // Add this line to update the dropdown
+        setupHoleIdDropdown(data);
         return data;
     } catch (error) {
         console.error("Error in importCSV:", error);

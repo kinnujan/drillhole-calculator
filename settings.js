@@ -323,9 +323,9 @@ function CSVToArray(strData, strDelimiter = ',') {
 }
 
 function populateFieldSelectors(headers) {
-    const csvFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
-    csvFieldSelectors.forEach(field => {
-        const selector = document.getElementById(`csvImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+    const surveyFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    surveyFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`surveyImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
         if (selector) {
             selector.innerHTML = '<option value="">Select field</option>';
             headers.forEach(header => {
@@ -334,6 +334,8 @@ function populateFieldSelectors(headers) {
                 option.textContent = header;
                 selector.appendChild(option);
             });
+        } else {
+            console.warn(`Selector for ${field} not found`);
         }
     });
 }
