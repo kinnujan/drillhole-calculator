@@ -24,7 +24,8 @@ export const DEFAULT_SETTINGS = {
     customTypes: [],
     hapticFeedback: true,
     undoEnabled: true,
-    includeHeaderInExport: true
+    includeHeaderInExport: true,
+    csvImportEnabled: false
 };
 
-export const CURRENT_SETTINGS_VERSION = 8; // Incremented from 7 to 8
+export const CURRENT_SETTINGS_VERSION = 9; // Incremented from 8 to 9
