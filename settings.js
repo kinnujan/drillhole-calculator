@@ -114,6 +114,23 @@ async function setupUndoButton(initialState) {
     });
 }
 
+async function setupIncludeHeaderInExport(initialState) {
+    const includeHeaderToggle = document.getElementById('includeHeaderInExport');
+    includeHeaderToggle.checked = initialState;
+
+    includeHeaderToggle.addEventListener('change', async () => {
+        const includeHeader = includeHeaderToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.includeHeaderInExport = includeHeader;
+            await saveSettings(settings);
+            console.log(`Include header in export ${includeHeader ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            handleError(error, "Error saving include header in export setting");
+        }
+    });
+}
+
 /**
  * Sets up the strike mode selector
  * @param {string} initialState - Initial state of strike mode
