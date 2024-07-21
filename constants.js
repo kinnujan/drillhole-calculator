@@ -31,7 +31,8 @@ export const DEFAULT_SETTINGS = {
         depth: 'Depth',
         azimuth: 'Azimuth UTM',
         dip: 'Dip'
-    }
+    },
+    skipInvalidCSVRows: false
 };
 
-export const CURRENT_SETTINGS_VERSION = 10; // Incremented from 9 to 10
+export const CURRENT_SETTINGS_VERSION = 11; // Incremented from 10 to 11

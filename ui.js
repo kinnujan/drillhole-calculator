@@ -200,6 +200,23 @@ export function updateCustomTypeSelectorButtons(customTypes) {
     });
 }
 
+async function setupSkipInvalidCSVRows(initialState) {
+    const skipInvalidCSVRowsToggle = document.getElementById('skipInvalidCSVRows');
+    skipInvalidCSVRowsToggle.checked = initialState;
+
+    skipInvalidCSVRowsToggle.addEventListener('change', async () => {
+        const skipInvalidRows = skipInvalidCSVRowsToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.skipInvalidCSVRows = skipInvalidRows;
+            await saveSettings(settings);
+            console.log(`Skip invalid CSV rows ${skipInvalidRows ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            handleError(error, "Error saving skip invalid CSV rows setting");
+        }
+    });
+}
+
 function updateSelectorButtons(containerSelector, options, dataAttribute, onClickHandler) {
     const container = document.querySelector(containerSelector);
     if (!container) {
