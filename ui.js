@@ -294,9 +294,9 @@ export async function updatePreview() {
             const settings = await loadSettings();
             const strike = calculateStrike(dipDirection, settings.strikeMode);
             
-            let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
-            
-            elements.preview.textContent = previewText;
+            let previewText = `<span class="preview-label">Dip:</span> <span class="preview-value">${dip.toFixed(1)}°</span> <span class="preview-label">Dip Direction:</span> <span class="preview-value">${dipDirection.toFixed(1)}°</span> <span class="preview-label">Strike:</span> <span class="preview-value">${strike.toFixed(1)}°</span>`;
+        
+            elements.preview.innerHTML = previewText;
         } catch (error) {
             handleError(error, "Error updating preview");
         }

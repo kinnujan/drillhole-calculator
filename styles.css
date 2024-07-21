@@ -117,6 +117,21 @@ th {
     padding: 8px;
     background-color: #e0e0e0;
     border-radius: 8px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.preview-label {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.preview-value {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-right: 10px;
 }
 
 #comment {
