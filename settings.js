@@ -18,6 +18,7 @@ export async function setupSettings() {
         setupUndoButton(settings.undoEnabled);
         setupIncludeHeaderInExport(settings.includeHeaderInExport);
         setupSurveyImportToggle(settings.surveyImportEnabled);
+        setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
