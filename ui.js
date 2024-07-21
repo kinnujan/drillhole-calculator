@@ -44,7 +44,6 @@ export async function setupUI() {
     console.log("UI setup complete.");
 }
 
-// CSV import setup is now handled in the settings page
 
 function setupHoleIdDropdown() {
     const holeIdSelect = document.getElementById('holeIdSelect');
@@ -197,6 +196,23 @@ export function updateCustomTypeSelectorButtons(customTypes) {
             'custom-option', 
             (option) => setSelectedCustomType(customType.name, option)
         );
+    });
+}
+
+async function setupSkipInvalidCSVRows(initialState) {
+    const skipInvalidCSVRowsToggle = document.getElementById('skipInvalidCSVRows');
+    skipInvalidCSVRowsToggle.checked = initialState;
+
+    skipInvalidCSVRowsToggle.addEventListener('change', async () => {
+        const skipInvalidRows = skipInvalidCSVRowsToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.skipInvalidCSVRows = skipInvalidRows;
+            await saveSettings(settings);
+            console.log(`Skip invalid CSV rows ${skipInvalidRows ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            handleError(error, "Error saving skip invalid CSV rows setting");
+        }
     });
 }
 
