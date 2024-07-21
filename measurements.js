@@ -322,11 +322,14 @@ async function getCSVContent() {
     const settings = await loadSettings();
     const customTypeNames = settings.customTypes.map(ct => ct.name);
     
-    let csvContent = "HoleID,HoleDip,HoleAzimuth,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
-    customTypeNames.forEach(name => {
-        csvContent += `,${name}`;
-    });
-    csvContent += "\n";
+    let csvContent = "";
+    if (settings.includeHeaderInExport) {
+        csvContent = "HoleID,HoleDip,HoleAzimuth,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
+        customTypeNames.forEach(name => {
+            csvContent += `,${name}`;
+        });
+        csvContent += "\n";
+    }
     
     measurements.forEach(function(measurement) {
         let row = [
