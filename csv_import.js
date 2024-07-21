@@ -1,5 +1,6 @@
 import { handleError } from './utils.js';
 import { loadSettings } from './storage.js';
+import { importCSV } from './csv_import.js';
 
 export async function importCSV(csvData) {
     console.log("Starting CSV import...");
