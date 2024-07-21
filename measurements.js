@@ -2,6 +2,7 @@ import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadS
 import { updateResultsTable, updatePreview, resetUISelections, enableUndoButton, disableUndoButton } from './ui.js';
 import { toRadians, toDegrees, calculateStrike, validateInputs, handleError } from './utils.js';
 import { ERROR_MESSAGES, CSV_MIME_TYPE } from './constants.js';
+import { getHoleData } from './csv_import.js';
 
 let measurements = [];
 let selectedType = '';
@@ -24,8 +25,9 @@ export async function loadMeasurements() {
 export async function addMeasurement() {
     console.log("Adding new measurement...");
     const holeId = document.getElementById('holeId')?.value || '';
-    const holeDip = parseFloat(document.getElementById('holeDip')?.value || '0');
-    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth')?.value || '0');
+    const holeData = getHoleData(holeId);
+    const holeDip = holeData ? holeData.dip : parseFloat(document.getElementById('holeDip')?.value || '0');
+    const holeAzimuth = holeData ? holeData.azimuth : parseFloat(document.getElementById('holeAzimuth')?.value || '0');
     const depth = parseFloat(document.getElementById('depth')?.value || '0');
     const alpha = parseFloat(document.getElementById('alpha')?.value || '0');
     const beta = parseFloat(document.getElementById('beta')?.value || '0');

@@ -1,6 +1,7 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
+import { importCSV, getImportedDrillHoleData, getHoleData } from './csv_import.js';
 
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
@@ -39,7 +40,57 @@ export async function setupUI() {
     await syncInputs();
     setupDepthButtons();
     setupMeasurementHandlers();
+    setupCSVImport();
+    setupHoleIdDropdown();
     console.log("UI setup complete.");
+}
+
+function setupCSVImport() {
+    const importCSVInput = document.getElementById('importCSV');
+    importCSVInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                await importCSV(file);
+                setupHoleIdDropdown();
+                console.log("CSV imported successfully");
+            } catch (error) {
+                handleError(error, "Error importing CSV file");
+            }
+        }
+    });
+}
+
+function setupHoleIdDropdown() {
+    const holeIdSelect = document.getElementById('holeId');
+    const importedData = getImportedDrillHoleData();
+    
+    holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
+    
+    if (importedData) {
+        Object.keys(importedData).forEach(holeId => {
+            const option = document.createElement('option');
+            option.value = holeId;
+            option.textContent = holeId;
+            holeIdSelect.appendChild(option);
+        });
+    }
+
+    holeIdSelect.addEventListener('change', updateHoleInfo);
+}
+
+function updateHoleInfo() {
+    const holeId = document.getElementById('holeId').value;
+    const holeData = getHoleData(holeId);
+    
+    if (holeData) {
+        document.getElementById('holeDip').value = holeData.dip;
+        document.getElementById('holeDipSlider').value = holeData.dip;
+        document.getElementById('holeAzimuth').value = holeData.azimuth;
+        document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
+        updateDrillHoleInfoSummary();
+        updatePreview();
+    }
 }
 
 function setupDrillHoleInfoToggle() {
