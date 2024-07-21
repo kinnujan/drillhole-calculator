@@ -221,6 +221,13 @@ async function setupSurveyImportToggle(initialState) {
     });
 }
 
+function toggleSurveyImportUI(isEnabled) {
+    const surveyImportElements = document.querySelectorAll('.survey-import-settings');
+    surveyImportElements.forEach(element => {
+        element.style.display = isEnabled ? 'block' : 'none';
+    });
+}
+
 async function handleCSVImport(event) {
     const file = event.target.files[0];
     if (file) {
