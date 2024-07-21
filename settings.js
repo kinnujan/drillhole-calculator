@@ -22,6 +22,24 @@ export async function setupSettings() {
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
+
+        // Add the setupSkipInvalidCSVRows function
+        function setupSkipInvalidCSVRows(initialState) {
+            const skipInvalidRowsToggle = document.getElementById('skipInvalidCSVRows');
+            skipInvalidRowsToggle.checked = initialState;
+
+            skipInvalidRowsToggle.addEventListener('change', async () => {
+                const skipInvalidRows = skipInvalidRowsToggle.checked;
+                try {
+                    const settings = await loadSettings();
+                    settings.skipInvalidCSVRows = skipInvalidRows;
+                    await saveSettings(settings);
+                    console.log(`Skip invalid CSV rows ${skipInvalidRows ? 'enabled' : 'disabled'}`);
+                } catch (error) {
+                    handleError(error, "Error saving skip invalid CSV rows setting");
+                }
+            });
+        }
         document.getElementById('addCustomType').addEventListener('click', addCustomType);
         setupResetButton();
 
