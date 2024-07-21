@@ -72,7 +72,7 @@ export async function importCSV(csvData) {
 export function setupHoleIdDropdown(data) {
     const holeIdSelect = document.getElementById('holeIdSelect');
     if (!holeIdSelect) {
-        console.warn('Hole ID select element not found');
+        console.error('Hole ID select element not found. Make sure the element with id "holeIdSelect" exists in your HTML.');
         return;
     }
 
@@ -85,6 +85,7 @@ export function setupHoleIdDropdown(data) {
     }
 
     holeIdSelect.addEventListener('change', updateHoleInfo);
+    console.log('Hole ID dropdown setup complete.');
 }
 
 function updateHoleInfo() {
