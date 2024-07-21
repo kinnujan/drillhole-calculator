@@ -2,6 +2,7 @@ import { updateTypeSelectorButtons, updateGenerationSelectorButtons, updateCusto
 import { saveSettings, loadSettings, saveMeasurements } from './storage.js';
 import { handleError } from './utils.js';
 import { DEFAULT_SETTINGS } from './constants.js';
+import { importCSV } from './csv_import.js';
 
 /**
  * Sets up the settings UI and event listeners
