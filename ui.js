@@ -74,6 +74,11 @@ async function setupCSVImport() {
 
 function setupHoleIdDropdown() {
     const holeIdSelect = document.getElementById('holeIdSelect');
+    if (!holeIdSelect) {
+        console.warn('Hole ID select element not found');
+        return;
+    }
+
     const importedData = getImportedDrillHoleData();
     
     holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
