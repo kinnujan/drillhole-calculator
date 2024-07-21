@@ -278,10 +278,15 @@ export async function updatePreview() {
     };
 
     if (Object.values(elements).every(el => el)) {
-        const holeDip = parseFloat(elements.holeDip.value);
-        const holeAzimuth = parseFloat(elements.holeAzimuth.value);
-        const alpha = parseFloat(elements.alpha.value);
-        const beta = parseFloat(elements.beta.value);
+        const holeDip = parseFloat(elements.holeDip.value) || 0;
+        const holeAzimuth = parseFloat(elements.holeAzimuth.value) || 0;
+        const alpha = parseFloat(elements.alpha.value) || 0;
+        const beta = parseFloat(elements.beta.value) || 0;
+
+        if (isNaN(holeDip) || isNaN(holeAzimuth) || isNaN(alpha) || isNaN(beta)) {
+            elements.preview.textContent = "Invalid input. Please enter numbers.";
+            return;
+        }
 
         const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
         

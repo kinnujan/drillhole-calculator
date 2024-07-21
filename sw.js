@@ -45,7 +45,16 @@ self.addEventListener('fetch', (event) => {
               });
             return response;
           }
-        );
+        ).catch(() => {
+          // If both the cache and network fail, return a fallback
+          return new Response('Network error occurred', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({
+              'Content-Type': 'text/plain'
+            })
+          });
+        });
       })
   );
 });

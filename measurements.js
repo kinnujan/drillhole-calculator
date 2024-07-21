@@ -169,10 +169,14 @@ export async function undoLastMeasurement() {
         // Restore the state of the last measurement
         document.getElementById('holeId').value = lastAddedMeasurement.holeId;
         document.getElementById('holeDip').value = lastAddedMeasurement.holeDip;
+        document.getElementById('holeDipSlider').value = lastAddedMeasurement.holeDip;
         document.getElementById('holeAzimuth').value = lastAddedMeasurement.holeAzimuth;
+        document.getElementById('holeAzimuthSlider').value = lastAddedMeasurement.holeAzimuth;
         document.getElementById('depth').value = lastAddedMeasurement.depth;
         document.getElementById('alpha').value = lastAddedMeasurement.alpha;
+        document.getElementById('alphaSlider').value = lastAddedMeasurement.alpha;
         document.getElementById('beta').value = lastAddedMeasurement.beta;
+        document.getElementById('betaSlider').value = lastAddedMeasurement.beta;
         document.getElementById('comment').value = lastAddedMeasurement.comment;
 
         selectedType = lastAddedMeasurement.type;
