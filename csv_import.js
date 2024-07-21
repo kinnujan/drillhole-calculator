@@ -1,4 +1,5 @@
 import { handleError } from './utils.js';
+import { loadSettings } from './storage.js';
 
 export async function importCSV(file) {
     return new Promise((resolve, reject) => {
@@ -10,14 +11,17 @@ export async function importCSV(file) {
                 const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
                 const data = {};
 
-                // Detect column indices
-                const holeIdIndex = headers.findIndex(h => h.toLowerCase().includes('hole') && h.toLowerCase().includes('id'));
-                const depthIndex = headers.findIndex(h => h.toLowerCase() === 'depth');
-                const azimuthIndex = headers.findIndex(h => h.toLowerCase().includes('azimuth'));
-                const dipIndex = headers.findIndex(h => h.toLowerCase() === 'dip');
+                const settings = await loadSettings();
+                const csvImportFields = settings.csvImportFields;
+
+                // Get column indices based on user-selected fields
+                const holeIdIndex = headers.indexOf(csvImportFields.holeId.toLowerCase());
+                const depthIndex = headers.indexOf(csvImportFields.depth.toLowerCase());
+                const azimuthIndex = headers.indexOf(csvImportFields.azimuth.toLowerCase());
+                const dipIndex = headers.indexOf(csvImportFields.dip.toLowerCase());
 
                 if (holeIdIndex === -1 || depthIndex === -1 || azimuthIndex === -1 || dipIndex === -1) {
-                    throw new Error('Required columns (Hole ID, Depth, Azimuth, Dip) not found in CSV');
+                    throw new Error('One or more required columns not found in CSV');
                 }
 
                 for (let i = 1; i < lines.length; i++) {

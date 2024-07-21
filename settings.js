@@ -199,12 +199,37 @@ async function setupCSVImportToggle(initialState) {
             handleError(error, "Error saving CSV import setting");
         }
     });
+
+    // Setup CSV import field selectors
+    const csvFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    csvFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`csvImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+        if (selector) {
+            selector.addEventListener('change', async () => {
+                const settings = await loadSettings();
+                settings.csvImportFields[field] = selector.value;
+                await saveSettings(settings);
+            });
+        }
+    });
 }
 
 function toggleCSVImportUI(isEnabled) {
     const csvImportElements = document.querySelectorAll('.csv-import-element');
     csvImportElements.forEach(element => {
         element.style.display = isEnabled ? 'block' : 'none';
+    });
+}
+
+async function populateCSVFieldSelectors() {
+    const settings = await loadSettings();
+    const csvFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    
+    csvFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`csvImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+        if (selector) {
+            selector.value = settings.csvImportFields[field];
+        }
     });
 }
 

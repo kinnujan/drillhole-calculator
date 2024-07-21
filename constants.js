@@ -25,7 +25,13 @@ export const DEFAULT_SETTINGS = {
     hapticFeedback: true,
     undoEnabled: true,
     includeHeaderInExport: true,
-    csvImportEnabled: false
+    csvImportEnabled: false,
+    csvImportFields: {
+        holeId: '',
+        depth: '',
+        azimuth: '',
+        dip: ''
+    }
 };
 
-export const CURRENT_SETTINGS_VERSION = 9; // Incremented from 8 to 9
+export const CURRENT_SETTINGS_VERSION = 10; // Incremented from 9 to 10
