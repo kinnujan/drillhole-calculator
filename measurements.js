@@ -296,22 +296,27 @@ export async function saveAsCSV() {
 
     try {
         const blob = new Blob([csvContent], { type: CSV_MIME_TYPE });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
         const copyStatus = document.getElementById('copyStatus');
         if (copyStatus) {
             copyStatus.textContent = 'File download initiated.';
         }
         console.log("File download initiated.");
     } catch (err) {
-        handleError(err, 'Error saving file.');
+        console.error("Error in primary save method, attempting fallback...");
+        fallbackSaveAsCSV(csvContent, filename);
     }
 }
 

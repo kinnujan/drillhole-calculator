@@ -437,3 +437,24 @@ export function resetUISelections() {
         btn.classList.remove('active');
     });
 }
+async function setupSurveyImportToggle(initialState) {
+    const surveyImportToggle = document.getElementById('surveyImportEnabled');
+    if (surveyImportToggle) {
+        surveyImportToggle.checked = initialState;
+
+        surveyImportToggle.addEventListener('change', async () => {
+            const isSurveyImportEnabled = surveyImportToggle.checked;
+            try {
+                const settings = await loadSettings();
+                settings.surveyImportEnabled = isSurveyImportEnabled;
+                await saveSettings(settings);
+                console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
+                toggleSurveyImportUI(isSurveyImportEnabled);
+            } catch (error) {
+                handleError(error, "Error saving survey import setting");
+            }
+        });
+    } else {
+        console.warn('Survey import toggle element not found');
+    }
+}

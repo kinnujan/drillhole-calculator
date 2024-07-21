@@ -202,10 +202,14 @@ async function setupSurveyImportToggle(initialState) {
 
     // Setup survey import functionality
     const surveyImportInput = document.getElementById('surveyImportInput');
-    surveyImportInput.addEventListener('change', (event) => {
-        console.log('Survey import functionality not yet implemented');
-        // TODO: Implement handleSurveyImport function
-    });
+    if (surveyImportInput) {
+        surveyImportInput.addEventListener('change', (event) => {
+            console.log('Survey import functionality not yet implemented');
+            // TODO: Implement survey import functionality
+        });
+    } else {
+        console.warn('Survey import input element not found');
+    }
 
     // Setup survey import field selectors
     const surveyFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];

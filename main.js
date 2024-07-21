@@ -64,7 +64,10 @@ if ('serviceWorker' in navigator) {
             const registration = await navigator.serviceWorker.register('sw.js');
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
         } catch (err) {
-            handleError(err, 'ServiceWorker registration failed.');
+            console.error('ServiceWorker registration failed: ', err);
+            handleError(err, 'ServiceWorker registration failed. The app will still work, but offline functionality may be limited.');
         }
     });
+} else {
+    console.warn('Service workers are not supported in this browser. The app will still work, but offline functionality will be limited.');
 }
