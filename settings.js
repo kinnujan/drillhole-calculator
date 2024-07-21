@@ -183,6 +183,31 @@ function updateTypeList(typeCategory, types) {
     }
 }
 
+async function setupCSVImportToggle(initialState) {
+    const csvImportToggle = document.getElementById('csvImportEnabled');
+    csvImportToggle.checked = initialState;
+
+    csvImportToggle.addEventListener('change', async () => {
+        const isCSVImportEnabled = csvImportToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.csvImportEnabled = isCSVImportEnabled;
+            await saveSettings(settings);
+            console.log(`CSV import ${isCSVImportEnabled ? 'enabled' : 'disabled'}`);
+            toggleCSVImportUI(isCSVImportEnabled);
+        } catch (error) {
+            handleError(error, "Error saving CSV import setting");
+        }
+    });
+}
+
+function toggleCSVImportUI(isEnabled) {
+    const csvImportElements = document.querySelectorAll('.csv-import-element');
+    csvImportElements.forEach(element => {
+        element.style.display = isEnabled ? 'block' : 'none';
+    });
+}
+
 /**
  * Updates the custom types list in the UI
  * @param {Object[]} customTypes - Array of custom type objects
