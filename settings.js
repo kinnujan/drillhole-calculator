@@ -233,14 +233,35 @@ async function handleCSVImport(event) {
     const file = event.target.files[0];
     if (file) {
         try {
+            console.log("Starting CSV import process...");
             const csvData = await readCSVFile(file);
+            console.log("CSV file read successfully");
+            
+            if (!Array.isArray(csvData) || csvData.length === 0) {
+                throw new Error('Invalid CSV data: empty or not an array');
+            }
+            
             const headers = csvData[0];
+            console.log("CSV headers:", headers);
+            
             populateFieldSelectors(headers);
+            console.log("Field selectors populated");
+            
             await importCSV(csvData);
             console.log("CSV imported successfully");
+            
+            // Show success message to the user
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'CSV imported successfully!';
+                setTimeout(() => copyStatus.textContent = '', 3000);
+            }
         } catch (error) {
-            handleError(error, "Error importing CSV file");
+            console.error("CSV import error:", error);
+            handleError(error, "Error importing CSV file: " + error.message);
         }
+    } else {
+        console.warn("No file selected for CSV import");
     }
 }
 
