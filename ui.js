@@ -45,24 +45,35 @@ export async function setupUI() {
     console.log("UI setup complete.");
 }
 
-function setupCSVImport() {
+async function setupCSVImport() {
+    const settings = await loadSettings();
     const importCSVInput = document.getElementById('importCSV');
-    importCSVInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            try {
-                await importCSV(file);
-                setupHoleIdDropdown();
-                console.log("CSV imported successfully");
-            } catch (error) {
-                handleError(error, "Error importing CSV file");
+    const holeIdInput = document.getElementById('holeId');
+    const csvImportElements = document.querySelectorAll('.csv-import-element');
+
+    if (settings.csvImportEnabled) {
+        csvImportElements.forEach(element => element.style.display = 'block');
+        holeIdInput.style.display = 'none';
+        importCSVInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    await importCSV(file);
+                    setupHoleIdDropdown();
+                    console.log("CSV imported successfully");
+                } catch (error) {
+                    handleError(error, "Error importing CSV file");
+                }
             }
-        }
-    });
+        });
+    } else {
+        csvImportElements.forEach(element => element.style.display = 'none');
+        holeIdInput.style.display = 'block';
+    }
 }
 
 function setupHoleIdDropdown() {
-    const holeIdSelect = document.getElementById('holeId');
+    const holeIdSelect = document.getElementById('holeIdSelect');
     const importedData = getImportedDrillHoleData();
     
     holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
