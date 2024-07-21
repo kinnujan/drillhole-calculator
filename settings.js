@@ -16,6 +16,7 @@ export async function setupSettings() {
         setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
         setupHapticFeedback(settings.hapticFeedback);
         setupUndoButton(settings.undoEnabled);
+        setupIncludeHeaderInExport(settings.includeHeaderInExport);
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
@@ -109,6 +110,23 @@ async function setupUndoButton(initialState) {
             }
         } catch (error) {
             handleError(error, "Error saving undo button setting");
+        }
+    });
+}
+
+async function setupIncludeHeaderInExport(initialState) {
+    const includeHeaderToggle = document.getElementById('includeHeaderInExport');
+    includeHeaderToggle.checked = initialState;
+
+    includeHeaderToggle.addEventListener('change', async () => {
+        const includeHeader = includeHeaderToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.includeHeaderInExport = includeHeader;
+            await saveSettings(settings);
+            console.log(`Include header in export ${includeHeader ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            handleError(error, "Error saving include header in export setting");
         }
     });
 }

@@ -3,16 +3,18 @@ body {
     margin: 0;
     padding: 10px;
     background-color: #f0f4f8;
-    font-size: 14px;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 .container {
     background-color: white;
     border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     max-width: 100%;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 h1, h2 { 
@@ -33,15 +35,16 @@ label {
     font-size: 0.9em; 
 }
 
-input[type="number"], input[type="text"] { 
+input[type="number"], input[type="text"], input[type="range"] { 
     width: calc(100% - 110px);
-    padding: 4px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    box-sizing: border-box;
 }
 
 input[type="range"] { 
-    width: calc(100% - 110px);
+    padding: 0;
     vertical-align: middle; 
 }
 
@@ -72,13 +75,9 @@ input[type="range"] {
 
 .type-button.active,
 .generation-button.active,
-.custom-option-button.active {
-    background-color: #4CAF50;
-    color: white;
-}
-
+.custom-option-button.active,
 .depth-button.active {
-    background-color: #2196F3;
+    background-color: #4CAF50;
     color: white;
 }
 
@@ -118,6 +117,21 @@ th {
     padding: 8px;
     background-color: #e0e0e0;
     border-radius: 8px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.preview-label {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.preview-value {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-right: 10px;
 }
 
 #comment {
@@ -325,6 +339,7 @@ body.dark-mode .container,
 body.dark-mode .modal-content,
 body.dark-mode #settingsPage {
     background-color: #1e1e1e;
+    color: #e0e0e0;
 }
 
 body.dark-mode h1, 

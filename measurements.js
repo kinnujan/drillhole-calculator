@@ -169,10 +169,14 @@ export async function undoLastMeasurement() {
         // Restore the state of the last measurement
         document.getElementById('holeId').value = lastAddedMeasurement.holeId;
         document.getElementById('holeDip').value = lastAddedMeasurement.holeDip;
+        document.getElementById('holeDipSlider').value = lastAddedMeasurement.holeDip;
         document.getElementById('holeAzimuth').value = lastAddedMeasurement.holeAzimuth;
+        document.getElementById('holeAzimuthSlider').value = lastAddedMeasurement.holeAzimuth;
         document.getElementById('depth').value = lastAddedMeasurement.depth;
         document.getElementById('alpha').value = lastAddedMeasurement.alpha;
+        document.getElementById('alphaSlider').value = lastAddedMeasurement.alpha;
         document.getElementById('beta').value = lastAddedMeasurement.beta;
+        document.getElementById('betaSlider').value = lastAddedMeasurement.beta;
         document.getElementById('comment').value = lastAddedMeasurement.comment;
 
         selectedType = lastAddedMeasurement.type;
@@ -180,13 +184,31 @@ export async function undoLastMeasurement() {
         selectedCustomTypes = { ...lastAddedMeasurement.customTypes };
 
         updatePreview();
-        resetUISelections();
+        restoreUISelections();
         lastAddedMeasurement = null;
         updateUndoButtonState();
         console.log("Last measurement undone");
     } else {
         console.log("No measurement to undo");
     }
+}
+
+function restoreUISelections() {
+    resetUISelections(); // First, reset all selections
+
+    // Restore type selection
+    const typeButton = document.querySelector(`.type-button[data-type="${selectedType}"]`);
+    if (typeButton) typeButton.classList.add('active');
+
+    // Restore generation selection
+    const generationButton = document.querySelector(`.generation-button[data-generation="${selectedGeneration}"]`);
+    if (generationButton) generationButton.classList.add('active');
+
+    // Restore custom type selections
+    Object.entries(selectedCustomTypes).forEach(([typeName, option]) => {
+        const customTypeButton = document.querySelector(`.custom-option-button[data-custom-option="${option}"]`);
+        if (customTypeButton) customTypeButton.classList.add('active');
+    });
 }
 
 function updateUndoButtonState() {
@@ -318,11 +340,14 @@ async function getCSVContent() {
     const settings = await loadSettings();
     const customTypeNames = settings.customTypes.map(ct => ct.name);
     
-    let csvContent = "HoleID,HoleDip,HoleAzimuth,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
-    customTypeNames.forEach(name => {
-        csvContent += `,${name}`;
-    });
-    csvContent += "\n";
+    let csvContent = "";
+    if (settings.includeHeaderInExport) {
+        csvContent = "HoleID,HoleDip,HoleAzimuth,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
+        customTypeNames.forEach(name => {
+            csvContent += `,${name}`;
+        });
+        csvContent += "\n";
+    }
     
     measurements.forEach(function(measurement) {
         let row = [

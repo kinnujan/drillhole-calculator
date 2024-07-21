@@ -278,10 +278,15 @@ export async function updatePreview() {
     };
 
     if (Object.values(elements).every(el => el)) {
-        const holeDip = parseFloat(elements.holeDip.value);
-        const holeAzimuth = parseFloat(elements.holeAzimuth.value);
-        const alpha = parseFloat(elements.alpha.value);
-        const beta = parseFloat(elements.beta.value);
+        const holeDip = parseFloat(elements.holeDip.value) || 0;
+        const holeAzimuth = parseFloat(elements.holeAzimuth.value) || 0;
+        const alpha = parseFloat(elements.alpha.value) || 0;
+        const beta = parseFloat(elements.beta.value) || 0;
+
+        if (isNaN(holeDip) || isNaN(holeAzimuth) || isNaN(alpha) || isNaN(beta)) {
+            elements.preview.textContent = "Invalid input. Please enter numbers.";
+            return;
+        }
 
         const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
         
@@ -289,9 +294,9 @@ export async function updatePreview() {
             const settings = await loadSettings();
             const strike = calculateStrike(dipDirection, settings.strikeMode);
             
-            let previewText = `Dip: ${dip.toFixed(1)}°\nDip Direction: ${dipDirection.toFixed(1)}°\nStrike: ${strike.toFixed(1)}°`;
-            
-            elements.preview.textContent = previewText;
+            let previewText = `<span class="preview-label">Dip:</span> <span class="preview-value">${dip.toFixed(1)}°</span> <span class="preview-label">Dip Direction:</span> <span class="preview-value">${dipDirection.toFixed(1)}°</span> <span class="preview-label">Strike:</span> <span class="preview-value">${strike.toFixed(1)}°</span>`;
+        
+            elements.preview.innerHTML = previewText;
         } catch (error) {
             handleError(error, "Error updating preview");
         }

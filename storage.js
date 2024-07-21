@@ -9,6 +9,9 @@ import { DEFAULT_SETTINGS, CURRENT_SETTINGS_VERSION } from './constants.js';
 export async function saveMeasurements(measurements) {
     console.log("Saving measurements to local storage...");
     try {
+        if (typeof localStorage === 'undefined') {
+            throw new Error('localStorage is not available');
+        }
         await localStorage.setItem('drillHoleMeasurements', JSON.stringify(measurements));
         console.log("Measurements saved successfully.");
     } catch (error) {
