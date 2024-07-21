@@ -200,6 +200,10 @@ async function setupCSVImportToggle(initialState) {
         }
     });
 
+    // Setup CSV import functionality
+    const csvImportInput = document.getElementById('csvImportInput');
+    csvImportInput.addEventListener('change', handleCSVImport);
+
     // Setup CSV import field selectors
     const csvFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
     csvFieldSelectors.forEach(field => {
@@ -209,6 +213,74 @@ async function setupCSVImportToggle(initialState) {
                 const settings = await loadSettings();
                 settings.csvImportFields[field] = selector.value;
                 await saveSettings(settings);
+            });
+        }
+    });
+}
+
+async function handleCSVImport(event) {
+    const file = event.target.files[0];
+    if (file) {
+        try {
+            const csvData = await readCSVFile(file);
+            const headers = csvData[0];
+            populateFieldSelectors(headers);
+            await importCSV(csvData);
+            console.log("CSV imported successfully");
+        } catch (error) {
+            handleError(error, "Error importing CSV file");
+        }
+    }
+}
+
+function readCSVFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target.result;
+            const data = CSVToArray(text);
+            resolve(data);
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsText(file);
+    });
+}
+
+function CSVToArray(strData, strDelimiter = ',') {
+    const objPattern = new RegExp(
+        ("(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+        "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+        "([^\"\\" + strDelimiter + "\\r\\n]*))"),"gi"
+    );
+    let arrData = [[]];
+    let arrMatches = null;
+    while (arrMatches = objPattern.exec(strData)) {
+        const strMatchedDelimiter = arrMatches[1];
+        if (strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter) {
+            arrData.push([]);
+        }
+        let strMatchedValue;
+        if (arrMatches[2]) {
+            strMatchedValue = arrMatches[2].replace(new RegExp( "\"\"", "g" ), "\"");
+        } else {
+            strMatchedValue = arrMatches[3];
+        }
+        arrData[arrData.length - 1].push(strMatchedValue);
+    }
+    return arrData;
+}
+
+function populateFieldSelectors(headers) {
+    const csvFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    csvFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`csvImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+        if (selector) {
+            selector.innerHTML = '<option value="">Select field</option>';
+            headers.forEach(header => {
+                const option = document.createElement('option');
+                option.value = header;
+                option.textContent = header;
+                selector.appendChild(option);
             });
         }
     });

@@ -150,24 +150,26 @@
                         <p class="setting-description">Enable CSV import functionality for drill hole data.</p>
                     </div>
                     <div class="setting-group csv-import-settings">
-                        <h3>CSV Import Field Mapping</h3>
+                        <h3>CSV Import</h3>
+                        <input type="file" id="csvImportInput" accept=".csv">
+                        <h4>CSV Import Field Mapping</h4>
                         <div>
                             <label for="csvImportHoleIdField">Hole ID Field:</label>
-                            <input type="text" id="csvImportHoleIdField">
+                            <select id="csvImportHoleIdField"></select>
                         </div>
                         <div>
                             <label for="csvImportDepthField">Depth Field:</label>
-                            <input type="text" id="csvImportDepthField">
+                            <select id="csvImportDepthField"></select>
                         </div>
                         <div>
                             <label for="csvImportAzimuthField">Azimuth Field:</label>
-                            <input type="text" id="csvImportAzimuthField">
+                            <select id="csvImportAzimuthField"></select>
                         </div>
                         <div>
                             <label for="csvImportDipField">Dip Field:</label>
-                            <input type="text" id="csvImportDipField">
+                            <select id="csvImportDipField"></select>
                         </div>
-                        <p class="setting-description">Specify the column names in your CSV file for each required field.</p>
+                        <p class="setting-description">Select the corresponding fields from your CSV file for each required field.</p>
                     </div>
                     <div class="setting-group">
                         <label for="strikeMode">Strike Mode:</label>
