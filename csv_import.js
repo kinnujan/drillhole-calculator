@@ -4,15 +4,15 @@ import { loadSettings } from './storage.js';
 export async function importCSV(csvData) {
     try {
         const settings = await loadSettings();
-        const csvImportFields = settings.csvImportFields;
+        const surveyImportFields = settings.surveyImportFields;
         const headers = csvData[0].map(h => h.toLowerCase().trim());
         const data = {};
 
         // Get column indices based on user-selected fields
-        const holeIdIndex = headers.indexOf(csvImportFields.holeId.toLowerCase());
-        const depthIndex = headers.indexOf(csvImportFields.depth.toLowerCase());
-        const azimuthIndex = headers.indexOf(csvImportFields.azimuth.toLowerCase());
-        const dipIndex = headers.indexOf(csvImportFields.dip.toLowerCase());
+        const holeIdIndex = headers.indexOf(surveyImportFields.holeId.toLowerCase());
+        const depthIndex = headers.indexOf(surveyImportFields.depth.toLowerCase());
+        const azimuthIndex = headers.indexOf(surveyImportFields.azimuth.toLowerCase());
+        const dipIndex = headers.indexOf(surveyImportFields.dip.toLowerCase());
 
         if (holeIdIndex === -1 || depthIndex === -1 || azimuthIndex === -1 || dipIndex === -1) {
             throw new Error('One or more required columns not found in CSV');
@@ -23,12 +23,13 @@ export async function importCSV(csvData) {
             if (values.length >= Math.max(holeIdIndex, depthIndex, azimuthIndex, dipIndex) + 1) {
                 const holeId = values[holeIdIndex].trim();
                 if (!data[holeId]) {
-                    data[holeId] = {
-                        depth: parseFloat(values[depthIndex]),
-                        azimuth: parseFloat(values[azimuthIndex]),
-                        dip: parseFloat(values[dipIndex])
-                    };
+                    data[holeId] = [];
                 }
+                data[holeId].push({
+                    depth: parseFloat(values[depthIndex]),
+                    azimuth: parseFloat(values[azimuthIndex]),
+                    dip: parseFloat(values[dipIndex])
+                });
             }
         }
 
