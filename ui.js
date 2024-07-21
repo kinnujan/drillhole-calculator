@@ -49,15 +49,15 @@ export async function setupUI() {
 
 function updateHoleInfo() {
     const holeId = document.getElementById('holeIdSelect').value;
-    const holeData = getHoleData(holeId);
+    const depth = parseFloat(document.getElementById('depth').value) || 0;
+    const holeData = getHoleData(holeId, depth);
     
-    if (holeData && holeData.length > 0) {
-        const firstEntry = holeData[0];
+    if (holeData) {
         document.getElementById('holeId').value = holeId;
-        document.getElementById('holeDip').value = firstEntry.dip;
-        document.getElementById('holeDipSlider').value = firstEntry.dip;
-        document.getElementById('holeAzimuth').value = firstEntry.azimuth;
-        document.getElementById('holeAzimuthSlider').value = firstEntry.azimuth;
+        document.getElementById('holeDip').value = holeData.dip;
+        document.getElementById('holeDipSlider').value = holeData.dip;
+        document.getElementById('holeAzimuth').value = holeData.azimuth;
+        document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
         updateDrillHoleInfoSummary();
         updatePreview();
     }
@@ -119,11 +119,12 @@ function setupMeasurementHandlers() {
 
 function setupDepthButtons() {
     const depthButtons = document.querySelectorAll('.depth-button');
+    const depthInput = document.getElementById('depth');
+
     depthButtons.forEach(button => {
         button.addEventListener('click', async () => {
             await triggerHapticFeedback();
             const amount = parseFloat(button.getAttribute('data-amount'));
-            const depthInput = document.getElementById('depth');
             if (depthInput) {
                 depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
                 
@@ -132,11 +133,21 @@ function setupDepthButtons() {
                 setTimeout(() => {
                     button.classList.remove('active');
                 }, 200);
+
+                // Update hole info based on new depth
+                updateHoleInfo();
             } else {
                 console.warn("Depth input not found.");
             }
         });
     });
+
+    // Add event listener for manual depth input
+    if (depthInput) {
+        depthInput.addEventListener('input', updateHoleInfo);
+    } else {
+        console.warn("Depth input not found.");
+    }
 }
 
 async function setupTypeSelectors() {

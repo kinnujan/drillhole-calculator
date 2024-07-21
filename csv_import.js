@@ -109,7 +109,21 @@ export function getImportedDrillHoleData() {
     return data ? JSON.parse(data) : null;
 }
 
-export function getHoleData(holeId) {
+function findClosestSurveyPoint(holeData, targetDepth) {
+    if (!holeData || holeData.length === 0) return null;
+    
+    return holeData.reduce((closest, current) => {
+        if (!closest) return current;
+        return Math.abs(current.depth - targetDepth) < Math.abs(closest.depth - targetDepth) ? current : closest;
+    }, null);
+}
+
+export function getHoleData(holeId, depth) {
     const data = getImportedDrillHoleData();
-    return data && data[holeId] ? data[holeId] : null;
+    if (!data || !data[holeId]) return null;
+    
+    const holeData = data[holeId];
+    if (!depth) return holeData[0]; // Return first entry if no depth is provided
+    
+    return findClosestSurveyPoint(holeData, depth);
 }
