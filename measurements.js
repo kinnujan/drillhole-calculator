@@ -184,13 +184,31 @@ export async function undoLastMeasurement() {
         selectedCustomTypes = { ...lastAddedMeasurement.customTypes };
 
         updatePreview();
-        resetUISelections();
+        restoreUISelections();
         lastAddedMeasurement = null;
         updateUndoButtonState();
         console.log("Last measurement undone");
     } else {
         console.log("No measurement to undo");
     }
+}
+
+function restoreUISelections() {
+    resetUISelections(); // First, reset all selections
+
+    // Restore type selection
+    const typeButton = document.querySelector(`.type-button[data-type="${selectedType}"]`);
+    if (typeButton) typeButton.classList.add('active');
+
+    // Restore generation selection
+    const generationButton = document.querySelector(`.generation-button[data-generation="${selectedGeneration}"]`);
+    if (generationButton) generationButton.classList.add('active');
+
+    // Restore custom type selections
+    Object.entries(selectedCustomTypes).forEach(([typeName, option]) => {
+        const customTypeButton = document.querySelector(`.custom-option-button[data-custom-option="${option}"]`);
+        if (customTypeButton) customTypeButton.classList.add('active');
+    });
 }
 
 function updateUndoButtonState() {
