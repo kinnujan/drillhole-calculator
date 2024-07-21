@@ -27,10 +27,10 @@ export const DEFAULT_SETTINGS = {
     includeHeaderInExport: true,
     surveyImportEnabled: false,
     surveyImportFields: {
-        holeId: '',
-        depth: '',
-        azimuth: '',
-        dip: ''
+        holeId: 'Hole number',
+        depth: 'Depth',
+        azimuth: 'Azimuth UTM',
+        dip: 'Dip'
     }
 };
 
