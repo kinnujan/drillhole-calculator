@@ -12,16 +12,16 @@ export async function importCSV(csvData) {
             throw new Error('Invalid CSV data: empty or not an array');
         }
 
-        const headers = csvData[0].map(h => h.toLowerCase().trim());
+        const headers = csvData[0].map(h => h.trim());
         console.log("CSV headers:", headers);
 
         const data = {};
 
         // Get column indices based on user-selected fields
-        const holeIdIndex = headers.indexOf(surveyImportFields.holeId.toLowerCase());
-        const depthIndex = headers.indexOf(surveyImportFields.depth.toLowerCase());
-        const azimuthIndex = headers.indexOf(surveyImportFields.azimuth.toLowerCase());
-        const dipIndex = headers.indexOf(surveyImportFields.dip.toLowerCase());
+        const holeIdIndex = headers.indexOf(surveyImportFields.holeId);
+        const depthIndex = headers.indexOf(surveyImportFields.depth);
+        const azimuthIndex = headers.indexOf(surveyImportFields.azimuth);
+        const dipIndex = headers.indexOf(surveyImportFields.dip);
 
         console.log("Column indices:", { holeIdIndex, depthIndex, azimuthIndex, dipIndex });
 
