@@ -215,10 +215,14 @@ async function setupSurveyImportToggle(initialState) {
             await saveSettings(settings);
             console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
             toggleSurveyImportUI(isSurveyImportEnabled);
+            toggleCustomHoleIdInput(isSurveyImportEnabled);
         } catch (error) {
             handleError(error, "Error saving survey import setting");
         }
     });
+
+    // Initial toggle of custom Hole ID input
+    toggleCustomHoleIdInput(initialState);
 
     // Setup survey import functionality
     const surveyImportInput = document.getElementById('surveyImportInput');
@@ -247,6 +251,18 @@ function toggleSurveyImportUI(isEnabled) {
     surveyImportElements.forEach(element => {
         element.style.display = isEnabled ? 'block' : 'none';
     });
+}
+
+function toggleCustomHoleIdInput(isSurveyImportEnabled) {
+    const customHoleIdGroup = document.getElementById('customHoleIdGroup');
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    
+    if (customHoleIdGroup && holeIdSelect) {
+        customHoleIdGroup.style.display = isSurveyImportEnabled ? 'none' : 'block';
+        holeIdSelect.style.display = isSurveyImportEnabled ? 'block' : 'none';
+    } else {
+        console.warn('Custom Hole ID group or Hole ID select not found');
+    }
 }
 
 async function handleCSVImport(event) {

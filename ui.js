@@ -42,6 +42,11 @@ export async function setupUI() {
     setupMeasurementHandlers();
     setupHoleIdDropdown(getImportedDrillHoleData());
     document.addEventListener('measurementAdded', updateHoleInfo);
+    
+    // Toggle custom Hole ID input based on initial survey import setting
+    const settings = await loadSettings();
+    toggleCustomHoleIdInput(settings.surveyImportEnabled);
+    
     console.log("UI setup complete.");
 }
 
