@@ -40,7 +40,6 @@ export async function setupUI() {
     await syncInputs();
     setupDepthButtons();
     setupMeasurementHandlers();
-    setupCSVImport();
     setupHoleIdDropdown();
     console.log("UI setup complete.");
 }

@@ -8,11 +8,16 @@ const urlsToCache = [
   '/ui.js',
   '/storage.js',
   '/settings.js',
+  '/utils.js',
+  '/constants.js',
+  '/csv_import.js',
   '/manifest.json',
   '/favicon.ico',
   '/apple-touch-icon.png',
   '/favicon-32x32.png',
-  '/favicon-16x16.png'
+  '/favicon-16x16.png',
+  '/android-chrome-192x192.png',
+  '/android-chrome-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
