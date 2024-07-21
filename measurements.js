@@ -25,10 +25,10 @@ export async function loadMeasurements() {
 export async function addMeasurement() {
     console.log("Adding new measurement...");
     const holeId = document.getElementById('holeId')?.value || '';
-    const holeData = getHoleData(holeId);
+    const depth = parseFloat(document.getElementById('depth')?.value || '0');
+    const holeData = getHoleData(holeId, depth);
     const holeDip = holeData ? holeData.dip : parseFloat(document.getElementById('holeDip')?.value || '0');
     const holeAzimuth = holeData ? holeData.azimuth : parseFloat(document.getElementById('holeAzimuth')?.value || '0');
-    const depth = parseFloat(document.getElementById('depth')?.value || '0');
     const alpha = parseFloat(document.getElementById('alpha')?.value || '0');
     const beta = parseFloat(document.getElementById('beta')?.value || '0');
     const comment = document.getElementById('comment')?.value || '';
@@ -75,6 +75,9 @@ export async function addMeasurement() {
         updatePreview();
         enableUndoButton();
         console.log("New measurement added:", result);
+
+        // Dispatch custom event
+        document.dispatchEvent(new CustomEvent('measurementAdded'));
     } catch (error) {
         handleError(error, "An error occurred while adding the measurement.");
     }

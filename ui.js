@@ -41,7 +41,24 @@ export async function setupUI() {
     setupDepthButtons();
     setupMeasurementHandlers();
     setupHoleIdDropdown(getImportedDrillHoleData());
+    document.addEventListener('measurementAdded', updateHoleInfo);
     console.log("UI setup complete.");
+}
+
+export function updateHoleInfo() {
+    const holeId = document.getElementById('holeIdSelect').value;
+    const depth = parseFloat(document.getElementById('depth').value) || 0;
+    const holeData = getHoleData(holeId, depth);
+    
+    if (holeData) {
+        document.getElementById('holeId').value = holeId;
+        document.getElementById('holeDip').value = holeData.dip;
+        document.getElementById('holeDipSlider').value = holeData.dip;
+        document.getElementById('holeAzimuth').value = holeData.azimuth;
+        document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
+        updateDrillHoleInfoSummary();
+        updatePreview();
+    }
 }
 
 
