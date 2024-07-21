@@ -11,13 +11,13 @@ export async function importCSV(file) {
                 const data = {};
 
                 // Detect column indices
-                const holeIdIndex = headers.findIndex(h => h.includes('hole') && h.includes('id'));
-                const depthIndex = headers.findIndex(h => h === 'depth');
-                const azimuthIndex = headers.findIndex(h => h === 'azimuth' || h === 'utm_azimuth');
-                const dipIndex = headers.findIndex(h => h === 'dip');
+                const holeIdIndex = headers.findIndex(h => h.toLowerCase().includes('hole') && h.toLowerCase().includes('number'));
+                const depthIndex = headers.findIndex(h => h.toLowerCase() === 'depth');
+                const azimuthIndex = headers.findIndex(h => h.toLowerCase() === 'azimuth utm');
+                const dipIndex = headers.findIndex(h => h.toLowerCase() === 'dip');
 
-                if (holeIdIndex === -1 || depthIndex === -1 || azimuthIndex === -1) {
-                    throw new Error('Required columns (Hole ID, Depth, Azimuth) not found in CSV');
+                if (holeIdIndex === -1 || depthIndex === -1 || azimuthIndex === -1 || dipIndex === -1) {
+                    throw new Error('Required columns (Hole number, Depth, Azimuth UTM, Dip) not found in CSV');
                 }
 
                 for (let i = 1; i < lines.length; i++) {
