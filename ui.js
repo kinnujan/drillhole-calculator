@@ -45,35 +45,7 @@ export async function setupUI() {
     console.log("UI setup complete.");
 }
 
-async function setupCSVImport() {
-    const settings = await loadSettings();
-    const importCSVInput = document.getElementById('importCSV');
-    const holeIdInput = document.getElementById('holeId');
-    const holeIdSelect = document.getElementById('holeIdSelect');
-    const csvImportElements = document.querySelectorAll('.csv-import-element');
-
-    if (settings.csvImportEnabled) {
-        csvImportElements.forEach(element => element.style.display = 'block');
-        holeIdInput.style.display = 'none';
-        holeIdSelect.style.display = 'block';
-        importCSVInput.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                try {
-                    await importCSV(file);
-                    setupHoleIdDropdown();
-                    console.log("CSV imported successfully");
-                } catch (error) {
-                    handleError(error, "Error importing CSV file");
-                }
-            }
-        });
-    } else {
-        csvImportElements.forEach(element => element.style.display = 'none');
-        holeIdInput.style.display = 'block';
-        holeIdSelect.style.display = 'none';
-    }
-}
+// CSV import setup is now handled in the settings page
 
 function setupHoleIdDropdown() {
     const holeIdSelect = document.getElementById('holeIdSelect');

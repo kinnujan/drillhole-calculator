@@ -43,22 +43,18 @@
 
         <div id="drillHoleInfo" class="collapsible">
             <div class="input-group">
-                <label for="importCSV">Import CSV:</label>
-                <input type="file" id="importCSV" accept=".csv">
-            </div>
-            <div class="input-group">
                 <label for="holeId">Hole ID:</label>
-                <select id="holeId"></select>
+                <input type="text" id="holeId">
             </div>
             <div class="input-group angle-input">
                 <label for="holeDip">Hole Dip (°):</label>
-                <input type="number" id="holeDip" min="-90" max="90" step="0.1" value="0" class="angle-number" readonly>
-                <input type="range" id="holeDipSlider" min="-90" max="90" step="0.1" value="0" class="angle-slider" disabled>
+                <input type="number" id="holeDip" min="-90" max="90" step="0.1" value="0" class="angle-number">
+                <input type="range" id="holeDipSlider" min="-90" max="90" step="0.1" value="0" class="angle-slider">
             </div>
             <div class="input-group angle-input">
                 <label for="holeAzimuth">Hole Azimuth (°):</label>
-                <input type="number" id="holeAzimuth" min="0" max="360" step="0.1" value="0" class="angle-number" readonly>
-                <input type="range" id="holeAzimuthSlider" min="0" max="360" step="0.1" value="0" class="angle-slider" disabled>
+                <input type="number" id="holeAzimuth" min="0" max="360" step="0.1" value="0" class="angle-number">
+                <input type="range" id="holeAzimuthSlider" min="0" max="360" step="0.1" value="0" class="angle-slider">
             </div>
         </div>
 
