@@ -17,7 +17,7 @@ export async function setupSettings() {
         setupHapticFeedback(settings.hapticFeedback);
         setupUndoButton(settings.undoEnabled);
         setupIncludeHeaderInExport(settings.includeHeaderInExport);
-        setupCSVImportToggle(settings.csvImportEnabled);
+        setupSurveyImportToggle(settings.surveyImportEnabled);
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
