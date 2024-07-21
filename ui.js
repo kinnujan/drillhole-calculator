@@ -85,10 +85,7 @@ function setupHoleIdDropdown() {
     
     if (importedData) {
         Object.keys(importedData).forEach(holeId => {
-            const option = document.createElement('option');
-            option.value = holeId;
-            option.textContent = holeId;
-            holeIdSelect.appendChild(option);
+            holeIdSelect.appendChild(new Option(holeId, holeId));
         });
     }
 
