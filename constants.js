@@ -25,8 +25,8 @@ export const DEFAULT_SETTINGS = {
     hapticFeedback: true,
     undoEnabled: true,
     includeHeaderInExport: true,
-    csvImportEnabled: false,
-    csvImportFields: {
+    surveyImportEnabled: false,
+    surveyImportFields: {
         holeId: '',
         depth: '',
         azimuth: '',

@@ -183,35 +183,35 @@ function updateTypeList(typeCategory, types) {
     }
 }
 
-async function setupCSVImportToggle(initialState) {
-    const csvImportToggle = document.getElementById('csvImportEnabled');
-    csvImportToggle.checked = initialState;
+async function setupSurveyImportToggle(initialState) {
+    const surveyImportToggle = document.getElementById('surveyImportEnabled');
+    surveyImportToggle.checked = initialState;
 
-    csvImportToggle.addEventListener('change', async () => {
-        const isCSVImportEnabled = csvImportToggle.checked;
+    surveyImportToggle.addEventListener('change', async () => {
+        const isSurveyImportEnabled = surveyImportToggle.checked;
         try {
             const settings = await loadSettings();
-            settings.csvImportEnabled = isCSVImportEnabled;
+            settings.surveyImportEnabled = isSurveyImportEnabled;
             await saveSettings(settings);
-            console.log(`CSV import ${isCSVImportEnabled ? 'enabled' : 'disabled'}`);
-            toggleCSVImportUI(isCSVImportEnabled);
+            console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
+            toggleSurveyImportUI(isSurveyImportEnabled);
         } catch (error) {
-            handleError(error, "Error saving CSV import setting");
+            handleError(error, "Error saving survey import setting");
         }
     });
 
-    // Setup CSV import functionality
-    const csvImportInput = document.getElementById('csvImportInput');
-    csvImportInput.addEventListener('change', handleCSVImport);
+    // Setup survey import functionality
+    const surveyImportInput = document.getElementById('surveyImportInput');
+    surveyImportInput.addEventListener('change', handleSurveyImport);
 
-    // Setup CSV import field selectors
-    const csvFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
-    csvFieldSelectors.forEach(field => {
-        const selector = document.getElementById(`csvImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+    // Setup survey import field selectors
+    const surveyFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    surveyFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`surveyImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
         if (selector) {
             selector.addEventListener('change', async () => {
                 const settings = await loadSettings();
-                settings.csvImportFields[field] = selector.value;
+                settings.surveyImportFields[field] = selector.value;
                 await saveSettings(settings);
             });
         }
@@ -287,7 +287,7 @@ function populateFieldSelectors(headers) {
 }
 
 function toggleCSVImportUI(isEnabled) {
-    const csvImportElements = document.querySelectorAll('.csv-import-element');
+    const surveyImportElements = document.querySelectorAll('.survey-import-element');
     csvImportElements.forEach(element => {
         element.style.display = isEnabled ? 'block' : 'none';
     });
