@@ -16,6 +16,7 @@ export async function setupSettings() {
         setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
         setupHapticFeedback(settings.hapticFeedback);
         setupUndoButton(settings.undoEnabled);
+        setupIncludeHeaderInExport(settings.includeHeaderInExport);
         
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
