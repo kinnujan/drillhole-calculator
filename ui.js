@@ -393,7 +393,7 @@ export async function updateResultsTable() {
     // Update header row
     const headerRow = thead.querySelector('tr');
     headerRow.innerHTML = '<th><input type="checkbox" id="selectAllMeasurements"></th>';
-    const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
+    const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Strike', 'Comment'];
     baseColumns.forEach(col => {
         const th = document.createElement('th');
         th.textContent = col;
@@ -424,8 +424,9 @@ export async function updateResultsTable() {
             row.insertCell(3).textContent = measurement.generation;
             row.insertCell(4).textContent = measurement.dip + '°';
             row.insertCell(5).textContent = measurement.dipDirection + '°';
+            row.insertCell(6).textContent = measurement.strike + '°';
             
-            const commentCell = row.insertCell(6);
+            const commentCell = row.insertCell(7);
             commentCell.textContent = (measurement.comment.length > 20 ? 
                 measurement.comment.substring(0, 20) + '...' : 
                 measurement.comment);
