@@ -383,11 +383,11 @@ export async function updateResultsTable() {
     }
 
     // Clear existing content
-    thead.innerHTML = '';
     tbody.innerHTML = '';
 
-    // Create header row
-    const headerRow = document.createElement('tr');
+    // Update header row
+    const headerRow = thead.querySelector('tr');
+    headerRow.innerHTML = '<th><input type="checkbox" id="selectAllMeasurements"></th>';
     const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
     baseColumns.forEach(col => {
         const th = document.createElement('th');
@@ -404,18 +404,23 @@ export async function updateResultsTable() {
             headerRow.appendChild(th);
         });
 
-        thead.appendChild(headerRow);
-
         // Populate table body
-        measurements.forEach((measurement) => {
+        measurements.forEach((measurement, index) => {
             const row = tbody.insertRow();
-            row.insertCell(0).textContent = measurement.depth.toFixed(2);
-            row.insertCell(1).textContent = measurement.type;
-            row.insertCell(2).textContent = measurement.generation;
-            row.insertCell(3).textContent = measurement.dip + '°';
-            row.insertCell(4).textContent = measurement.dipDirection + '°';
+            const checkboxCell = row.insertCell(0);
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'measurement-checkbox';
+            checkbox.dataset.index = index;
+            checkboxCell.appendChild(checkbox);
+
+            row.insertCell(1).textContent = measurement.depth.toFixed(2);
+            row.insertCell(2).textContent = measurement.type;
+            row.insertCell(3).textContent = measurement.generation;
+            row.insertCell(4).textContent = measurement.dip + '°';
+            row.insertCell(5).textContent = measurement.dipDirection + '°';
             
-            const commentCell = row.insertCell(5);
+            const commentCell = row.insertCell(6);
             commentCell.textContent = (measurement.comment.length > 20 ? 
                 measurement.comment.substring(0, 20) + '...' : 
                 measurement.comment);
@@ -428,6 +433,14 @@ export async function updateResultsTable() {
                 cell.textContent = customValue || '-';
             });
         });
+
+        // Add event listener for "Select All" checkbox
+        const selectAllCheckbox = document.getElementById('selectAllMeasurements');
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.measurement-checkbox');
+            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+        });
+
     } catch (error) {
         handleError(error, "Error updating results table");
     }
