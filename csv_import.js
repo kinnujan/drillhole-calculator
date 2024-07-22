@@ -112,3 +112,22 @@ export function getHoleData(holeId, depth) {
     
     return findClosestSurveyPoint(holeData, depth);
 }
+
+export function setupHoleIdDropdown(data) {
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    if (!holeIdSelect) {
+        console.error('Hole ID select element not found. Make sure the element with id "holeIdSelect" exists in your HTML.');
+        return;
+    }
+
+    holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
+    
+    if (data) {
+        Object.keys(data).forEach(holeId => {
+            holeIdSelect.appendChild(new Option(holeId, holeId));
+        });
+    }
+
+    holeIdSelect.addEventListener('change', updateHoleInfo);
+    console.log('Hole ID dropdown setup complete.');
+}
