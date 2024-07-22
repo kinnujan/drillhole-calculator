@@ -88,21 +88,6 @@ export function setupHoleIdDropdown(data) {
     console.log('Hole ID dropdown setup complete.');
 }
 
-function updateHoleInfo() {
-    const holeId = document.getElementById('holeIdSelect').value;
-    const holeData = getHoleData(holeId);
-    
-    if (holeData && holeData.length > 0) {
-        const firstEntry = holeData[0];
-        document.getElementById('holeId').value = holeId;
-        document.getElementById('holeDip').value = firstEntry.dip;
-        document.getElementById('holeDipSlider').value = firstEntry.dip;
-        document.getElementById('holeAzimuth').value = firstEntry.azimuth;
-        document.getElementById('holeAzimuthSlider').value = firstEntry.azimuth;
-        updateDrillHoleInfoSummary();
-        updatePreview();
-    }
-}
 
 export function getImportedDrillHoleData() {
     const data = localStorage.getItem('importedDrillHoleData');
