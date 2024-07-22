@@ -69,22 +69,6 @@ export function updateHoleInfo() {
 
 // Remove the setupHoleIdDropdown function as it's now in csv_import.js
 
-function updateHoleInfo() {
-    const holeId = document.getElementById('holeIdSelect').value;
-    const depth = parseFloat(document.getElementById('depth').value) || 0;
-    const holeData = getHoleData(holeId, depth);
-    
-    if (holeData) {
-        document.getElementById('holeId').value = holeId;
-        document.getElementById('holeDip').value = holeData.dip;
-        document.getElementById('holeDipSlider').value = holeData.dip;
-        document.getElementById('holeAzimuth').value = holeData.azimuth;
-        document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
-        updateDrillHoleInfoSummary();
-        updatePreview();
-    }
-}
-
 function setupDrillHoleInfoToggle() {
     const toggle = document.getElementById('drillHoleInfoToggle');
     const drillHoleInfo = document.getElementById('drillHoleInfo');
