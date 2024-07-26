@@ -36,17 +36,51 @@ export function disableUndoButton() {
 
 export async function setupUI() {
     console.log("Setting up UI...");
-    setupDrillHoleInfoToggle();
-    await setupTypeSelectors();
-    await syncInputs();
-    setupDepthButtons();
-    setupMeasurementHandlers();
-    setupHoleIdDropdown(getImportedDrillHoleData());
+    try {
+        setupDrillHoleInfoToggle();
+    } catch (error) {
+        console.error('Error setting up drill hole info toggle:', error);
+    }
+
+    try {
+        await setupTypeSelectors();
+    } catch (error) {
+        console.error('Error setting up type selectors:', error);
+    }
+
+    try {
+        await syncInputs();
+    } catch (error) {
+        console.error('Error syncing inputs:', error);
+    }
+
+    try {
+        setupDepthButtons();
+    } catch (error) {
+        console.error('Error setting up depth buttons:', error);
+    }
+
+    try {
+        setupMeasurementHandlers();
+    } catch (error) {
+        console.error('Error setting up measurement handlers:', error);
+    }
+
+    try {
+        setupHoleIdDropdown(getImportedDrillHoleData());
+    } catch (error) {
+        console.error('Error setting up hole ID dropdown:', error);
+    }
+
     document.addEventListener('measurementAdded', updateHoleInfo);
     
-    // Toggle custom Hole ID input based on initial survey import setting
-    const settings = await loadSettings();
-    toggleCustomHoleIdInput(settings.surveyImportEnabled);
+    try {
+        // Toggle custom Hole ID input based on initial survey import setting
+        const settings = await loadSettings();
+        toggleCustomHoleIdInput(settings.surveyImportEnabled);
+    } catch (error) {
+        console.error('Error toggling custom hole ID input:', error);
+    }
     
     console.log("UI setup complete.");
 }

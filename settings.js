@@ -14,7 +14,7 @@ export async function setupSettings() {
         const settings = await loadSettings();
         await setupDarkMode(settings.darkMode);
         setupStrikeMode(settings.strikeMode);
-        setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
+        setupAllTypes(settings.measurementTypes || [], settings.generationTypes || [], settings.customTypes || []);
         setupHapticFeedback(settings.hapticFeedback);
         setupUndoButton(settings.undoEnabled);
         setupIncludeHeaderInExport(settings.includeHeaderInExport);
@@ -24,8 +24,15 @@ export async function setupSettings() {
         // Add this line to export the toggleCustomHoleIdInput function
         window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
         
-        document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
-        document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
+        const addMeasurementTypeBtn = document.getElementById('addMeasurementType');
+        if (addMeasurementTypeBtn) {
+            addMeasurementTypeBtn.addEventListener('click', () => addType('measurementTypes'));
+        }
+        
+        const addGenerationTypeBtn = document.getElementById('addGenerationType');
+        if (addGenerationTypeBtn) {
+            addGenerationTypeBtn.addEventListener('click', () => addType('generationTypes'));
+        }
 
         // Add the setupSkipInvalidCSVRows function
         function setupSkipInvalidCSVRows(initialState) {
