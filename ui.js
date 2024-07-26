@@ -375,6 +375,7 @@ export async function updatePreview() {
 }
 
 export async function updateResultsTable() {
+    console.log("Updating results table...");
     const resultsTable = document.getElementById('resultsTable');
     if (!resultsTable) {
         console.warn("Results table not found.");
@@ -413,24 +414,25 @@ export async function updateResultsTable() {
 
         // Import measurements from measurements.js
         const { measurements } = await import('./measurements.js');
+        console.log("Measurements loaded:", measurements);
 
         // Populate table body
         measurements.forEach((measurement) => {
             try {
                 const row = tbody.insertRow();
 
-                row.insertCell().textContent = measurement.depth.toFixed(2);
-                row.insertCell().textContent = measurement.type;
-                row.insertCell().textContent = measurement.generation;
+                row.insertCell().textContent = measurement.depth;
+                row.insertCell().textContent = measurement.type || 'Unspecified';
+                row.insertCell().textContent = measurement.generation || '-';
                 row.insertCell().textContent = measurement.dip + '°';
                 row.insertCell().textContent = measurement.dipDirection + '°';
                 row.insertCell().textContent = measurement.strike + '°';
                 
                 const commentCell = row.insertCell();
-                commentCell.textContent = (measurement.comment.length > 20 ? 
+                commentCell.textContent = (measurement.comment && measurement.comment.length > 20 ? 
                     measurement.comment.substring(0, 20) + '...' : 
-                    measurement.comment);
-                commentCell.title = measurement.comment; // Show full comment on hover
+                    measurement.comment || '-');
+                commentCell.title = measurement.comment || ''; // Show full comment on hover
 
                 // Add custom type values
                 settings.customTypes.forEach(customType => {
@@ -443,7 +445,9 @@ export async function updateResultsTable() {
             }
         });
 
+        console.log("Results table updated successfully.");
     } catch (error) {
+        console.error("Error updating results table:", error);
         handleError(error, "Error updating results table");
     }
 }
