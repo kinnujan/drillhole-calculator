@@ -42,13 +42,15 @@ export function validateInputs(holeDip, holeAzimuth, alpha, beta) {
     return null;
 }
 
+import { error } from './logger.js';
+
 /**
  * Handles errors by logging them and displaying a message to the user
- * @param {Error} error - The error object
+ * @param {Error} err - The error object
  * @param {string} userMessage - The message to display to the user
  */
-export function handleError(error, userMessage) {
-    console.error(error);
+export function handleError(err, userMessage) {
+    error(err);
     document.getElementById('error').textContent = userMessage;
 }
 

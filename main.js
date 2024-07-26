@@ -2,30 +2,31 @@ import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
 import { setupSettings } from './settings.js';
 import { handleError } from './utils.js';
+import { info, error, warn } from './logger.js';
 
 async function init() {
-    console.log('Initializing app...');
+    info('Initializing app...');
     try {
-        console.log('Setting up UI...');
+        info('Setting up UI...');
         await setupUI();
-        console.log('UI setup complete.');
+        info('UI setup complete.');
 
-        console.log('Loading measurements...');
+        info('Loading measurements...');
         await loadMeasurements();
-        console.log('Measurements loaded.');
+        info('Measurements loaded.');
 
-        console.log('Updating preview...');
+        info('Updating preview...');
         updatePreview();
-        console.log('Preview updated.');
+        info('Preview updated.');
 
-        console.log('Setting up settings...');
+        info('Setting up settings...');
         await setupSettings();
-        console.log('Settings setup complete.');
-    } catch (error) {
-        console.error('Error during initialization:', error);
-        console.error('Error stack:', error.stack);
-        console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-        handleError(error, "An error occurred during app initialization. Some features may not work correctly.");
+        info('Settings setup complete.');
+    } catch (err) {
+        error('Error during initialization:', err);
+        error('Error stack:', err.stack);
+        error('Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        handleError(err, "An error occurred during app initialization. Some features may not work correctly.");
     }
     
     // Check for Vibration API support
