@@ -335,6 +335,9 @@ async function handleCSVImport(event) {
                 copyStatus.textContent = 'CSV imported successfully!';
                 setTimeout(() => copyStatus.textContent = '', 3000);
             }
+
+            // Update the main UI to reflect the imported data
+            updateMainUIAfterImport(importedData);
         } catch (error) {
             console.error("CSV import error:", error);
             handleError(error, "Error importing CSV file: " + error.message);
@@ -342,6 +345,32 @@ async function handleCSVImport(event) {
     } else {
         console.warn("No file selected for CSV import");
     }
+}
+
+function updateMainUIAfterImport(importedData) {
+    // Update the hole ID dropdown in the main UI
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    if (holeIdSelect) {
+        holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
+        Object.keys(importedData).forEach(holeId => {
+            const option = document.createElement('option');
+            option.value = holeId;
+            option.textContent = holeId;
+            holeIdSelect.appendChild(option);
+        });
+    }
+
+    // Show the hole ID select and hide the hole ID input
+    const holeIdGroup = document.getElementById('holeIdGroup');
+    const holeIdSelectGroup = document.getElementById('holeIdSelectGroup');
+    if (holeIdGroup && holeIdSelectGroup) {
+        holeIdGroup.classList.add('hidden');
+        holeIdSelectGroup.classList.remove('hidden');
+    }
+
+    // Trigger an update of the hole info
+    const event = new Event('change');
+    holeIdSelect.dispatchEvent(event);
 }
 
 function readCSVFile(file) {
