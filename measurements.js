@@ -47,6 +47,11 @@ export async function addMeasurement() {
         return;
     }
 
+    if (!selectedType) {
+        handleError(new Error("No measurement type selected"), "Please select a measurement type.");
+        return;
+    }
+
     const errorElement = document.getElementById('error');
     if (errorElement) errorElement.textContent = '';
 
@@ -67,7 +72,7 @@ export async function addMeasurement() {
             holeId,
             holeDip: holeDip.toFixed(1),
             holeAzimuth: holeAzimuth.toFixed(1),
-            depth,
+            depth: depth.toFixed(2),
             type: selectedType,
             generation: selectedGeneration,
             customTypes: { ...selectedCustomTypes },
