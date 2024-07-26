@@ -287,7 +287,7 @@ function resetSelections() {
 
 export async function copyResults() {
     console.log("Copying results to clipboard...");
-    const csvContent = await getCSVContent(true);
+    const csvContent = await getCSVContent();
 
     try {
         if (navigator.clipboard && window.isSecureContext) {
@@ -332,7 +332,7 @@ async function fallbackCopyTextToClipboard(text) {
 
 export async function saveAsCSV() {
     console.log("Saving results as CSV...");
-    const csvContent = await getCSVContent(true);
+    const csvContent = await getCSVContent();
     const filename = `drill_hole_measurements_${new Date().toISOString().slice(0,10)}.csv`;
 
     try {
@@ -384,7 +384,7 @@ function fallbackSaveAsCSV(csvContent, filename) {
     console.log("File download initiated.");
 }
 
-async function getCSVContent(useSelection = false) {
+async function getCSVContent() {
     const settings = await loadSettings();
     const customTypeNames = settings.customTypes.map(ct => ct.name);
     
@@ -397,11 +397,7 @@ async function getCSVContent(useSelection = false) {
         csvContent += "\n";
     }
     
-    const selectedMeasurements = useSelection ? 
-        measurements.filter((_, index) => document.querySelector(`.measurement-checkbox[data-index="${index}"]`)?.checked) : 
-        measurements;
-    
-    selectedMeasurements.forEach(function(measurement) {
+    measurements.forEach(function(measurement) {
         let row = [
             measurement.holeId,
             measurement.holeDip,
