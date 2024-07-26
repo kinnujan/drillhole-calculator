@@ -1,7 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
-const LOG_FILE = 'app.log';
 const LOG_LEVELS = {
     DEBUG: 0,
     INFO: 1,
@@ -11,20 +7,9 @@ const LOG_LEVELS = {
 
 let currentLogLevel = LOG_LEVELS.INFO;
 
-function ensureLogFileExists() {
-    if (!fs.existsSync(LOG_FILE)) {
-        fs.writeFileSync(LOG_FILE, '');
-    }
-}
-
 function formatLogMessage(level, message) {
     const timestamp = new Date().toISOString();
-    return `${timestamp} [${level}] ${message}\n`;
-}
-
-function writeToLogFile(message) {
-    ensureLogFileExists();
-    fs.appendFileSync(LOG_FILE, message);
+    return `${timestamp} [${level}] ${message}`;
 }
 
 export function setLogLevel(level) {
@@ -36,8 +21,7 @@ export function setLogLevel(level) {
 export function log(level, ...args) {
     if (LOG_LEVELS[level] >= currentLogLevel) {
         const message = args.join(' ');
-        console[level.toLowerCase()](message);
-        writeToLogFile(formatLogMessage(level, message));
+        console[level.toLowerCase()](formatLogMessage(level, message));
     }
 }
 
