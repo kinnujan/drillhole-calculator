@@ -238,7 +238,8 @@ async function setupSurveyImportToggle(initialState) {
         }
     });
 
-    // Initial toggle of Hole ID input
+    // Initial toggle of UI elements
+    toggleSurveyImportUI(initialState);
     toggleCustomHoleIdInput(initialState);
 
     // Setup survey import functionality
@@ -259,6 +260,8 @@ async function setupSurveyImportToggle(initialState) {
                 settings.surveyImportFields[field] = selector.value;
                 await saveSettings(settings);
             });
+        } else {
+            console.warn(`Survey import field selector for ${field} not found`);
         }
     });
 }
@@ -268,6 +271,7 @@ function toggleSurveyImportUI(isEnabled) {
     surveyImportElements.forEach(element => {
         element.style.display = isEnabled ? 'block' : 'none';
     });
+    console.log(`Survey import UI ${isEnabled ? 'shown' : 'hidden'}`);
 }
 
 export function toggleCustomHoleIdInput(isSurveyImportEnabled) {
@@ -277,6 +281,8 @@ export function toggleCustomHoleIdInput(isSurveyImportEnabled) {
     if (holeIdGroup && holeIdSelectGroup) {
         holeIdGroup.classList.toggle('hidden', isSurveyImportEnabled);
         holeIdSelectGroup.classList.toggle('hidden', !isSurveyImportEnabled);
+        console.log(`Custom Hole ID input ${isSurveyImportEnabled ? 'hidden' : 'shown'}`);
+        console.log(`Hole ID select ${isSurveyImportEnabled ? 'shown' : 'hidden'}`);
     } else {
         console.warn('Hole ID group or Hole ID select group not found');
     }
@@ -305,8 +311,11 @@ async function handleCSVImport(event) {
             populateFieldSelectors(headers);
             console.log("Field selectors populated");
             
-            await importCSV(csvData);
-            console.log("CSV imported successfully");
+            const importedData = await importCSV(csvData);
+            console.log("CSV imported successfully", importedData);
+            
+            // Update the UI with the imported data
+            setupHoleIdDropdown(importedData);
             
             // Show success message to the user
             const copyStatus = document.getElementById('copyStatus');
