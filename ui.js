@@ -413,27 +413,31 @@ export async function updateResultsTable() {
 
         // Populate table body
         measurements.forEach((measurement) => {
-            const row = tbody.insertRow();
+            try {
+                const row = tbody.insertRow();
 
-            row.insertCell().textContent = measurement.depth.toFixed(2);
-            row.insertCell().textContent = measurement.type;
-            row.insertCell().textContent = measurement.generation;
-            row.insertCell().textContent = measurement.dip + '°';
-            row.insertCell().textContent = measurement.dipDirection + '°';
-            row.insertCell().textContent = measurement.strike + '°';
-            
-            const commentCell = row.insertCell();
-            commentCell.textContent = (measurement.comment.length > 20 ? 
-                measurement.comment.substring(0, 20) + '...' : 
-                measurement.comment);
-            commentCell.title = measurement.comment; // Show full comment on hover
+                row.insertCell().textContent = measurement.depth.toFixed(2);
+                row.insertCell().textContent = measurement.type;
+                row.insertCell().textContent = measurement.generation;
+                row.insertCell().textContent = measurement.dip + '°';
+                row.insertCell().textContent = measurement.dipDirection + '°';
+                row.insertCell().textContent = measurement.strike + '°';
+                
+                const commentCell = row.insertCell();
+                commentCell.textContent = (measurement.comment.length > 20 ? 
+                    measurement.comment.substring(0, 20) + '...' : 
+                    measurement.comment);
+                commentCell.title = measurement.comment; // Show full comment on hover
 
-            // Add custom type values
-            settings.customTypes.forEach(customType => {
-                const cell = row.insertCell();
-                const customValue = measurement.customTypes && measurement.customTypes[customType.name];
-                cell.textContent = customValue || '-';
-            });
+                // Add custom type values
+                settings.customTypes.forEach(customType => {
+                    const cell = row.insertCell();
+                    const customValue = measurement.customTypes && measurement.customTypes[customType.name];
+                    cell.textContent = customValue || '-';
+                });
+            } catch (error) {
+                console.error("Error adding row to results table:", error);
+            }
         });
 
     } catch (error) {
