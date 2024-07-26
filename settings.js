@@ -21,6 +21,9 @@ export async function setupSettings() {
         setupSurveyImportToggle(settings.surveyImportEnabled);
         setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
         
+        // Add this line to export the toggleCustomHoleIdInput function
+        window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
+        
         document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
         document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
 
@@ -253,7 +256,7 @@ function toggleSurveyImportUI(isEnabled) {
     });
 }
 
-function toggleCustomHoleIdInput(isSurveyImportEnabled) {
+export function toggleCustomHoleIdInput(isSurveyImportEnabled) {
     const holeIdGroup = document.getElementById('holeIdGroup');
     const holeIdSelectGroup = document.getElementById('holeIdSelectGroup');
     

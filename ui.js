@@ -2,6 +2,7 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 import { importCSV, getImportedDrillHoleData, getHoleData, setupHoleIdDropdown } from './csv_import.js';
+import { toggleCustomHoleIdInput } from './settings.js';
 
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
