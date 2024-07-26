@@ -24,6 +24,13 @@ export async function setupSettings() {
         // Add this line to export the toggleCustomHoleIdInput function
         window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
         
+        // Check if toggleCustomHoleIdInput is available
+        if (typeof window.toggleCustomHoleIdInput === 'function') {
+            console.log('toggleCustomHoleIdInput function is available');
+        } else {
+            console.error('toggleCustomHoleIdInput function is not available');
+        }
+        
         const addMeasurementTypeBtn = document.getElementById('addMeasurementType');
         if (addMeasurementTypeBtn) {
             addMeasurementTypeBtn.addEventListener('click', () => addType('measurementTypes'));

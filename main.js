@@ -1,6 +1,6 @@
 import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
-import { setupSettings } from './settings.js';
+import { setupSettings, toggleCustomHoleIdInput } from './settings.js';
 import { handleError } from './utils.js';
 
 async function init() {
@@ -90,7 +90,7 @@ domReady(async () => {
     }
 
     // Ensure toggleCustomHoleIdInput is available
-    if (typeof toggleCustomHoleIdInput === 'function') {
+    if (typeof window.toggleCustomHoleIdInput === 'function') {
         console.log('toggleCustomHoleIdInput function is available');
     } else {
         console.error('toggleCustomHoleIdInput function is not available');
