@@ -234,6 +234,11 @@ function updateTypeList(typeCategory, types) {
 
 async function setupSurveyImportToggle(initialState) {
     const surveyImportToggle = document.getElementById('surveyImportEnabled');
+    if (!surveyImportToggle) {
+        console.error('Survey import toggle element not found');
+        return;
+    }
+    
     surveyImportToggle.checked = initialState;
 
     surveyImportToggle.addEventListener('change', async () => {
@@ -244,7 +249,11 @@ async function setupSurveyImportToggle(initialState) {
             await saveSettings(settings);
             console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
             toggleSurveyImportUI(isSurveyImportEnabled);
-            toggleCustomHoleIdInput(isSurveyImportEnabled);
+            if (typeof toggleCustomHoleIdInput === 'function') {
+                toggleCustomHoleIdInput(isSurveyImportEnabled);
+            } else {
+                console.error('toggleCustomHoleIdInput function is not defined');
+            }
         } catch (error) {
             handleError(error, "Error saving survey import setting");
         }
@@ -252,7 +261,11 @@ async function setupSurveyImportToggle(initialState) {
 
     // Initial toggle of UI elements
     toggleSurveyImportUI(initialState);
-    toggleCustomHoleIdInput(initialState);
+    if (typeof toggleCustomHoleIdInput === 'function') {
+        toggleCustomHoleIdInput(initialState);
+    } else {
+        console.error('toggleCustomHoleIdInput function is not defined');
+    }
 
     // Setup survey import functionality
     const surveyImportInput = document.getElementById('surveyImportInput');
@@ -301,9 +314,7 @@ export function toggleCustomHoleIdInput(isSurveyImportEnabled) {
 }
 
 // Make the function available globally
-if (typeof window !== 'undefined') {
-    window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
-}
+window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
 
 async function handleCSVImport(event) {
     const file = event.target.files[0];
