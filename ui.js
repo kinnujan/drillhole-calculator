@@ -78,10 +78,12 @@ export async function setupUI() {
     }
 }
 
-export function updateHoleInfo(holeData) {
+export function updateHoleInfo() {
     const holeIdSelect = document.getElementById('holeIdSelect');
     const holeId = holeIdSelect ? holeIdSelect.value : document.getElementById('holeId').value;
     const depth = parseFloat(document.getElementById('depth').value) || 0;
+    
+    const holeData = getHoleData(holeId, depth);
     
     if (holeData) {
         document.getElementById('holeId').value = holeId;
@@ -91,12 +93,6 @@ export function updateHoleInfo(holeData) {
         document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
         updateDrillHoleInfoSummary();
         updatePreview();
-    }
-
-    // Update the hole ID dropdown if it exists
-    if (holeIdSelect) {
-        const event = new Event('change');
-        holeIdSelect.dispatchEvent(event);
     }
 }
 
