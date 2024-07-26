@@ -5,6 +5,12 @@ import { handleError } from './utils.js';
 import { info, error, warn } from './logger.js';
 
 async function init() {
+    console.log('Testing logger...');
+    info('This is an info log');
+    warn('This is a warning log');
+    error('This is an error log');
+    debug('This is a debug log');
+    
     info('Initializing app...');
     try {
         info('Setting up UI...');
