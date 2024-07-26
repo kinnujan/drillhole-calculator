@@ -1,9 +1,6 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { toggleCustomHoleIdInput } from './settings.js';
-
-// Ensure toggleCustomHoleIdInput is available globally
-window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
 import { handleError, calculateStrike } from './utils.js';
 import { importCSV, getImportedDrillHoleData, getHoleData, setupHoleIdDropdown } from './csv_import.js';
 
@@ -69,13 +66,8 @@ export async function setupUI() {
 
         console.log("Toggling custom Hole ID input...");
         const settings = await loadSettings();
-        if (typeof toggleCustomHoleIdInput === 'function') {
-            toggleCustomHoleIdInput(settings.surveyImportEnabled);
-            console.log("Custom Hole ID input toggled.");
-        } else {
-            console.error("toggleCustomHoleIdInput function is not defined");
-            console.error("Current window object keys:", Object.keys(window));
-        }
+        toggleCustomHoleIdInput(settings.surveyImportEnabled);
+        console.log("Custom Hole ID input toggled.");
 
         console.log("UI setup complete.");
     } catch (error) {
