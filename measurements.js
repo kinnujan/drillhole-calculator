@@ -27,13 +27,18 @@ export async function addMeasurement() {
     const holeId = document.getElementById('holeId')?.value || '';
     const depth = parseFloat(document.getElementById('depth')?.value || '0');
     const holeData = getHoleData(holeId, depth);
-    const holeDip = holeData ? holeData.dip : parseFloat(document.getElementById('holeDip')?.value || '0');
-    const holeAzimuth = holeData ? holeData.azimuth : parseFloat(document.getElementById('holeAzimuth')?.value || '0');
+    const holeDip = holeData ? parseFloat(holeData.dip) : parseFloat(document.getElementById('holeDip')?.value || '0');
+    const holeAzimuth = holeData ? parseFloat(holeData.azimuth) : parseFloat(document.getElementById('holeAzimuth')?.value || '0');
     const alpha = parseFloat(document.getElementById('alpha')?.value || '0');
     const beta = parseFloat(document.getElementById('beta')?.value || '0');
     const comment = document.getElementById('comment')?.value || '';
 
     console.log("Measurement input values:", { holeId, depth, holeDip, holeAzimuth, alpha, beta, comment });
+    if (holeData) {
+        console.log("Using imported survey data:", holeData);
+    } else {
+        console.log("Using manually entered hole data");
+    }
 
     const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
     if (errorMessage) {

@@ -94,7 +94,9 @@ export function getHoleData(holeId, depth) {
     const holeData = data[holeId];
     if (!depth) return holeData[0]; // Return first entry if no depth is provided
     
-    return findClosestSurveyPoint(holeData, depth);
+    const closestPoint = findClosestSurveyPoint(holeData, depth);
+    console.log(`Closest survey point for depth ${depth}:`, closestPoint);
+    return closestPoint;
 }
 
 export function setupHoleIdDropdown(data) {
