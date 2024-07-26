@@ -1,6 +1,6 @@
 import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
-import { setupSettings, toggleCustomHoleIdInput } from './settings.js';
+import { setupSettings } from './settings.js';
 import { handleError } from './utils.js';
 import { info, error, warn, debug } from './logger.js';
 
@@ -91,8 +91,7 @@ domReady(async () => {
         console.warn('Help button not found');
     }
 
-    // toggleCustomHoleIdInput is now imported directly, no need to check window
-    console.log('toggleCustomHoleIdInput function is available');
+    // No need to check for toggleCustomHoleIdInput
 });
 
 if ('serviceWorker' in navigator) {
