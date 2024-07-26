@@ -6,31 +6,24 @@ import { handleError } from './utils.js';
 async function init() {
     console.log('Initializing app...');
     try {
+        console.log('Setting up UI...');
         await setupUI();
-    } catch (error) {
-        console.error('Error setting up UI:', error);
-        handleError(error, "Error setting up UI. Some features may not work correctly.");
-    }
+        console.log('UI setup complete.');
 
-    try {
+        console.log('Loading measurements...');
         await loadMeasurements();
-    } catch (error) {
-        console.error('Error loading measurements:', error);
-        handleError(error, "Error loading measurements. Previous data may not be available.");
-    }
+        console.log('Measurements loaded.');
 
-    try {
+        console.log('Updating preview...');
         updatePreview();
-    } catch (error) {
-        console.error('Error updating preview:', error);
-        handleError(error, "Error updating preview. Calculation preview may not work correctly.");
-    }
+        console.log('Preview updated.');
 
-    try {
+        console.log('Setting up settings...');
         await setupSettings();
+        console.log('Settings setup complete.');
     } catch (error) {
-        console.error('Error setting up settings:', error);
-        handleError(error, "Error setting up settings. Default settings will be used.");
+        console.error('Error during initialization:', error);
+        handleError(error, "An error occurred during app initialization. Some features may not work correctly.");
     }
     
     // Check for Vibration API support

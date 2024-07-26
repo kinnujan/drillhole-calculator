@@ -36,52 +36,47 @@ export function disableUndoButton() {
 export async function setupUI() {
     console.log("Setting up UI...");
     try {
+        console.log("Setting up drill hole info toggle...");
         setupDrillHoleInfoToggle();
-    } catch (error) {
-        console.error('Error setting up drill hole info toggle:', error);
-    }
+        console.log("Drill hole info toggle setup complete.");
 
-    try {
+        console.log("Setting up type selectors...");
         await setupTypeSelectors();
-    } catch (error) {
-        console.error('Error setting up type selectors:', error);
-    }
+        console.log("Type selectors setup complete.");
 
-    try {
+        console.log("Syncing inputs...");
         await syncInputs();
-    } catch (error) {
-        console.error('Error syncing inputs:', error);
-    }
+        console.log("Inputs synced.");
 
-    try {
+        console.log("Setting up depth buttons...");
         setupDepthButtons();
-    } catch (error) {
-        console.error('Error setting up depth buttons:', error);
-    }
+        console.log("Depth buttons setup complete.");
 
-    try {
+        console.log("Setting up measurement handlers...");
         setupMeasurementHandlers();
-    } catch (error) {
-        console.error('Error setting up measurement handlers:', error);
-    }
+        console.log("Measurement handlers setup complete.");
 
-    try {
+        console.log("Setting up hole ID dropdown...");
         setupHoleIdDropdown(getImportedDrillHoleData());
-    } catch (error) {
-        console.error('Error setting up hole ID dropdown:', error);
-    }
+        console.log("Hole ID dropdown setup complete.");
 
-    document.addEventListener('measurementAdded', updateHoleInfo);
-    
-    try {
-        // Toggle custom Hole ID input based on initial survey import setting
+        document.addEventListener('measurementAdded', updateHoleInfo);
+        console.log("Measurement added event listener set up.");
+
+        console.log("Toggling custom Hole ID input...");
         const settings = await loadSettings();
-        window.toggleCustomHoleIdInput(settings.surveyImportEnabled);
+        if (typeof window.toggleCustomHoleIdInput === 'function') {
+            window.toggleCustomHoleIdInput(settings.surveyImportEnabled);
+            console.log("Custom Hole ID input toggled.");
+        } else {
+            console.error("toggleCustomHoleIdInput function not found on window object.");
+        }
+
+        console.log("UI setup complete.");
     } catch (error) {
-        console.error('Error toggling custom hole ID input:', error);
+        console.error('Error in setupUI:', error);
+        throw error; // Re-throw the error to be caught by the caller
     }
-    
-    console.log("UI setup complete.");
 }
 
 export function updateHoleInfo(holeData) {
