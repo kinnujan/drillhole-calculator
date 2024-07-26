@@ -82,15 +82,6 @@ domReady(async () => {
         console.warn('Settings button, settings page, or back button not found');
     }
 
-    // Set up help button (if needed)
-    const helpButton = document.getElementById('helpButton');
-    if (helpButton) {
-        console.log('Help button found');
-        helpButton.addEventListener('click', () => console.log('Help button clicked'));
-    } else {
-        console.warn('Help button not found');
-    }
-
     // No need to check for toggleCustomHoleIdInput
 });
 
