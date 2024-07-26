@@ -1,5 +1,6 @@
 import { handleError } from './utils.js';
 import { loadSettings } from './storage.js';
+import { updateHoleInfo as updateHoleInfoUI } from './ui.js';
 
 export async function importCSV(csvData) {
     console.log("Starting CSV import...");
@@ -113,4 +114,16 @@ export function setupHoleIdDropdown(data) {
 
     holeIdSelect.addEventListener('change', updateHoleInfo);
     console.log('Hole ID dropdown setup complete.');
+}
+
+function updateHoleInfo() {
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    const selectedHoleId = holeIdSelect.value;
+    const holeData = getHoleData(selectedHoleId);
+    
+    if (holeData) {
+        updateHoleInfoUI(holeData);
+    } else {
+        console.warn('No data found for selected Hole ID');
+    }
 }

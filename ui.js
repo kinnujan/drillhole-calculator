@@ -50,10 +50,9 @@ export async function setupUI() {
     console.log("UI setup complete.");
 }
 
-export function updateHoleInfo() {
+export function updateHoleInfo(holeData) {
     const holeId = document.getElementById('holeIdSelect').value;
     const depth = parseFloat(document.getElementById('depth').value) || 0;
-    const holeData = getHoleData(holeId, depth);
     
     if (holeData) {
         document.getElementById('holeId').value = holeId;
