@@ -1,6 +1,6 @@
 import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
-import { setupSettings } from './settings.js';
+import { setupSettings, toggleCustomHoleIdInput } from './settings.js';
 import { handleError } from './utils.js';
 
 async function init() {
@@ -38,8 +38,8 @@ function domReady(fn) {
     }
 }
 
-domReady(() => {
-    init();
+domReady(async () => {
+    await init();
 
     // Set up settings button
     const settingsButton = document.getElementById('settingsButton');
@@ -68,6 +68,13 @@ domReady(() => {
         helpButton.addEventListener('click', () => console.log('Help button clicked'));
     } else {
         console.warn('Help button not found');
+    }
+
+    // Ensure toggleCustomHoleIdInput is available
+    if (typeof toggleCustomHoleIdInput === 'function') {
+        console.log('toggleCustomHoleIdInput function is available');
+    } else {
+        console.error('toggleCustomHoleIdInput function is not available');
     }
 });
 
