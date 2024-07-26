@@ -34,6 +34,10 @@ export async function importCSV(csvData) {
             const values = csvData[i];
             if (values.length >= Math.max(holeIdIndex, depthIndex, azimuthIndex, dipIndex) + 1) {
                 const holeId = values[holeIdIndex].trim();
+                if (!holeId) {
+                    console.warn(`Skipping row ${i + 1} due to empty Hole ID`);
+                    continue;
+                }
                 if (!data[holeId]) {
                     data[holeId] = [];
                 }
@@ -50,6 +54,10 @@ export async function importCSV(csvData) {
             } else {
                 console.warn(`Skipping row ${i + 1} due to insufficient data`);
             }
+        }
+
+        if (Object.keys(data).length === 0) {
+            throw new Error('No valid data found in CSV');
         }
 
         console.log("Processed data:", data);
