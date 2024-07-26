@@ -1,6 +1,6 @@
 import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
-import { setupSettings } from './settings.js';
+import { setupSettings, toggleCustomHoleIdInput } from './settings.js';
 import { handleError } from './utils.js';
 import { info, error, warn, debug } from './logger.js';
 
@@ -91,12 +91,8 @@ domReady(async () => {
         console.warn('Help button not found');
     }
 
-    // Ensure toggleCustomHoleIdInput is available
-    if (typeof window.toggleCustomHoleIdInput === 'function') {
-        console.log('toggleCustomHoleIdInput function is available');
-    } else {
-        console.error('toggleCustomHoleIdInput function is not available');
-    }
+    // toggleCustomHoleIdInput is now imported directly, no need to check window
+    console.log('toggleCustomHoleIdInput function is available');
 });
 
 if ('serviceWorker' in navigator) {
