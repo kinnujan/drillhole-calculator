@@ -411,6 +411,9 @@ export async function updateResultsTable() {
             headerRow.appendChild(th);
         });
 
+        // Import measurements from measurements.js
+        const { measurements } = await import('./measurements.js');
+
         // Populate table body
         measurements.forEach((measurement) => {
             try {
