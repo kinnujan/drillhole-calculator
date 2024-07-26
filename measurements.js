@@ -69,16 +69,17 @@ export async function addMeasurement() {
             holeDip: holeDip.toFixed(1),
             holeAzimuth: holeAzimuth.toFixed(1),
             depth: depth.toFixed(2),
-            type: selectedType || 'Unspecified',
-            generation: selectedGeneration,
-            customTypes: { ...selectedCustomTypes },
             alpha: alpha.toFixed(1),
             beta: beta.toFixed(1),
             dip: dip.toFixed(1),
             dipDirection: dipDirection.toFixed(1),
             strike: strike.toFixed(1),
-            comment
         };
+
+        if (selectedType) result.type = selectedType;
+        if (selectedGeneration) result.generation = selectedGeneration;
+        if (Object.keys(selectedCustomTypes).length > 0) result.customTypes = { ...selectedCustomTypes };
+        if (comment) result.comment = comment;
 
         console.log("New measurement result:", result);
 
@@ -404,18 +405,18 @@ async function getCSVContent() {
             measurement.holeDip,
             measurement.holeAzimuth,
             measurement.depth,
-            measurement.type,
-            measurement.generation,
+            measurement.type || '',
+            measurement.generation || '',
             measurement.alpha,
             measurement.beta,
             measurement.dip,
             measurement.dipDirection,
             measurement.strike,
-            measurement.comment
+            measurement.comment || ''
         ];
         
         customTypeNames.forEach(name => {
-            row.push(measurement.customTypes[name] || '');
+            row.push(measurement.customTypes && measurement.customTypes[name] || '');
         });
         
         csvContent += row.map(value => `"${value}"`).join(",") + "\n";
