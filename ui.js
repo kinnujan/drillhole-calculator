@@ -422,7 +422,7 @@ export async function updateResultsTable() {
                 const row = tbody.insertRow();
 
                 row.insertCell().textContent = measurement.depth;
-                row.insertCell().textContent = measurement.type || 'Unspecified';
+                row.insertCell().textContent = measurement.type || '-';
                 row.insertCell().textContent = measurement.generation || '-';
                 row.insertCell().textContent = measurement.dip + '°';
                 row.insertCell().textContent = measurement.dipDirection + '°';
