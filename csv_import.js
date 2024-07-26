@@ -7,9 +7,7 @@ export async function importCSV(csvData) {
     try {
         const settings = await loadSettings();
         const surveyImportFields = settings.surveyImportFields;
-        const skipInvalidRows = settings.skipInvalidCSVRows;
         console.log("Survey import fields:", surveyImportFields);
-        console.log("Skip invalid rows:", skipInvalidRows);
 
         if (!Array.isArray(csvData) || csvData.length === 0) {
             throw new Error('Invalid CSV data: empty or not an array');
@@ -45,18 +43,12 @@ export async function importCSV(csvData) {
                 
                 if (isNaN(depth) || isNaN(azimuth) || isNaN(dip)) {
                     console.warn(`Invalid data in row ${i + 1}: depth=${values[depthIndex]}, azimuth=${values[azimuthIndex]}, dip=${values[dipIndex]}`);
-                    if (!skipInvalidRows) {
-                        throw new Error(`Invalid data in row ${i + 1}`);
-                    }
                     continue;
                 }
                 
                 data[holeId].push({ depth, azimuth, dip });
             } else {
                 console.warn(`Skipping row ${i + 1} due to insufficient data`);
-                if (!skipInvalidRows) {
-                    throw new Error(`Insufficient data in row ${i + 1}`);
-                }
             }
         }
 
