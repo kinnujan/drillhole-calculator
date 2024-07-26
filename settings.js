@@ -268,6 +268,9 @@ export function toggleCustomHoleIdInput(isSurveyImportEnabled) {
     }
 }
 
+// Make sure the function is available globally
+window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
+
 async function handleCSVImport(event) {
     const file = event.target.files[0];
     if (file) {
