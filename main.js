@@ -24,24 +24,6 @@ async function init() {
             setTimeout(() => message.remove(), 5000); // Remove the message after 5 seconds
         }
 
-        // Add debug logs for settings and help buttons
-        const settingsButton = document.getElementById('settingsButton');
-        const helpButton = document.getElementById('helpButton');
-        
-        if (settingsButton) {
-            console.log('Settings button found');
-            settingsButton.addEventListener('click', () => console.log('Settings button clicked'));
-        } else {
-            console.warn('Settings button not found');
-        }
-        
-        if (helpButton) {
-            console.log('Help button found');
-            helpButton.addEventListener('click', () => console.log('Help button clicked'));
-        } else {
-            console.warn('Help button not found');
-        }
-
         console.log('App initialization complete');
     } catch (error) {
         handleError(error, "An error occurred during initialization.");
@@ -56,7 +38,38 @@ function domReady(fn) {
     }
 }
 
-domReady(init);
+domReady(() => {
+    init();
+
+    // Set up settings button
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsPage = document.getElementById('settingsPage');
+    const backToMain = document.getElementById('backToMain');
+
+    if (settingsButton && settingsPage && backToMain) {
+        settingsButton.addEventListener('click', () => {
+            console.log('Settings button clicked');
+            settingsPage.classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+        });
+
+        backToMain.addEventListener('click', () => {
+            settingsPage.classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        });
+    } else {
+        console.warn('Settings button, settings page, or back button not found');
+    }
+
+    // Set up help button (if needed)
+    const helpButton = document.getElementById('helpButton');
+    if (helpButton) {
+        console.log('Help button found');
+        helpButton.addEventListener('click', () => console.log('Help button clicked'));
+    } else {
+        console.warn('Help button not found');
+    }
+});
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async function() {
