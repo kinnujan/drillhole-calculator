@@ -1,6 +1,6 @@
 import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
-import { setupSettings, toggleCustomHoleIdInput } from './settings.js';
+import { setupSettings } from './settings.js';
 import { handleError } from './utils.js';
 
 async function init() {

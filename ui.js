@@ -2,7 +2,6 @@ import { measurements, calculateDipDirection, setSelectedType, setSelectedGenera
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { handleError, calculateStrike } from './utils.js';
 import { importCSV, getImportedDrillHoleData, getHoleData, setupHoleIdDropdown } from './csv_import.js';
-import { toggleCustomHoleIdInput } from './settings.js';
 
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
@@ -77,7 +76,7 @@ export async function setupUI() {
     try {
         // Toggle custom Hole ID input based on initial survey import setting
         const settings = await loadSettings();
-        toggleCustomHoleIdInput(settings.surveyImportEnabled);
+        window.toggleCustomHoleIdInput(settings.surveyImportEnabled);
     } catch (error) {
         console.error('Error toggling custom hole ID input:', error);
     }
