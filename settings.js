@@ -44,19 +44,23 @@ export async function setupSettings() {
         // Add the setupSkipInvalidCSVRows function
         function setupSkipInvalidCSVRows(initialState) {
             const skipInvalidRowsToggle = document.getElementById('skipInvalidCSVRows');
-            skipInvalidRowsToggle.checked = initialState;
+            if (skipInvalidRowsToggle) {
+                skipInvalidRowsToggle.checked = initialState;
 
-            skipInvalidRowsToggle.addEventListener('change', async () => {
-                const skipInvalidRows = skipInvalidRowsToggle.checked;
-                try {
-                    const settings = await loadSettings();
-                    settings.skipInvalidCSVRows = skipInvalidRows;
-                    await saveSettings(settings);
-                    console.log(`Skip invalid CSV rows ${skipInvalidRows ? 'enabled' : 'disabled'}`);
-                } catch (error) {
-                    handleError(error, "Error saving skip invalid CSV rows setting");
-                }
-            });
+                skipInvalidRowsToggle.addEventListener('change', async () => {
+                    const skipInvalidRows = skipInvalidRowsToggle.checked;
+                    try {
+                        const settings = await loadSettings();
+                        settings.skipInvalidCSVRows = skipInvalidRows;
+                        await saveSettings(settings);
+                        console.log(`Skip invalid CSV rows ${skipInvalidRows ? 'enabled' : 'disabled'}`);
+                    } catch (error) {
+                        handleError(error, "Error saving skip invalid CSV rows setting");
+                    }
+                });
+            } else {
+                console.warn('Skip invalid CSV rows toggle not found in the DOM');
+            }
         }
         document.getElementById('addCustomType').addEventListener('click', addCustomType);
         setupResetButton();
