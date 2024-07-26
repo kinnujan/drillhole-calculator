@@ -215,14 +215,14 @@ async function setupSurveyImportToggle(initialState) {
             await saveSettings(settings);
             console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
             toggleSurveyImportUI(isSurveyImportEnabled);
-            toggleHoleIdInput(isSurveyImportEnabled);
+            toggleCustomHoleIdInput(isSurveyImportEnabled);
         } catch (error) {
             handleError(error, "Error saving survey import setting");
         }
     });
 
     // Initial toggle of Hole ID input
-    toggleHoleIdInput(initialState);
+    toggleCustomHoleIdInput(initialState);
 
     // Setup survey import functionality
     const surveyImportInput = document.getElementById('surveyImportInput');
@@ -253,7 +253,7 @@ function toggleSurveyImportUI(isEnabled) {
     });
 }
 
-function toggleHoleIdInput(isSurveyImportEnabled) {
+function toggleCustomHoleIdInput(isSurveyImportEnabled) {
     const holeIdGroup = document.getElementById('holeIdGroup');
     const holeIdSelectGroup = document.getElementById('holeIdSelectGroup');
     
