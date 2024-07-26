@@ -88,12 +88,16 @@ export async function setupSettings() {
  */
 async function setupDarkMode(initialState) {
     const darkModeToggle = document.getElementById('darkMode');
+    if (!darkModeToggle) {
+        console.error('Dark mode toggle not found');
+        return;
+    }
     darkModeToggle.checked = initialState;
-    document.body.classList.toggle('dark-mode', initialState);
+    applyDarkMode(initialState);
 
     darkModeToggle.addEventListener('change', async () => {
         const isDarkMode = darkModeToggle.checked;
-        document.body.classList.toggle('dark-mode', isDarkMode);
+        applyDarkMode(isDarkMode);
         try {
             const settings = await loadSettings();
             settings.darkMode = isDarkMode;
@@ -103,6 +107,14 @@ async function setupDarkMode(initialState) {
             handleError(error, "Error saving dark mode setting");
         }
     });
+}
+
+function applyDarkMode(isDarkMode) {
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', isDarkMode ? '#333333' : '#ffffff');
+    }
 }
 
 /**

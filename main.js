@@ -13,6 +13,10 @@ async function init() {
     
     info('Initializing app...');
     try {
+        info('Setting up settings...');
+        await setupSettings();
+        info('Settings setup complete.');
+
         info('Setting up UI...');
         await setupUI();
         info('UI setup complete.');
@@ -24,10 +28,6 @@ async function init() {
         info('Updating preview...');
         updatePreview();
         info('Preview updated.');
-
-        info('Setting up settings...');
-        await setupSettings();
-        info('Settings setup complete.');
     } catch (err) {
         error('Error during initialization:', err);
         error('Error stack:', err.stack);
