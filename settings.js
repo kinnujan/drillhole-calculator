@@ -215,14 +215,14 @@ async function setupSurveyImportToggle(initialState) {
             await saveSettings(settings);
             console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
             toggleSurveyImportUI(isSurveyImportEnabled);
-            toggleCustomHoleIdInput(isSurveyImportEnabled);
+            toggleHoleIdInput(isSurveyImportEnabled);
         } catch (error) {
             handleError(error, "Error saving survey import setting");
         }
     });
 
-    // Initial toggle of custom Hole ID input
-    toggleCustomHoleIdInput(initialState);
+    // Initial toggle of Hole ID input
+    toggleHoleIdInput(initialState);
 
     // Setup survey import functionality
     const surveyImportInput = document.getElementById('surveyImportInput');
@@ -253,15 +253,15 @@ function toggleSurveyImportUI(isEnabled) {
     });
 }
 
-function toggleCustomHoleIdInput(isSurveyImportEnabled) {
-    const customHoleIdGroup = document.getElementById('customHoleIdGroup');
-    const holeIdSelect = document.getElementById('holeIdSelect');
+function toggleHoleIdInput(isSurveyImportEnabled) {
+    const holeIdGroup = document.getElementById('holeIdGroup');
+    const holeIdSelectGroup = document.getElementById('holeIdSelectGroup');
     
-    if (customHoleIdGroup && holeIdSelect) {
-        customHoleIdGroup.style.display = isSurveyImportEnabled ? 'none' : 'block';
-        holeIdSelect.style.display = isSurveyImportEnabled ? 'block' : 'none';
+    if (holeIdGroup && holeIdSelectGroup) {
+        holeIdGroup.classList.toggle('hidden', isSurveyImportEnabled);
+        holeIdSelectGroup.classList.toggle('hidden', !isSurveyImportEnabled);
     } else {
-        console.warn('Custom Hole ID group or Hole ID select not found');
+        console.warn('Hole ID group or Hole ID select group not found');
     }
 }
 
