@@ -605,23 +605,35 @@ async function deleteCustomTypeOption(typeName, option) {
  */
 function setupResetButton() {
     const resetButton = document.getElementById('resetApp');
-    resetButton.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to reset all settings and data? This action cannot be undone.')) {
-            try {
-                // Clear all localStorage items
-                localStorage.clear();
+    if (resetButton) {
+        resetButton.addEventListener('click', async () => {
+            if (confirm('Are you sure you want to reset all settings and data? This action cannot be undone.')) {
+                try {
+                    // Clear all localStorage items
+                    localStorage.clear();
 
-                // Reset settings to default
-                await saveSettings(DEFAULT_SETTINGS);
+                    // Reset settings to default
+                    await saveSettings(DEFAULT_SETTINGS);
 
-                // Clear measurements
-                await saveMeasurements([]);
+                    // Clear measurements
+                    await saveMeasurements([]);
 
-                // Reload the page to reset the UI
-                window.location.reload();
-            } catch (error) {
-                handleError(error, "Error resetting application");
+                    // Show a message to the user
+                    const copyStatus = document.getElementById('copyStatus');
+                    if (copyStatus) {
+                        copyStatus.textContent = 'Application reset. Reloading page...';
+                    }
+
+                    // Reload the page to reset the UI after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } catch (error) {
+                    handleError(error, "Error resetting application");
+                }
             }
-        }
-    });
+        });
+    } else {
+        console.error('Reset button not found in the DOM');
+    }
 }
