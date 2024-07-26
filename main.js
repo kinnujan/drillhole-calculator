@@ -2,7 +2,7 @@ import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
 import { setupSettings } from './settings.js';
 import { handleError } from './utils.js';
-import { info, error, warn } from './logger.js';
+import { info, error, warn, debug } from './logger.js';
 
 async function init() {
     console.log('Testing logger...');
