@@ -20,6 +20,7 @@ export async function setupSettings() {
         setupIncludeHeaderInExport(settings.includeHeaderInExport);
         setupSurveyImportToggle(settings.surveyImportEnabled);
         setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
+        setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
         
         // Add this line to export the toggleCustomHoleIdInput function
         window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
@@ -59,7 +60,7 @@ export async function setupSettings() {
                     }
                 });
             } else {
-                console.warn('Skip invalid CSV rows toggle not found in the DOM');
+                console.error('Skip invalid CSV rows toggle not found in the DOM');
             }
         }
         document.getElementById('addCustomType').addEventListener('click', addCustomType);
