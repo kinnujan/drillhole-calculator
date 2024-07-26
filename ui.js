@@ -74,11 +74,14 @@ export async function setupUI() {
             console.log("Custom Hole ID input toggled.");
         } else {
             console.error("toggleCustomHoleIdInput function is not defined");
+            console.error("Current window object keys:", Object.keys(window));
         }
 
         console.log("UI setup complete.");
     } catch (error) {
         console.error('Error in setupUI:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
         throw error; // Re-throw the error to be caught by the caller
     }
 }

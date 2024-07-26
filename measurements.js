@@ -33,8 +33,11 @@ export async function addMeasurement() {
     const beta = parseFloat(document.getElementById('beta')?.value || '0');
     const comment = document.getElementById('comment')?.value || '';
 
+    console.log("Measurement input values:", { holeId, depth, holeDip, holeAzimuth, alpha, beta, comment });
+
     const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
     if (errorMessage) {
+        console.error("Input validation failed:", errorMessage);
         handleError(new Error(errorMessage), errorMessage);
         return;
     }
@@ -43,9 +46,17 @@ export async function addMeasurement() {
     if (errorElement) errorElement.textContent = '';
 
     try {
+        console.log("Calculating dip direction...");
         const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+        console.log("Dip direction calculated:", { dip, dipDirection });
+
+        console.log("Loading settings...");
         const settings = await loadSettings();
+        console.log("Settings loaded:", settings);
+
+        console.log("Calculating strike...");
         const strike = calculateStrike(dipDirection, settings.strikeMode);
+        console.log("Strike calculated:", strike);
         
         const result = {
             holeId,
@@ -63,22 +74,44 @@ export async function addMeasurement() {
             comment
         };
 
+        console.log("New measurement result:", result);
+
         measurements.push(result);
         lastAddedMeasurement = { ...result, index: measurements.length - 1 };
+        console.log("Saving measurements...");
         await saveMeasurements(measurements);
+        console.log("Measurements saved.");
+
+        console.log("Saving drill hole info...");
         await saveDrillHoleInfo({ holeId, holeDip, holeAzimuth });
+        console.log("Drill hole info saved.");
 
+        console.log("Updating results table...");
         await updateResultsTable();
+        console.log("Results table updated.");
 
+        console.log("Resetting input fields and selections...");
         resetInputFields();
         resetSelections();
+        console.log("Input fields and selections reset.");
+
+        console.log("Updating preview...");
         updatePreview();
+        console.log("Preview updated.");
+
+        console.log("Enabling undo button...");
         enableUndoButton();
+        console.log("Undo button enabled.");
+
         console.log("New measurement added:", result);
 
-        // Dispatch custom event
+        console.log("Dispatching measurementAdded event...");
         document.dispatchEvent(new CustomEvent('measurementAdded'));
+        console.log("measurementAdded event dispatched.");
     } catch (error) {
+        console.error("Error in addMeasurement:", error);
+        console.error("Error stack:", error.stack);
+        console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
         handleError(error, "An error occurred while adding the measurement.");
     }
 }

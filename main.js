@@ -23,6 +23,8 @@ async function init() {
         console.log('Settings setup complete.');
     } catch (error) {
         console.error('Error during initialization:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
         handleError(error, "An error occurred during app initialization. Some features may not work correctly.");
     }
     
