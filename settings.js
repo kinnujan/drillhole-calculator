@@ -234,12 +234,15 @@ function updateTypeList(typeCategory, types) {
 
 async function setupSurveyImportToggle(initialState) {
     const surveyImportToggle = document.getElementById('surveyImportEnabled');
-    if (!surveyImportToggle) {
-        console.error('Survey import toggle element not found');
+    const surveyImportSettings = document.querySelector('.survey-import-settings');
+    
+    if (!surveyImportToggle || !surveyImportSettings) {
+        console.error('Survey import toggle or settings elements not found');
         return;
     }
     
     surveyImportToggle.checked = initialState;
+    surveyImportSettings.style.display = initialState ? 'block' : 'none';
 
     surveyImportToggle.addEventListener('change', async () => {
         const isSurveyImportEnabled = surveyImportToggle.checked;
@@ -248,7 +251,7 @@ async function setupSurveyImportToggle(initialState) {
             settings.surveyImportEnabled = isSurveyImportEnabled;
             await saveSettings(settings);
             console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
-            toggleSurveyImportUI(isSurveyImportEnabled);
+            surveyImportSettings.style.display = isSurveyImportEnabled ? 'block' : 'none';
             if (typeof toggleCustomHoleIdInput === 'function') {
                 toggleCustomHoleIdInput(isSurveyImportEnabled);
             } else {
@@ -258,14 +261,6 @@ async function setupSurveyImportToggle(initialState) {
             handleError(error, "Error saving survey import setting");
         }
     });
-
-    // Initial toggle of UI elements
-    toggleSurveyImportUI(initialState);
-    if (typeof toggleCustomHoleIdInput === 'function') {
-        toggleCustomHoleIdInput(initialState);
-    } else {
-        console.error('toggleCustomHoleIdInput function is not defined');
-    }
 
     // Setup survey import functionality
     const surveyImportInput = document.getElementById('surveyImportInput');
@@ -289,14 +284,6 @@ async function setupSurveyImportToggle(initialState) {
             console.warn(`Survey import field selector for ${field} not found`);
         }
     });
-}
-
-function toggleSurveyImportUI(isEnabled) {
-    const surveyImportElements = document.querySelectorAll('.survey-import-settings');
-    surveyImportElements.forEach(element => {
-        element.style.display = isEnabled ? 'block' : 'none';
-    });
-    console.log(`Survey import UI ${isEnabled ? 'shown' : 'hidden'}`);
 }
 
 export function toggleCustomHoleIdInput(isSurveyImportEnabled) {

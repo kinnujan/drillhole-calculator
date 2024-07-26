@@ -156,31 +156,44 @@
                         <p class="setting-description">Enable survey import functionality for drill hole data.</p>
                     </div>
                     <div class="setting-group">
-                        <label for="skipInvalidCSVRows">Skip Invalid CSV Rows:</label>
-                        <input type="checkbox" id="skipInvalidCSVRows">
-                        <p class="setting-description">Skip rows with invalid or missing data during CSV import.</p>
+                        <label for="strikeMode">Strike Mode:</label>
+                        <select id="strikeMode">
+                            <option value="negative">-90° (default)</option>
+                            <option value="positive">+90°</option>
+                        </select>
+                        <p class="setting-description">Choose the strike mode for measurements. -90° is the default, but some geologists prefer +90°.</p>
                     </div>
-                    <div class="setting-group survey-import-settings">
-                        <h3>Survey Import</h3>
-                        <input type="file" id="surveyImportInput" accept=".csv">
-                        <h4>Survey Import Field Mapping</h4>
-                        <div>
-                            <label for="surveyImportHoleIdField">Hole ID Field:</label>
-                            <select id="surveyImportHoleIdField"></select>
+                    <div class="setting-group">
+                        <h3>Survey Import Settings</h3>
+                        <div class="setting-group">
+                            <label for="surveyImportEnabled">Enable Survey Import:</label>
+                            <input type="checkbox" id="surveyImportEnabled">
+                            <p class="setting-description">Enable survey import functionality for drill hole data. This allows you to import survey data from a CSV file to automatically populate hole information.</p>
                         </div>
-                        <div>
-                            <label for="surveyImportDepthField">Depth Field:</label>
-                            <select id="surveyImportDepthField"></select>
+                        <div class="survey-import-settings" style="display: none;">
+                            <h4>CSV Import</h4>
+                            <input type="file" id="surveyImportInput" accept=".csv">
+                            <p class="setting-description">Select a CSV file containing your survey data. The file should include columns for Hole ID, Depth, Azimuth, and Dip.</p>
+                            <h4>Survey Import Field Mapping</h4>
+                            <p class="setting-description">Map the columns in your CSV file to the required fields. Select the appropriate column for each field:</p>
+                            <div>
+                                <label for="surveyImportHoleIdField">Hole ID Field:</label>
+                                <select id="surveyImportHoleIdField"></select>
+                            </div>
+                            <div>
+                                <label for="surveyImportDepthField">Depth Field:</label>
+                                <select id="surveyImportDepthField"></select>
+                            </div>
+                            <div>
+                                <label for="surveyImportAzimuthField">Azimuth Field:</label>
+                                <select id="surveyImportAzimuthField"></select>
+                            </div>
+                            <div>
+                                <label for="surveyImportDipField">Dip Field:</label>
+                                <select id="surveyImportDipField"></select>
+                            </div>
+                            <p class="setting-description">Note: Invalid rows in the CSV will be automatically skipped during import.</p>
                         </div>
-                        <div>
-                            <label for="surveyImportAzimuthField">Azimuth Field:</label>
-                            <select id="surveyImportAzimuthField"></select>
-                        </div>
-                        <div>
-                            <label for="surveyImportDipField">Dip Field:</label>
-                            <select id="surveyImportDipField"></select>
-                        </div>
-                        <p class="setting-description">Select the corresponding fields from your survey file for each required field.</p>
                     </div>
                     <div class="setting-group">
                         <label for="strikeMode">Strike Mode:</label>
