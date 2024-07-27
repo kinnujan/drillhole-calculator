@@ -1,4 +1,4 @@
-import { CACHE_NAME, URLS_TO_CACHE } from './constants.js';
+import { CACHE_NAME, URLS_TO_CACHE } from './Constants.js';
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing.');
