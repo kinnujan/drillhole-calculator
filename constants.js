@@ -34,4 +34,4 @@ export const DEFAULT_SETTINGS = {
     }
 };
 
-export const CURRENT_SETTINGS_VERSION = 12; // Incremented from 11 to 12
+export const CURRENT_SETTINGS_VERSION = 13; // Incremented from 12 to 13
