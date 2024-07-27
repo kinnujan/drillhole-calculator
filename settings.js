@@ -427,7 +427,7 @@ function populateFieldSelectors(headers) {
 
 function toggleCSVImportUI(isEnabled) {
     const surveyImportElements = document.querySelectorAll('.survey-import-element');
-    csvImportElements.forEach(element => {
+    surveyImportElements.forEach(element => {
         element.style.display = isEnabled ? 'block' : 'none';
     });
 }
