@@ -128,40 +128,54 @@
                 <h2>Settings</h2>
             </div>
             <div class="settings-content">
-                <div class="settings-grid">
-                    <div class="setting-group">
-                        <label for="darkMode">Dark Mode:</label>
-                        <input type="checkbox" id="darkMode">
-                        <p class="setting-description">Enable dark mode for a more comfortable viewing experience in low-light conditions.</p>
-                    </div>
-                    <div class="setting-group">
-                        <label for="hapticFeedback">Haptic Feedback:</label>
-                        <input type="checkbox" id="hapticFeedback">
-                        <p class="setting-description">Enable vibration feedback for button presses and other interactions (if supported by your device).</p>
-                    </div>
-                    <div class="setting-group">
-                        <label for="undoEnabled">Undo Button:</label>
-                        <input type="checkbox" id="undoEnabled">
-                        <p class="setting-description">Enable or disable the undo button functionality.</p>
-                    </div>
-                    <div class="setting-group">
-                        <label for="includeHeaderInExport">Include Header in Export:</label>
-                        <input type="checkbox" id="includeHeaderInExport">
-                        <p class="setting-description">Include header row when exporting or copying results.</p>
-                    </div>
-                    <div class="setting-group">
-                        <h3>Survey Import Settings</h3>
+                <section class="settings-section">
+                    <h3>General Settings</h3>
+                    <div class="settings-grid">
                         <div class="setting-group">
-                            <label for="surveyImportEnabled">Enable Survey Import:</label>
-                            <input type="checkbox" id="surveyImportEnabled">
-                            <p class="setting-description">Enable survey import functionality for drill hole data. This allows you to import survey data from a CSV file to automatically populate hole information.</p>
+                            <label for="darkMode">Dark Mode:</label>
+                            <input type="checkbox" id="darkMode">
+                            <p class="setting-description">Enable dark mode for a more comfortable viewing experience in low-light conditions.</p>
                         </div>
-                        <div class="survey-import-settings" style="display: none;">
-                            <h4>CSV Import</h4>
-                            <input type="file" id="surveyImportInput" accept=".csv">
-                            <p class="setting-description">Select a CSV file containing your survey data. The file should include columns for Hole ID, Depth, Azimuth, and Dip.</p>
-                            <h4>Survey Import Field Mapping</h4>
-                            <p class="setting-description">Map the columns in your CSV file to the required fields. Select the appropriate column for each field:</p>
+                        <div class="setting-group">
+                            <label for="hapticFeedback">Haptic Feedback:</label>
+                            <input type="checkbox" id="hapticFeedback">
+                            <p class="setting-description">Enable vibration feedback for button presses and other interactions (if supported by your device).</p>
+                        </div>
+                        <div class="setting-group">
+                            <label for="undoEnabled">Undo Button:</label>
+                            <input type="checkbox" id="undoEnabled">
+                            <p class="setting-description">Enable or disable the undo button functionality.</p>
+                        </div>
+                        <div class="setting-group">
+                            <label for="includeHeaderInExport">Include Header in Export:</label>
+                            <input type="checkbox" id="includeHeaderInExport">
+                            <p class="setting-description">Include header row when exporting or copying results.</p>
+                        </div>
+                        <div class="setting-group">
+                            <label for="strikeMode">Strike Mode:</label>
+                            <select id="strikeMode">
+                                <option value="negative">-90° (default)</option>
+                                <option value="positive">+90°</option>
+                            </select>
+                            <p class="setting-description">Choose the strike mode for measurements. -90° is the default, but some geologists prefer +90°.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>Survey Import Settings</h3>
+                    <div class="setting-group">
+                        <label for="surveyImportEnabled">Enable Survey Import:</label>
+                        <input type="checkbox" id="surveyImportEnabled">
+                        <p class="setting-description">Enable survey import functionality for drill hole data. This allows you to import survey data from a CSV file to automatically populate hole information.</p>
+                    </div>
+                    <div class="survey-import-settings" style="display: none;">
+                        <h4>CSV Import</h4>
+                        <input type="file" id="surveyImportInput" accept=".csv">
+                        <p class="setting-description">Select a CSV file containing your survey data. The file should include columns for Hole ID, Depth, Azimuth, and Dip.</p>
+                        <h4>Survey Import Field Mapping</h4>
+                        <p class="setting-description">Map the columns in your CSV file to the required fields. Select the appropriate column for each field:</p>
+                        <div class="field-mapping">
                             <div>
                                 <label for="surveyImportHoleIdField">Hole ID Field:</label>
                                 <select id="surveyImportHoleIdField"></select>
@@ -178,41 +192,46 @@
                                 <label for="surveyImportDipField">Dip Field:</label>
                                 <select id="surveyImportDipField"></select>
                             </div>
-                            <p class="setting-description">Note: Invalid rows in the CSV will be automatically skipped during import.</p>
                         </div>
+                        <p class="setting-description">Note: Invalid rows in the CSV will be automatically skipped during import.</p>
                     </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>Measurement Types</h3>
                     <div class="setting-group">
-                        <label for="strikeMode">Strike Mode:</label>
-                        <select id="strikeMode">
-                            <option value="negative">-90° (default)</option>
-                            <option value="positive">+90°</option>
-                        </select>
-                        <p class="setting-description">Choose the strike mode for measurements. -90° is the default, but some geologists prefer +90°.</p>
+                        <div id="measurementTypes"></div>
+                        <button id="addMeasurementType">Add Measurement Type</button>
+                        <p class="setting-description">Manage the types of measurements you can record (e.g., Foliation, Lineation). Add custom measurement types as needed.</p>
                     </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>Generation Types</h3>
                     <div class="setting-group">
-                        <h3>Reset Application</h3>
+                        <div id="generationTypes"></div>
+                        <button id="addGenerationType">Add Generation Type</button>
+                        <p class="setting-description">Manage generation types to classify measurements (e.g., S1, S2 for different foliation generations).</p>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>Custom Types</h3>
+                    <div class="setting-group">
+                        <div id="customTypes"></div>
+                        <button id="addCustomType">Add Custom Type</button>
+                        <p class="setting-description">Create and manage custom classification types for your measurements to suit your specific project needs.</p>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>Reset Application</h3>
+                    <div class="setting-group">
                         <button id="resetApp" class="danger-button">Reset All Settings and Data</button>
                         <p class="setting-description">Warning: This will clear all your settings, custom types, and stored measurements. Use with caution!</p>
                     </div>
-                </div>
-                <div class="setting-group">
-                    <label>Measurement Types:</label>
-                    <div id="measurementTypes"></div>
-                    <button id="addMeasurementType">Add Measurement Type</button>
-                    <p class="setting-description">Manage the types of measurements you can record (e.g., Foliation, Lineation). Add custom measurement types as needed.</p>
-                </div>
-                <div class="setting-group">
-                    <label>Generation Types:</label>
-                    <div id="generationTypes"></div>
-                    <button id="addGenerationType">Add Generation Type</button>
-                    <p class="setting-description">Manage generation types to classify measurements (e.g., S1, S2 for different foliation generations).</p>
-                </div>
-                <div class="setting-group">
-                    <label>Custom Types:</label>
-                    <div id="customTypes"></div>
-                    <button id="addCustomType">Add Custom Type</button>
-                    <p class="setting-description">Create and manage custom classification types for your measurements to suit your specific project needs.</p>
-                </div>
+                </section>
+
                 <div class="setting-group data-storage-info">
                     <i class="fas fa-info-circle"></i>
                     <p>All data and settings are saved locally on your device. No information is stored in the cloud or on external servers.</p>
