@@ -18,11 +18,11 @@ export async function importCSV(csvData) {
 
         const data = {};
 
-        // Automatically map fields
-        const holeIdIndex = headers.findIndex(h => h.includes('hole'));
-        const depthIndex = headers.findIndex(h => h.includes('depth'));
-        const azimuthIndex = headers.findIndex(h => h.includes('azimuth utm') || h.includes('azimuth'));
-        const dipIndex = headers.findIndex(h => h.includes('dip'));
+        // Automatically map fields with more robust matching
+        const holeIdIndex = findHeaderIndex(headers, ['hole', 'id', 'holeid', 'hole_id', 'hole id']);
+        const depthIndex = findHeaderIndex(headers, ['depth', 'dep']);
+        const azimuthIndex = findHeaderIndex(headers, ['azimuth', 'azi', 'azimuth_utm', 'azimuth utm']);
+        const dipIndex = findHeaderIndex(headers, ['dip', 'inclination', 'incl']);
 
         console.log("Automatically mapped column indices:", { holeIdIndex, depthIndex, azimuthIndex, dipIndex });
 
@@ -163,4 +163,14 @@ function updateHoleInfo() {
     } else {
         console.warn('No data found for selected Hole ID');
     }
+}
+function findHeaderIndex(headers, possibleMatches) {
+    for (const match of possibleMatches) {
+        const index = headers.findIndex(h => 
+            h.includes(match) || 
+            h.replace(/[_\s]/g, '').includes(match.replace(/[_\s]/g, ''))
+        );
+        if (index !== -1) return index;
+    }
+    return -1;
 }
