@@ -28,6 +28,8 @@ export async function importCSV(csvData) {
         console.log("Automatically mapped column indices:", { holeIdIndex, depthIndex, azimuthIndex, dipIndex });
 
         if (holeIdIndex === -1 || depthIndex === -1 || azimuthIndex === -1 || dipIndex === -1) {
+            console.error('One or more required columns not found in CSV');
+            console.log('CSV_IMPORT_FIELDS:', CSV_IMPORT_FIELDS);
             throw new Error('One or more required columns not found in CSV');
         }
 
@@ -180,8 +182,12 @@ function findHeaderIndex(headers, possibleMatches) {
     const sanitizedHeaders = headers.map(sanitizeFieldName);
     for (const match of possibleMatches) {
         const sanitizedMatch = sanitizeFieldName(match);
-        const index = sanitizedHeaders.findIndex(h => h.includes(sanitizedMatch));
-        if (index !== -1) return index;
+        const index = sanitizedHeaders.findIndex(h => h === sanitizedMatch || h.includes(sanitizedMatch));
+        if (index !== -1) {
+            console.log(`Match found for ${match}: ${headers[index]}`);
+            return index;
+        }
     }
+    console.log(`No match found for ${possibleMatches.join(', ')}`);
     return -1;
 }
