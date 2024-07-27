@@ -465,11 +465,17 @@ export async function updateResultsTable() {
 
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
-    if (depthInput) {
-        depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
-    } else {
-        console.warn("Depth input not found.");
+    if (!depthInput) {
+        throw new Error("Depth input element not found");
     }
+    if (typeof amount !== 'number') {
+        throw new Error("Invalid amount: must be a number");
+    }
+    const currentDepth = parseFloat(depthInput.value);
+    if (isNaN(currentDepth)) {
+        throw new Error("Current depth is not a valid number");
+    }
+    depthInput.value = (currentDepth + amount).toFixed(2);
 }
 
 export function resetUISelections() {
