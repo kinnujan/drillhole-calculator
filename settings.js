@@ -345,17 +345,7 @@ async function handleCSVImport(event) {
 }
 
 function updateMainUIAfterImport(importedData) {
-    // Update the hole ID dropdown in the main UI
-    const holeIdSelect = document.getElementById('holeIdSelect');
-    if (holeIdSelect) {
-        holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
-        Object.keys(importedData).forEach(holeId => {
-            const option = document.createElement('option');
-            option.value = holeId;
-            option.textContent = holeId;
-            holeIdSelect.appendChild(option);
-        });
-    }
+    setupHoleIdDropdown(importedData);
 
     // Show the hole ID select and hide the hole ID input
     const holeIdGroup = document.getElementById('holeIdGroup');
@@ -366,8 +356,28 @@ function updateMainUIAfterImport(importedData) {
     }
 
     // Trigger an update of the hole info
+    const holeIdSelect = document.getElementById('holeIdSelect');
     const event = new Event('change');
     holeIdSelect.dispatchEvent(event);
+}
+
+function setupHoleIdDropdown(data) {
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    if (!holeIdSelect) {
+        console.error('Hole ID select element not found');
+        return;
+    }
+
+    holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
+    
+    if (data) {
+        Object.keys(data).forEach(holeId => {
+            const option = document.createElement('option');
+            option.value = holeId;
+            option.textContent = holeId;
+            holeIdSelect.appendChild(option);
+        });
+    }
 }
 
 function readCSVFile(file) {
