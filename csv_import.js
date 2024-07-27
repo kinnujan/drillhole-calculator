@@ -168,8 +168,8 @@ function updateHoleInfo() {
 function findHeaderIndex(headers, possibleMatches) {
     for (const match of possibleMatches) {
         const index = headers.findIndex(h => 
-            h.includes(match) || 
-            h.replace(/[_\s]/g, '').includes(match.replace(/[_\s]/g, ''))
+            h.toLowerCase().includes(match.toLowerCase()) || 
+            h.toLowerCase().replace(/[_\s]/g, '').includes(match.toLowerCase().replace(/[_\s]/g, ''))
         );
         if (index !== -1) return index;
     }

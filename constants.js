@@ -67,8 +67,8 @@ export const URLS_TO_CACHE = [
 ];
 
 export const CSV_IMPORT_FIELDS = {
-    HOLE_ID: ['hole', 'id', 'holeid', 'hole_id', 'hole id'],
-    DEPTH: ['depth', 'dep'],
-    AZIMUTH: ['azimuth', 'azi', 'azimuth_utm', 'azimuth utm'],
-    DIP: ['dip', 'inclination', 'incl']
+    HOLE_ID: ['hole', 'id', 'holeid', 'hole_id', 'hole id', 'HOLE', 'ID', 'HOLEID', 'HOLE_ID', 'HOLE ID'],
+    DEPTH: ['depth', 'dep', 'DEPTH', 'DEP'],
+    AZIMUTH: ['azimuth', 'azi', 'azimuth_utm', 'azimuth utm', 'AZIMUTH', 'AZI', 'AZIMUTH_UTM', 'AZIMUTH UTM'],
+    DIP: ['dip', 'inclination', 'incl', 'DIP', 'INCLINATION', 'INCL']
 };
