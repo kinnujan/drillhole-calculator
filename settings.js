@@ -20,17 +20,9 @@ export async function setupSettings() {
         setupIncludeHeaderInExport(settings.includeHeaderInExport);
         setupSurveyImportToggle(settings.surveyImportEnabled);
         setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
-        setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
         
         // Add this line to export the toggleCustomHoleIdInput function
         window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
-        
-        // Check if toggleCustomHoleIdInput is available
-        if (typeof window.toggleCustomHoleIdInput === 'function') {
-            console.log('toggleCustomHoleIdInput function is available');
-        } else {
-            console.error('toggleCustomHoleIdInput function is not available');
-        }
         
         const addMeasurementTypeBtn = document.getElementById('addMeasurementType');
         if (addMeasurementTypeBtn) {
@@ -257,25 +249,27 @@ async function setupSurveyImportToggle(initialState) {
             await saveSettings(settings);
             console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
             surveyImportSettings.style.display = isSurveyImportEnabled ? 'block' : 'none';
-            if (typeof toggleCustomHoleIdInput === 'function') {
-                toggleCustomHoleIdInput(isSurveyImportEnabled);
-            } else {
-                console.error('toggleCustomHoleIdInput function is not defined');
-            }
+            toggleCustomHoleIdInput(isSurveyImportEnabled);
+            toggleCSVImportUI(isSurveyImportEnabled);
         } catch (error) {
             handleError(error, "Error saving survey import setting");
         }
     });
 
-    // Setup survey import functionality
+    setupSurveyImportInput();
+    setupSurveyImportFieldSelectors();
+}
+
+function setupSurveyImportInput() {
     const surveyImportInput = document.getElementById('surveyImportInput');
     if (surveyImportInput) {
         surveyImportInput.addEventListener('change', handleCSVImport);
     } else {
         console.warn('Survey import input element not found');
     }
+}
 
-    // Setup survey import field selectors
+function setupSurveyImportFieldSelectors() {
     const surveyFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
     surveyFieldSelectors.forEach(field => {
         const selector = document.getElementById(`surveyImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
