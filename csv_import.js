@@ -42,7 +42,7 @@ export async function importCSV(csvData) {
                 continue;
             }
             
-            const holeId = values[holeIdIndex].trim();
+            const holeId = values[holeIdIndex].replace(/"/g, '').trim();
             if (!holeId) {
                 console.warn(`Skipping row ${i + 1} due to empty Hole ID`);
                 skippedRows++;
@@ -51,9 +51,9 @@ export async function importCSV(csvData) {
             if (!data[holeId]) {
                 data[holeId] = [];
             }
-            const depth = parseFloat(values[depthIndex]);
-            const azimuth = parseFloat(values[azimuthIndex]);
-            const dip = parseFloat(values[dipIndex]);
+            const depth = parseFloat(values[depthIndex].replace(/"/g, ''));
+            const azimuth = parseFloat(values[azimuthIndex].replace(/"/g, ''));
+            const dip = parseFloat(values[dipIndex].replace(/"/g, ''));
             
             if (isNaN(depth) || isNaN(azimuth) || isNaN(dip)) {
                 console.warn(`Invalid data in row ${i + 1}: depth=${values[depthIndex]}, azimuth=${values[azimuthIndex]}, dip=${values[dipIndex]}`);
