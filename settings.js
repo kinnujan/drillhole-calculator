@@ -417,7 +417,8 @@ function CSVToArray(strData, strDelimiter = ',') {
     return arrData;
 }
 
-function populateFieldSelectors(headers) {
+async function populateFieldSelectors(headers) {
+    const settings = await loadSettings();
     const surveyFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
     surveyFieldSelectors.forEach(field => {
         const selector = document.getElementById(`surveyImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
@@ -427,6 +428,9 @@ function populateFieldSelectors(headers) {
                 const option = document.createElement('option');
                 option.value = header;
                 option.textContent = header;
+                if (settings.surveyImportFields[field] === header) {
+                    option.selected = true;
+                }
                 selector.appendChild(option);
             });
         } else {
