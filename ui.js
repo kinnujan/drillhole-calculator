@@ -18,20 +18,30 @@ async function triggerHapticFeedback(duration = 10) {
 }
 
 export function enableUndoButton() {
-    const undoButton = document.getElementById('undoMeasurement');
-    if (undoButton) {
-        undoButton.disabled = false;
-    } else {
-        console.warn("Undo button not found.");
+    try {
+        const undoButton = document.getElementById('undoMeasurement');
+        if (undoButton) {
+            undoButton.disabled = false;
+        } else {
+            throw new Error("Undo button not found.");
+        }
+    } catch (error) {
+        console.error('Error in enableUndoButton:', error);
+        errorService.handleError(error, "Failed to enable undo button");
     }
 }
 
 export function disableUndoButton() {
-    const undoButton = document.getElementById('undoMeasurement');
-    if (undoButton) {
-        undoButton.disabled = true;
-    } else {
-        console.warn("Undo button not found.");
+    try {
+        const undoButton = document.getElementById('undoMeasurement');
+        if (undoButton) {
+            undoButton.disabled = true;
+        } else {
+            throw new Error("Undo button not found.");
+        }
+    } catch (error) {
+        console.error('Error in disableUndoButton:', error);
+        errorService.handleError(error, "Failed to disable undo button");
     }
 }
 
