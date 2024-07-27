@@ -13,6 +13,8 @@ class ErrorService {
     }
 
     handleError(err, userMessage = 'An error occurred. Please try again.') {
+        console.error('Error:', err);
+        
         try {
             const errorElement = this.getErrorElement();
             if (errorElement) {
@@ -47,7 +49,7 @@ class ErrorService {
         if (err instanceof Error) {
             logError(err);
         } else {
-            logError(new Error(err));
+            logError(new Error(String(err)));
         }
     }
 }
