@@ -19,6 +19,39 @@ export async function importCSV(csvData) {
 
         const data = {};
 
+        for (let i = 1; i < csvData.length; i++) {
+            const values = csvData[i];
+            if (values.length < 4) {
+                console.warn(`Skipping row ${i + 1} due to insufficient data`);
+                continue;
+            }
+            
+            const holeId = values[0].trim();
+            if (!holeId) {
+                console.warn(`Skipping row ${i + 1} due to empty Hole ID`);
+                continue;
+            }
+            if (!data[holeId]) {
+                data[holeId] = [];
+            }
+            const depth = parseFloat(values[1]);
+            const azimuth = parseFloat(values[2]);
+            const dip = parseFloat(values[3]);
+            
+            if (isNaN(depth) || isNaN(azimuth) || isNaN(dip)) {
+                console.warn(`Invalid data in row ${i + 1}: depth=${values[1]}, azimuth=${values[2]}, dip=${values[3]}`);
+                continue;
+            }
+            
+            data[holeId].push({ depth, azimuth, dip });
+        }
+
+        if (Object.keys(data).length === 0) {
+            throw new Error('No valid data found in CSV');
+        }
+
+        console.log("Processed data:", data);
+
         // Automatically map fields with more robust matching
         const holeIdIndex = findHeaderIndex(headers, CSV_IMPORT_FIELDS.HOLE_ID);
         const depthIndex = findHeaderIndex(headers, CSV_IMPORT_FIELDS.DEPTH);
@@ -40,37 +73,6 @@ export async function importCSV(csvData) {
             dip: headers[dipIndex]
         });
 
-        for (let i = 1; i < csvData.length; i++) {
-            const values = csvData[i];
-            if (values.length >= Math.max(holeIdIndex, depthIndex, azimuthIndex, dipIndex) + 1) {
-                const holeId = values[holeIdIndex].trim();
-                if (!holeId) {
-                    console.warn(`Skipping row ${i + 1} due to empty Hole ID`);
-                    continue;
-                }
-                if (!data[holeId]) {
-                    data[holeId] = [];
-                }
-                const depth = parseFloat(values[depthIndex]);
-                const azimuth = parseFloat(values[azimuthIndex]);
-                const dip = parseFloat(values[dipIndex]);
-                
-                if (isNaN(depth) || isNaN(azimuth) || isNaN(dip)) {
-                    console.warn(`Invalid data in row ${i + 1}: depth=${values[depthIndex]}, azimuth=${values[azimuthIndex]}, dip=${values[dipIndex]}`);
-                    continue;
-                }
-                
-                data[holeId].push({ depth, azimuth, dip });
-            } else {
-                console.warn(`Skipping row ${i + 1} due to insufficient data`);
-            }
-        }
-
-        if (Object.keys(data).length === 0) {
-            throw new Error('No valid data found in CSV');
-        }
-
-        console.log("Processed data:", data);
         localStorage.setItem('importedDrillHoleData', JSON.stringify(data));
         setupHoleIdDropdown(data);
         return data;
