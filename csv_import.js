@@ -1,4 +1,4 @@
-import { handleError } from './utils.js';
+import errorService from './errorService.js';
 import { loadSettings } from './storage.js';
 import { updateHoleInfo as updateHoleInfoUI } from './ui.js';
 
