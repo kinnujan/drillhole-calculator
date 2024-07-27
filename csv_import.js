@@ -18,13 +18,13 @@ export async function importCSV(csvData) {
 
         const data = {};
 
-        // Get column indices based on user-selected fields
-        const holeIdIndex = headers.indexOf(surveyImportFields.holeId.toLowerCase());
-        const depthIndex = headers.indexOf(surveyImportFields.depth.toLowerCase());
-        const azimuthIndex = headers.indexOf(surveyImportFields.azimuth.toLowerCase());
-        const dipIndex = headers.indexOf(surveyImportFields.dip.toLowerCase());
+        // Automatically map fields
+        const holeIdIndex = headers.findIndex(h => h.includes('hole'));
+        const depthIndex = headers.findIndex(h => h.includes('depth'));
+        const azimuthIndex = headers.findIndex(h => h.includes('azimuth utm') || h.includes('azimuth'));
+        const dipIndex = headers.findIndex(h => h.includes('dip'));
 
-        console.log("Column indices:", { holeIdIndex, depthIndex, azimuthIndex, dipIndex });
+        console.log("Automatically mapped column indices:", { holeIdIndex, depthIndex, azimuthIndex, dipIndex });
 
         if (holeIdIndex === -1 || depthIndex === -1 || azimuthIndex === -1 || dipIndex === -1) {
             throw new Error('One or more required columns not found in CSV');
