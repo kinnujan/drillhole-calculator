@@ -42,8 +42,6 @@ export function validateInputs(holeDip, holeAzimuth, alpha, beta) {
     return null;
 }
 
-import errorService from './errorService.js';
-
 // Export errorService for use in other modules
 export { errorService };
 
