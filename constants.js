@@ -65,3 +65,10 @@ export const URLS_TO_CACHE = [
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png'
 ];
+
+export const CSV_IMPORT_FIELDS = {
+    HOLE_ID: ['hole', 'id', 'holeid', 'hole_id', 'hole id'],
+    DEPTH: ['depth', 'dep'],
+    AZIMUTH: ['azimuth', 'azi', 'azimuth_utm', 'azimuth utm'],
+    DIP: ['dip', 'inclination', 'incl']
+};

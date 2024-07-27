@@ -1,6 +1,7 @@
 import errorService from './errorService.js';
 import { loadSettings } from './storage.js';
 import { updateHoleInfo as updateHoleInfoUI } from './ui.js';
+import { CSV_IMPORT_FIELDS } from './constants.js';
 
 export async function importCSV(csvData) {
     console.log("Starting CSV import...");
@@ -19,10 +20,10 @@ export async function importCSV(csvData) {
         const data = {};
 
         // Automatically map fields with more robust matching
-        const holeIdIndex = findHeaderIndex(headers, ['hole', 'id', 'holeid', 'hole_id', 'hole id']);
-        const depthIndex = findHeaderIndex(headers, ['depth', 'dep']);
-        const azimuthIndex = findHeaderIndex(headers, ['azimuth', 'azi', 'azimuth_utm', 'azimuth utm']);
-        const dipIndex = findHeaderIndex(headers, ['dip', 'inclination', 'incl']);
+        const holeIdIndex = findHeaderIndex(headers, CSV_IMPORT_FIELDS.HOLE_ID);
+        const depthIndex = findHeaderIndex(headers, CSV_IMPORT_FIELDS.DEPTH);
+        const azimuthIndex = findHeaderIndex(headers, CSV_IMPORT_FIELDS.AZIMUTH);
+        const dipIndex = findHeaderIndex(headers, CSV_IMPORT_FIELDS.DIP);
 
         console.log("Automatically mapped column indices:", { holeIdIndex, depthIndex, azimuthIndex, dipIndex });
 
