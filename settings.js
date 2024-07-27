@@ -1,6 +1,6 @@
 import { updateTypeSelectorButtons, updateGenerationSelectorButtons, updateCustomTypeSelectorButtons } from './ui.js';
 import { saveSettings, loadSettings, saveMeasurements } from './storage.js';
-import { handleError } from './utils.js';
+import errorService from './errorService.js';
 import { DEFAULT_SETTINGS } from './constants.js';
 import { importCSV } from './csv_import.js';
 
@@ -75,7 +75,7 @@ export async function setupSettings() {
 
         console.log("Settings setup complete.");
     } catch (error) {
-        handleError(error, "Error setting up settings");
+        errorService.handleError(error, "Error setting up settings");
     }
 }
 
@@ -101,7 +101,7 @@ async function setupDarkMode(initialState) {
             await saveSettings(settings);
             console.log(`Dark mode ${isDarkMode ? 'enabled' : 'disabled'}`);
         } catch (error) {
-            handleError(error, "Error saving dark mode setting");
+            errorService.handleError(error, "Error saving dark mode setting");
         }
     });
 }
@@ -130,7 +130,7 @@ async function setupHapticFeedback(initialState) {
             await saveSettings(settings);
             console.log(`Haptic feedback ${isHapticFeedbackEnabled ? 'enabled' : 'disabled'}`);
         } catch (error) {
-            handleError(error, "Error saving haptic feedback setting");
+            errorService.handleError(error, "Error saving haptic feedback setting");
         }
     });
 }
@@ -156,7 +156,7 @@ async function setupUndoButton(initialState) {
                 undoButton.style.display = isUndoEnabled ? 'inline-block' : 'none';
             }
         } catch (error) {
-            handleError(error, "Error saving undo button setting");
+            errorService.handleError(error, "Error saving undo button setting");
         }
     });
 }
@@ -173,7 +173,7 @@ async function setupIncludeHeaderInExport(initialState) {
             await saveSettings(settings);
             console.log(`Include header in export ${includeHeader ? 'enabled' : 'disabled'}`);
         } catch (error) {
-            handleError(error, "Error saving include header in export setting");
+            errorService.handleError(error, "Error saving include header in export setting");
         }
     });
 }
@@ -252,7 +252,7 @@ async function setupSurveyImportToggle(initialState) {
             toggleCustomHoleIdInput(isSurveyImportEnabled);
             toggleCSVImportUI(isSurveyImportEnabled);
         } catch (error) {
-            handleError(error, "Error saving survey import setting");
+            errorService.handleError(error, "Error saving survey import setting");
         }
     });
 
@@ -337,7 +337,7 @@ async function handleCSVImport(event) {
             updateMainUIAfterImport(importedData);
         } catch (error) {
             console.error("CSV import error:", error);
-            handleError(error, "Error importing CSV file: " + error.message);
+            errorService.handleError(error, "Error importing CSV file: " + error.message);
         }
     } else {
         console.warn("No file selected for CSV import");
@@ -543,7 +543,7 @@ async function addCustomType() {
             updateCustomTypesList(settings.customTypes);
             await saveSettings(settings);
         } catch (error) {
-            handleError(error, "Error adding new custom type");
+            errorService.handleError(error, "Error adding new custom type");
         }
     }
 }
@@ -560,7 +560,7 @@ async function deleteCustomType(typeName) {
         updateCustomTypesList(settings.customTypes);
         await saveSettings(settings);
     } catch (error) {
-        handleError(error, "Error deleting custom type");
+        errorService.handleError(error, "Error deleting custom type");
     }
 }
 
@@ -581,7 +581,7 @@ async function addCustomTypeOption(typeName) {
                 await saveSettings(settings);
             }
         } catch (error) {
-            handleError(error, "Error adding custom type option");
+            errorService.handleError(error, "Error adding custom type option");
         }
     }
 }
@@ -605,7 +605,7 @@ async function deleteCustomTypeOption(typeName, option) {
             }
         }
     } catch (error) {
-        handleError(error, "Error deleting custom type option");
+        errorService.handleError(error, "Error deleting custom type option");
     }
 }
 
@@ -638,7 +638,7 @@ function setupResetButton() {
                         window.location.reload();
                     }, 1500);
                 } catch (error) {
-                    handleError(error, "Error resetting application");
+                    errorService.handleError(error, "Error resetting application");
                 }
             }
         });
