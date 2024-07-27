@@ -468,8 +468,8 @@ export function adjustDepth(amount) {
     if (!depthInput) {
         throw new Error("Depth input element not found");
     }
-    if (typeof amount !== 'number') {
-        throw new Error("Invalid amount: must be a number");
+    if (typeof amount !== 'number' || isNaN(amount)) {
+        throw new Error("Invalid amount: must be a valid number");
     }
     const currentDepth = parseFloat(depthInput.value);
     if (isNaN(currentDepth)) {

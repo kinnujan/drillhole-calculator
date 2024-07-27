@@ -4,8 +4,8 @@
  * @returns {number} Angle in radians
  */
 export const toRadians = (angle) => {
-    if (typeof angle !== 'number') {
-        throw new Error('Invalid input: angle must be a number');
+    if (typeof angle !== 'number' || isNaN(angle)) {
+        throw new Error('Invalid input: angle must be a valid number');
     }
     return angle * Math.PI / 180;
 };
@@ -16,8 +16,8 @@ export const toRadians = (angle) => {
  * @returns {number} Angle in degrees
  */
 export const toDegrees = (angle) => {
-    if (typeof angle !== 'number') {
-        throw new Error('Invalid input: angle must be a number');
+    if (typeof angle !== 'number' || isNaN(angle)) {
+        throw new Error('Invalid input: angle must be a valid number');
     }
     return angle * 180 / Math.PI;
 };
@@ -29,10 +29,10 @@ export const toDegrees = (angle) => {
  * @returns {number} Strike in degrees
  */
 export function calculateStrike(dipDirection, strikeMode) {
-    if (typeof dipDirection !== 'number' || dipDirection < 0 || dipDirection >= 360) {
+    if (typeof dipDirection !== 'number' || isNaN(dipDirection) || dipDirection < 0 || dipDirection >= 360) {
         throw new Error('Invalid dipDirection: must be a number between 0 and 359');
     }
-    if (strikeMode !== 'negative' && strikeMode !== 'positive') {
+    if (typeof strikeMode !== 'string' || (strikeMode !== 'negative' && strikeMode !== 'positive')) {
         throw new Error('Invalid strike mode: must be either "negative" or "positive"');
     }
     
