@@ -1,5 +1,4 @@
-import { LOG_LEVELS } from './constants.js';
-import { CONFIG } from './config.js';
+import { LOG_LEVELS, CONFIG } from './constants.js';
 
 let currentLogLevel = LOG_LEVELS[CONFIG.logLevel];
 

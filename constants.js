@@ -45,6 +45,11 @@ export const LOG_LEVELS = {
 
 export const CACHE_NAME = 'drill-hole-orientation-calculator-v1';
 
+export const CONFIG = {
+    environment: 'development', // Change this to 'production' for production builds
+    logLevel: 'DEBUG' // This can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
+};
+
 export const URLS_TO_CACHE = [
   '/',
   '/index.html',
