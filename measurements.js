@@ -2,6 +2,7 @@ import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadS
 import { updateResultsTable, updatePreview, resetUISelections, enableUndoButton, disableUndoButton } from './ui.js';
 import { toRadians, toDegrees, calculateStrike, validateInputs, handleError } from './utils.js';
 import { ERROR_MESSAGES, CSV_MIME_TYPE } from './constants.js';
+import { getHoleData } from './csv_import.js';
 
 let measurements = [];
 let selectedType = '';
@@ -24,56 +25,100 @@ export async function loadMeasurements() {
 export async function addMeasurement() {
     console.log("Adding new measurement...");
     const holeId = document.getElementById('holeId')?.value || '';
-    const holeDip = parseFloat(document.getElementById('holeDip')?.value || '0');
-    const holeAzimuth = parseFloat(document.getElementById('holeAzimuth')?.value || '0');
     const depth = parseFloat(document.getElementById('depth')?.value || '0');
+    const holeData = getHoleData(holeId, depth);
+    const holeDip = holeData ? parseFloat(holeData.dip) : parseFloat(document.getElementById('holeDip')?.value || '0');
+    const holeAzimuth = holeData ? parseFloat(holeData.azimuth) : parseFloat(document.getElementById('holeAzimuth')?.value || '0');
     const alpha = parseFloat(document.getElementById('alpha')?.value || '0');
     const beta = parseFloat(document.getElementById('beta')?.value || '0');
     const comment = document.getElementById('comment')?.value || '';
 
+    console.log("Measurement input values:", { holeId, depth, holeDip, holeAzimuth, alpha, beta, comment });
+    if (holeData) {
+        console.log("Using imported survey data:", holeData);
+    } else {
+        console.log("Using manually entered hole data");
+    }
+
     const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
     if (errorMessage) {
+        console.error("Input validation failed:", errorMessage);
         handleError(new Error(errorMessage), errorMessage);
         return;
     }
+
 
     const errorElement = document.getElementById('error');
     if (errorElement) errorElement.textContent = '';
 
     try {
+        console.log("Calculating dip direction...");
         const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+        console.log("Dip direction calculated:", { dip, dipDirection });
+
+        console.log("Loading settings...");
         const settings = await loadSettings();
+        console.log("Settings loaded:", settings);
+
+        console.log("Calculating strike...");
         const strike = calculateStrike(dipDirection, settings.strikeMode);
+        console.log("Strike calculated:", strike);
         
         const result = {
             holeId,
             holeDip: holeDip.toFixed(1),
             holeAzimuth: holeAzimuth.toFixed(1),
-            depth,
-            type: selectedType,
-            generation: selectedGeneration,
-            customTypes: { ...selectedCustomTypes },
+            depth: depth.toFixed(2),
             alpha: alpha.toFixed(1),
             beta: beta.toFixed(1),
             dip: dip.toFixed(1),
             dipDirection: dipDirection.toFixed(1),
             strike: strike.toFixed(1),
-            comment
         };
+
+        if (selectedType) result.type = selectedType;
+        if (selectedGeneration) result.generation = selectedGeneration;
+        if (Object.keys(selectedCustomTypes).length > 0) result.customTypes = { ...selectedCustomTypes };
+        if (comment) result.comment = comment;
+
+        console.log("New measurement result:", result);
 
         measurements.push(result);
         lastAddedMeasurement = { ...result, index: measurements.length - 1 };
+        console.log("Saving measurements...");
         await saveMeasurements(measurements);
+        console.log("Measurements saved.");
+
+        console.log("Saving drill hole info...");
         await saveDrillHoleInfo({ holeId, holeDip, holeAzimuth });
+        console.log("Drill hole info saved.");
 
+        console.log("Updating results table...");
         await updateResultsTable();
+        console.log("Results table updated.");
 
+        console.log("Resetting input fields and selections...");
         resetInputFields();
         resetSelections();
+        console.log("Input fields and selections reset.");
+
+        console.log("Updating preview...");
         updatePreview();
+        console.log("Preview updated.");
+
+        console.log("Enabling undo button...");
         enableUndoButton();
+        console.log("Undo button enabled.");
+
         console.log("New measurement added:", result);
+
+        console.log("Dispatching measurementAdded event...");
+        document.dispatchEvent(new CustomEvent('measurementAdded'));
+        console.log("measurementAdded event dispatched.");
     } catch (error) {
+        console.error("Error in addMeasurement:", error);
+        console.error("Error stack:", error.stack);
+        console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
         handleError(error, "An error occurred while adding the measurement.");
     }
 }
@@ -294,22 +339,27 @@ export async function saveAsCSV() {
 
     try {
         const blob = new Blob([csvContent], { type: CSV_MIME_TYPE });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
         const copyStatus = document.getElementById('copyStatus');
         if (copyStatus) {
             copyStatus.textContent = 'File download initiated.';
         }
         console.log("File download initiated.");
     } catch (err) {
-        handleError(err, 'Error saving file.');
+        console.error("Error in primary save method, attempting fallback...");
+        fallbackSaveAsCSV(csvContent, filename);
     }
 }
 
@@ -352,21 +402,21 @@ async function getCSVContent() {
     measurements.forEach(function(measurement) {
         let row = [
             measurement.holeId,
-            measurement.holeDip,  // Add holeDip to CSV export
-            measurement.holeAzimuth,  // Add holeAzimuth to CSV export
+            measurement.holeDip,
+            measurement.holeAzimuth,
             measurement.depth,
-            measurement.type,
-            measurement.generation,
+            measurement.type || '',
+            measurement.generation || '',
             measurement.alpha,
             measurement.beta,
             measurement.dip,
             measurement.dipDirection,
             measurement.strike,
-            measurement.comment
+            measurement.comment || ''
         ];
         
         customTypeNames.forEach(name => {
-            row.push(measurement.customTypes[name] || '');
+            row.push(measurement.customTypes && measurement.customTypes[name] || '');
         });
         
         csvContent += row.map(value => `"${value}"`).join(",") + "\n";

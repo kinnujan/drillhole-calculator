@@ -2,6 +2,7 @@ import { updateTypeSelectorButtons, updateGenerationSelectorButtons, updateCusto
 import { saveSettings, loadSettings, saveMeasurements } from './storage.js';
 import { handleError } from './utils.js';
 import { DEFAULT_SETTINGS } from './constants.js';
+import { importCSV } from './csv_import.js';
 
 /**
  * Sets up the settings UI and event listeners
@@ -13,13 +14,47 @@ export async function setupSettings() {
         const settings = await loadSettings();
         await setupDarkMode(settings.darkMode);
         setupStrikeMode(settings.strikeMode);
-        setupAllTypes(settings.measurementTypes, settings.generationTypes, settings.customTypes);
+        setupAllTypes(settings.measurementTypes || [], settings.generationTypes || [], settings.customTypes || []);
         setupHapticFeedback(settings.hapticFeedback);
         setupUndoButton(settings.undoEnabled);
         setupIncludeHeaderInExport(settings.includeHeaderInExport);
+        setupSurveyImportToggle(settings.surveyImportEnabled);
+        setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
         
-        document.getElementById('addMeasurementType').addEventListener('click', () => addType('measurementTypes'));
-        document.getElementById('addGenerationType').addEventListener('click', () => addType('generationTypes'));
+        // Add this line to export the toggleCustomHoleIdInput function
+        window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
+        
+        const addMeasurementTypeBtn = document.getElementById('addMeasurementType');
+        if (addMeasurementTypeBtn) {
+            addMeasurementTypeBtn.addEventListener('click', () => addType('measurementTypes'));
+        }
+        
+        const addGenerationTypeBtn = document.getElementById('addGenerationType');
+        if (addGenerationTypeBtn) {
+            addGenerationTypeBtn.addEventListener('click', () => addType('generationTypes'));
+        }
+
+        // Add the setupSkipInvalidCSVRows function
+        function setupSkipInvalidCSVRows(initialState) {
+            const skipInvalidRowsToggle = document.getElementById('skipInvalidCSVRows');
+            if (skipInvalidRowsToggle) {
+                skipInvalidRowsToggle.checked = initialState;
+
+                skipInvalidRowsToggle.addEventListener('change', async () => {
+                    const skipInvalidRows = skipInvalidRowsToggle.checked;
+                    try {
+                        const settings = await loadSettings();
+                        settings.skipInvalidCSVRows = skipInvalidRows;
+                        await saveSettings(settings);
+                        console.log(`Skip invalid CSV rows ${skipInvalidRows ? 'enabled' : 'disabled'}`);
+                    } catch (error) {
+                        handleError(error, "Error saving skip invalid CSV rows setting");
+                    }
+                });
+            } else {
+                console.error('Skip invalid CSV rows toggle not found in the DOM');
+            }
+        }
         document.getElementById('addCustomType').addEventListener('click', addCustomType);
         setupResetButton();
 
@@ -50,12 +85,16 @@ export async function setupSettings() {
  */
 async function setupDarkMode(initialState) {
     const darkModeToggle = document.getElementById('darkMode');
+    if (!darkModeToggle) {
+        console.error('Dark mode toggle not found');
+        return;
+    }
     darkModeToggle.checked = initialState;
-    document.body.classList.toggle('dark-mode', initialState);
+    applyDarkMode(initialState);
 
     darkModeToggle.addEventListener('change', async () => {
         const isDarkMode = darkModeToggle.checked;
-        document.body.classList.toggle('dark-mode', isDarkMode);
+        applyDarkMode(isDarkMode);
         try {
             const settings = await loadSettings();
             settings.darkMode = isDarkMode;
@@ -65,6 +104,14 @@ async function setupDarkMode(initialState) {
             handleError(error, "Error saving dark mode setting");
         }
     });
+}
+
+function applyDarkMode(isDarkMode) {
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', isDarkMode ? '#333333' : '#ffffff');
+    }
 }
 
 /**
@@ -180,6 +227,231 @@ function updateTypeList(typeCategory, types) {
     } else if (typeCategory === 'generationTypes') {
         updateGenerationSelectorButtons(types);
     }
+}
+
+async function setupSurveyImportToggle(initialState) {
+    const surveyImportToggle = document.getElementById('surveyImportEnabled');
+    const surveyImportSettings = document.querySelector('.survey-import-settings');
+    
+    if (!surveyImportToggle || !surveyImportSettings) {
+        console.error('Survey import toggle or settings elements not found');
+        return;
+    }
+    
+    surveyImportToggle.checked = initialState;
+    surveyImportSettings.style.display = initialState ? 'block' : 'none';
+
+    surveyImportToggle.addEventListener('change', async () => {
+        const isSurveyImportEnabled = surveyImportToggle.checked;
+        try {
+            const settings = await loadSettings();
+            settings.surveyImportEnabled = isSurveyImportEnabled;
+            await saveSettings(settings);
+            console.log(`Survey import ${isSurveyImportEnabled ? 'enabled' : 'disabled'}`);
+            surveyImportSettings.style.display = isSurveyImportEnabled ? 'block' : 'none';
+            toggleCustomHoleIdInput(isSurveyImportEnabled);
+            toggleCSVImportUI(isSurveyImportEnabled);
+        } catch (error) {
+            handleError(error, "Error saving survey import setting");
+        }
+    });
+
+    setupSurveyImportInput();
+    setupSurveyImportFieldSelectors();
+}
+
+function setupSurveyImportInput() {
+    const surveyImportInput = document.getElementById('surveyImportInput');
+    if (surveyImportInput) {
+        surveyImportInput.addEventListener('change', handleCSVImport);
+    } else {
+        console.warn('Survey import input element not found');
+    }
+}
+
+function setupSurveyImportFieldSelectors() {
+    const surveyFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    surveyFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`surveyImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+        if (selector) {
+            selector.addEventListener('change', async () => {
+                const settings = await loadSettings();
+                settings.surveyImportFields[field] = selector.value;
+                await saveSettings(settings);
+            });
+        } else {
+            console.warn(`Survey import field selector for ${field} not found`);
+        }
+    });
+}
+
+export function toggleCustomHoleIdInput(isSurveyImportEnabled) {
+    const holeIdGroup = document.getElementById('holeIdGroup');
+    const holeIdSelectGroup = document.getElementById('holeIdSelectGroup');
+    
+    if (holeIdGroup && holeIdSelectGroup) {
+        holeIdGroup.classList.toggle('hidden', isSurveyImportEnabled);
+        holeIdSelectGroup.classList.toggle('hidden', !isSurveyImportEnabled);
+        console.log(`Custom Hole ID input ${isSurveyImportEnabled ? 'hidden' : 'shown'}`);
+        console.log(`Hole ID select ${isSurveyImportEnabled ? 'shown' : 'hidden'}`);
+    } else {
+        console.warn('Hole ID group or Hole ID select group not found');
+    }
+}
+
+// Make the function available globally
+window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
+
+async function handleCSVImport(event) {
+    const file = event.target.files[0];
+    if (file) {
+        try {
+            console.log("Starting CSV import process...");
+            const csvData = await readCSVFile(file);
+            console.log("CSV file read successfully");
+            
+            if (!Array.isArray(csvData) || csvData.length === 0) {
+                throw new Error('Invalid CSV data: empty or not an array');
+            }
+            
+            const headers = csvData[0];
+            console.log("CSV headers:", headers);
+            
+            populateFieldSelectors(headers);
+            console.log("Field selectors populated");
+            
+            const importedData = await importCSV(csvData);
+            console.log("CSV imported successfully", importedData);
+            
+            // Update the UI with the imported data
+            setupHoleIdDropdown(importedData);
+            
+            // Show success message to the user
+            const copyStatus = document.getElementById('copyStatus');
+            if (copyStatus) {
+                copyStatus.textContent = 'CSV imported successfully!';
+                setTimeout(() => copyStatus.textContent = '', 3000);
+            }
+
+            // Update the main UI to reflect the imported data
+            updateMainUIAfterImport(importedData);
+        } catch (error) {
+            console.error("CSV import error:", error);
+            handleError(error, "Error importing CSV file: " + error.message);
+        }
+    } else {
+        console.warn("No file selected for CSV import");
+    }
+}
+
+function updateMainUIAfterImport(importedData) {
+    setupHoleIdDropdown(importedData);
+
+    // Show the hole ID select and hide the hole ID input
+    const holeIdGroup = document.getElementById('holeIdGroup');
+    const holeIdSelectGroup = document.getElementById('holeIdSelectGroup');
+    if (holeIdGroup && holeIdSelectGroup) {
+        holeIdGroup.classList.add('hidden');
+        holeIdSelectGroup.classList.remove('hidden');
+    }
+
+    // Trigger an update of the hole info
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    const event = new Event('change');
+    holeIdSelect.dispatchEvent(event);
+}
+
+function setupHoleIdDropdown(data) {
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    if (!holeIdSelect) {
+        console.error('Hole ID select element not found');
+        return;
+    }
+
+    holeIdSelect.innerHTML = '<option value="">Select Hole ID</option>';
+    
+    if (data) {
+        Object.keys(data).forEach(holeId => {
+            const option = document.createElement('option');
+            option.value = holeId;
+            option.textContent = holeId;
+            holeIdSelect.appendChild(option);
+        });
+    }
+}
+
+function readCSVFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target.result;
+            const data = CSVToArray(text);
+            resolve(data);
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsText(file);
+    });
+}
+
+function CSVToArray(strData, strDelimiter = ',') {
+    const objPattern = new RegExp(
+        ("(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+        "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+        "([^\"\\" + strDelimiter + "\\r\\n]*))"),"gi"
+    );
+    let arrData = [[]];
+    let arrMatches = null;
+    while (arrMatches = objPattern.exec(strData)) {
+        const strMatchedDelimiter = arrMatches[1];
+        if (strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter) {
+            arrData.push([]);
+        }
+        let strMatchedValue;
+        if (arrMatches[2]) {
+            strMatchedValue = arrMatches[2].replace(new RegExp( "\"\"", "g" ), "\"");
+        } else {
+            strMatchedValue = arrMatches[3];
+        }
+        arrData[arrData.length - 1].push(strMatchedValue);
+    }
+    return arrData;
+}
+
+function populateFieldSelectors(headers) {
+    const surveyFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    surveyFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`surveyImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+        if (selector) {
+            selector.innerHTML = '<option value="">Select field</option>';
+            headers.forEach(header => {
+                const option = document.createElement('option');
+                option.value = header;
+                option.textContent = header;
+                selector.appendChild(option);
+            });
+        } else {
+            console.warn(`Selector for ${field} not found`);
+        }
+    });
+}
+
+function toggleCSVImportUI(isEnabled) {
+    const surveyImportElements = document.querySelectorAll('.survey-import-element');
+    surveyImportElements.forEach(element => {
+        element.style.display = isEnabled ? 'block' : 'none';
+    });
+}
+
+async function populateCSVFieldSelectors() {
+    const settings = await loadSettings();
+    const csvFieldSelectors = ['holeId', 'depth', 'azimuth', 'dip'];
+    
+    csvFieldSelectors.forEach(field => {
+        const selector = document.getElementById(`csvImport${field.charAt(0).toUpperCase() + field.slice(1)}Field`);
+        if (selector) {
+            selector.value = settings.csvImportFields[field];
+        }
+    });
 }
 
 /**
@@ -342,23 +614,35 @@ async function deleteCustomTypeOption(typeName, option) {
  */
 function setupResetButton() {
     const resetButton = document.getElementById('resetApp');
-    resetButton.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to reset all settings and data? This action cannot be undone.')) {
-            try {
-                // Clear all localStorage items
-                localStorage.clear();
+    if (resetButton) {
+        resetButton.addEventListener('click', async () => {
+            if (confirm('Are you sure you want to reset all settings and data? This action cannot be undone.')) {
+                try {
+                    // Clear all localStorage items
+                    localStorage.clear();
 
-                // Reset settings to default
-                await saveSettings(DEFAULT_SETTINGS);
+                    // Reset settings to default
+                    await saveSettings(DEFAULT_SETTINGS);
 
-                // Clear measurements
-                await saveMeasurements([]);
+                    // Clear measurements
+                    await saveMeasurements([]);
 
-                // Reload the page to reset the UI
-                window.location.reload();
-            } catch (error) {
-                handleError(error, "Error resetting application");
+                    // Show a message to the user
+                    const copyStatus = document.getElementById('copyStatus');
+                    if (copyStatus) {
+                        copyStatus.textContent = 'Application reset. Reloading page...';
+                    }
+
+                    // Reload the page to reset the UI after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } catch (error) {
+                    handleError(error, "Error resetting application");
+                }
             }
-        }
-    });
+        });
+    } else {
+        console.error('Reset button not found in the DOM');
+    }
 }

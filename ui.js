@@ -1,6 +1,8 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
+import { toggleCustomHoleIdInput } from './settings.js';
 import { handleError, calculateStrike } from './utils.js';
+import { importCSV, getImportedDrillHoleData, getHoleData, setupHoleIdDropdown } from './csv_import.js';
 
 // Update utility function for haptic feedback
 async function triggerHapticFeedback(duration = 10) {
@@ -34,13 +36,68 @@ export function disableUndoButton() {
 
 export async function setupUI() {
     console.log("Setting up UI...");
-    setupDrillHoleInfoToggle();
-    await setupTypeSelectors();
-    await syncInputs();
-    setupDepthButtons();
-    setupMeasurementHandlers();
-    console.log("UI setup complete.");
+    try {
+        console.log("Setting up drill hole info toggle...");
+        setupDrillHoleInfoToggle();
+        console.log("Drill hole info toggle setup complete.");
+
+        console.log("Setting up type selectors...");
+        await setupTypeSelectors();
+        console.log("Type selectors setup complete.");
+
+        console.log("Syncing inputs...");
+        await syncInputs();
+        console.log("Inputs synced.");
+
+        console.log("Setting up depth buttons...");
+        setupDepthButtons();
+        console.log("Depth buttons setup complete.");
+
+        console.log("Setting up measurement handlers...");
+        setupMeasurementHandlers();
+        console.log("Measurement handlers setup complete.");
+
+        console.log("Setting up hole ID dropdown...");
+        setupHoleIdDropdown(getImportedDrillHoleData());
+        console.log("Hole ID dropdown setup complete.");
+
+        document.addEventListener('measurementAdded', updateHoleInfo);
+        console.log("Measurement added event listener set up.");
+
+        console.log("Toggling custom Hole ID input...");
+        const settings = await loadSettings();
+        await toggleCustomHoleIdInput(settings.surveyImportEnabled);
+        console.log("Custom Hole ID input toggled.");
+
+        console.log("UI setup complete.");
+    } catch (error) {
+        console.error('Error in setupUI:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        throw error; // Re-throw the error to be caught by the caller
+    }
 }
+
+export function updateHoleInfo() {
+    const holeIdSelect = document.getElementById('holeIdSelect');
+    const holeId = holeIdSelect ? holeIdSelect.value : document.getElementById('holeId').value;
+    const depth = parseFloat(document.getElementById('depth').value) || 0;
+    
+    const holeData = getHoleData(holeId, depth);
+    
+    if (holeData) {
+        document.getElementById('holeId').value = holeId;
+        document.getElementById('holeDip').value = holeData.dip;
+        document.getElementById('holeDipSlider').value = holeData.dip;
+        document.getElementById('holeAzimuth').value = holeData.azimuth;
+        document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
+        updateDrillHoleInfoSummary();
+        updatePreview();
+    }
+}
+
+
+// Remove the setupHoleIdDropdown function as it's now in csv_import.js
 
 function setupDrillHoleInfoToggle() {
     const toggle = document.getElementById('drillHoleInfoToggle');
@@ -98,11 +155,12 @@ function setupMeasurementHandlers() {
 
 function setupDepthButtons() {
     const depthButtons = document.querySelectorAll('.depth-button');
+    const depthInput = document.getElementById('depth');
+
     depthButtons.forEach(button => {
         button.addEventListener('click', async () => {
             await triggerHapticFeedback();
             const amount = parseFloat(button.getAttribute('data-amount'));
-            const depthInput = document.getElementById('depth');
             if (depthInput) {
                 depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
                 
@@ -111,11 +169,21 @@ function setupDepthButtons() {
                 setTimeout(() => {
                     button.classList.remove('active');
                 }, 200);
+
+                // Update hole info based on new depth
+                updateHoleInfo();
             } else {
                 console.warn("Depth input not found.");
             }
         });
     });
+
+    // Add event listener for manual depth input
+    if (depthInput) {
+        depthInput.addEventListener('input', updateHoleInfo);
+    } else {
+        console.warn("Depth input not found.");
+    }
 }
 
 async function setupTypeSelectors() {
@@ -161,6 +229,7 @@ export function updateCustomTypeSelectorButtons(customTypes) {
         );
     });
 }
+
 
 function updateSelectorButtons(containerSelector, options, dataAttribute, onClickHandler) {
     const container = document.querySelector(containerSelector);
@@ -306,6 +375,7 @@ export async function updatePreview() {
 }
 
 export async function updateResultsTable() {
+    console.log("Updating results table...");
     const resultsTable = document.getElementById('resultsTable');
     if (!resultsTable) {
         console.warn("Results table not found.");
@@ -321,12 +391,12 @@ export async function updateResultsTable() {
     }
 
     // Clear existing content
-    thead.innerHTML = '';
     tbody.innerHTML = '';
 
-    // Create header row
-    const headerRow = document.createElement('tr');
-    const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Comment'];
+    // Update header row
+    const headerRow = thead.querySelector('tr');
+    headerRow.innerHTML = '';
+    const baseColumns = ['Depth', 'Type', 'Gen', 'Dip', 'DipDir', 'Strike', 'Comment'];
     baseColumns.forEach(col => {
         const th = document.createElement('th');
         th.textContent = col;
@@ -342,31 +412,42 @@ export async function updateResultsTable() {
             headerRow.appendChild(th);
         });
 
-        thead.appendChild(headerRow);
+        // Import measurements from measurements.js
+        const { measurements } = await import('./measurements.js');
+        console.log("Measurements loaded:", measurements);
 
         // Populate table body
         measurements.forEach((measurement) => {
-            const row = tbody.insertRow();
-            row.insertCell(0).textContent = measurement.depth.toFixed(2);
-            row.insertCell(1).textContent = measurement.type;
-            row.insertCell(2).textContent = measurement.generation;
-            row.insertCell(3).textContent = measurement.dip + '°';
-            row.insertCell(4).textContent = measurement.dipDirection + '°';
-            
-            const commentCell = row.insertCell(5);
-            commentCell.textContent = (measurement.comment.length > 20 ? 
-                measurement.comment.substring(0, 20) + '...' : 
-                measurement.comment);
-            commentCell.title = measurement.comment; // Show full comment on hover
+            try {
+                const row = tbody.insertRow();
 
-            // Add custom type values
-            settings.customTypes.forEach(customType => {
-                const cell = row.insertCell();
-                const customValue = measurement.customTypes && measurement.customTypes[customType.name];
-                cell.textContent = customValue || '-';
-            });
+                row.insertCell().textContent = measurement.depth;
+                row.insertCell().textContent = measurement.type || '-';
+                row.insertCell().textContent = measurement.generation || '-';
+                row.insertCell().textContent = measurement.dip + '°';
+                row.insertCell().textContent = measurement.dipDirection + '°';
+                row.insertCell().textContent = measurement.strike + '°';
+                
+                const commentCell = row.insertCell();
+                commentCell.textContent = (measurement.comment && measurement.comment.length > 20 ? 
+                    measurement.comment.substring(0, 20) + '...' : 
+                    measurement.comment || '-');
+                commentCell.title = measurement.comment || ''; // Show full comment on hover
+
+                // Add custom type values
+                settings.customTypes.forEach(customType => {
+                    const cell = row.insertCell();
+                    const customValue = measurement.customTypes && measurement.customTypes[customType.name];
+                    cell.textContent = customValue || '-';
+                });
+            } catch (error) {
+                console.error("Error adding row to results table:", error);
+            }
         });
+
+        console.log("Results table updated successfully.");
     } catch (error) {
+        console.error("Error updating results table:", error);
         handleError(error, "Error updating results table");
     }
 }

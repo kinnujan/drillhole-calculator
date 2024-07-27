@@ -24,7 +24,14 @@ export const DEFAULT_SETTINGS = {
     customTypes: [],
     hapticFeedback: true,
     undoEnabled: true,
-    includeHeaderInExport: true
+    includeHeaderInExport: true,
+    surveyImportEnabled: false,
+    surveyImportFields: {
+        holeId: 'Hole number',
+        depth: 'Depth',
+        azimuth: 'Azimuth UTM',
+        dip: 'Dip'
+    }
 };
 
-export const CURRENT_SETTINGS_VERSION = 8; // Incremented from 7 to 8
+export const CURRENT_SETTINGS_VERSION = 13; // Incremented from 12 to 13
