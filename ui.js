@@ -90,13 +90,17 @@ export async function setupUI() {
 }
 
 export function updateHoleInfo() {
+    console.log('updateHoleInfo called');
     const holeIdSelect = document.getElementById('holeIdSelect');
     const holeId = holeIdSelect ? holeIdSelect.value : document.getElementById('holeId').value;
     const depth = parseFloat(document.getElementById('depth').value) || 0;
     
+    console.log(`Updating hole info for holeId: ${holeId}, depth: ${depth}`);
+    
     const holeData = getHoleData(holeId, depth);
     
     if (holeData) {
+        console.log('Hole data found:', holeData);
         document.getElementById('holeId').value = holeId;
         document.getElementById('holeDip').value = holeData.dip;
         document.getElementById('holeDipSlider').value = holeData.dip;

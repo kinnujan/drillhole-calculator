@@ -112,12 +112,16 @@ function findClosestSurveyPoint(holeData, targetDepth) {
 }
 
 export function getHoleData(holeId, depth) {
+    console.log(`getHoleData called with holeId: ${holeId}, depth: ${depth}`);
+
     if (typeof holeId !== 'string' || holeId.trim() === '') {
         console.error('Invalid holeId provided to getHoleData');
         return null;
     }
 
     const data = getImportedDrillHoleData();
+    console.log('Imported drill hole data:', data);
+
     if (!data || typeof data !== 'object') {
         console.error('Invalid or missing imported drill hole data');
         return null;
@@ -129,13 +133,16 @@ export function getHoleData(holeId, depth) {
     }
     
     const holeData = data[holeId];
+    console.log(`Data for holeId ${holeId}:`, holeData);
+
     if (!Array.isArray(holeData) || holeData.length === 0) {
         console.warn(`Invalid or empty data for holeId: ${holeId}`);
         return null;
     }
 
     if (depth === undefined || depth === null) {
-        return holeData[0]; // Return first entry if no depth is provided
+        console.log(`No depth provided, returning first entry for holeId: ${holeId}`);
+        return holeData[0];
     }
     
     if (typeof depth !== 'number' || isNaN(depth)) {
@@ -146,8 +153,10 @@ export function getHoleData(holeId, depth) {
     const closestPoint = findClosestSurveyPoint(holeData, depth);
     if (!closestPoint) {
         console.warn(`No survey point found for holeId: ${holeId} at depth: ${depth}`);
-        return holeData[0]; // Return first entry if no close point is found
+        console.log(`Returning first entry for holeId: ${holeId}`);
+        return holeData[0];
     }
+    console.log(`Closest point found for holeId: ${holeId} at depth: ${depth}:`, closestPoint);
     return closestPoint;
 }
 
