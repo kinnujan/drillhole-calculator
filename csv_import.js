@@ -143,7 +143,12 @@ export function getHoleData(holeId, depth) {
         return null;
     }
     
-    return findClosestSurveyPoint(holeData, depth);
+    const closestPoint = findClosestSurveyPoint(holeData, depth);
+    if (!closestPoint) {
+        console.warn(`No survey point found for holeId: ${holeId} at depth: ${depth}`);
+        return holeData[0]; // Return first entry if no close point is found
+    }
+    return closestPoint;
 }
 
 export function setupHoleIdDropdown(data) {

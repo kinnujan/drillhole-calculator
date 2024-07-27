@@ -104,6 +104,9 @@ export function updateHoleInfo() {
         document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
         updateDrillHoleInfoSummary();
         updatePreview();
+    } else {
+        console.warn(`No hole data found for holeId: ${holeId} at depth: ${depth}`);
+        // Optionally, you can clear the fields or set them to default values here
     }
 }
 
