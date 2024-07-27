@@ -62,7 +62,6 @@ export function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
-import errorService from './errorService.js';
 
 /**
  * Converts degrees to radians
