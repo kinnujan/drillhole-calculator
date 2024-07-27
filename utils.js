@@ -4,12 +4,10 @@
  * @returns {number} Angle in radians
  */
 export const toRadians = (angle) => {
-    try {
-        return angle * Math.PI / 180;
-    } catch (error) {
-        console.error('Error in toRadians:', error);
-        throw new Error('Failed to convert angle to radians');
+    if (typeof angle !== 'number') {
+        throw new Error('Invalid input: angle must be a number');
     }
+    return angle * Math.PI / 180;
 };
 
 /**
@@ -18,12 +16,10 @@ export const toRadians = (angle) => {
  * @returns {number} Angle in degrees
  */
 export const toDegrees = (angle) => {
-    try {
-        return angle * 180 / Math.PI;
-    } catch (error) {
-        console.error('Error in toDegrees:', error);
-        throw new Error('Failed to convert angle to degrees');
+    if (typeof angle !== 'number') {
+        throw new Error('Invalid input: angle must be a number');
     }
+    return angle * 180 / Math.PI;
 };
 
 /**
@@ -33,17 +29,17 @@ export const toDegrees = (angle) => {
  * @returns {number} Strike in degrees
  */
 export function calculateStrike(dipDirection, strikeMode) {
-    try {
-        if (strikeMode === 'negative') {
-            return (dipDirection - 90 + 360) % 360;
-        } else if (strikeMode === 'positive') {
-            return (dipDirection + 90) % 360;
-        } else {
-            throw new Error('Invalid strike mode');
-        }
-    } catch (error) {
-        console.error('Error in calculateStrike:', error);
-        throw new Error('Failed to calculate strike');
+    if (typeof dipDirection !== 'number' || dipDirection < 0 || dipDirection >= 360) {
+        throw new Error('Invalid dipDirection: must be a number between 0 and 359');
+    }
+    if (strikeMode !== 'negative' && strikeMode !== 'positive') {
+        throw new Error('Invalid strike mode: must be either "negative" or "positive"');
+    }
+    
+    if (strikeMode === 'negative') {
+        return (dipDirection - 90 + 360) % 360;
+    } else {
+        return (dipDirection + 90) % 360;
     }
 }
 
