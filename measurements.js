@@ -391,13 +391,10 @@ async function getCSVContent() {
     const settings = await loadSettings();
     const customTypeNames = settings.customTypes.map(ct => ct.name);
     
-    let csvContent = "";
+    let csvRows = [];
     if (settings.includeHeaderInExport) {
-        csvContent = "HoleID,HoleDip,HoleAzimuth,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
-        customTypeNames.forEach(name => {
-            csvContent += `,${name}`;
-        });
-        csvContent += "\n";
+        const headers = ["HoleID", "HoleDip", "HoleAzimuth", "Depth", "Type", "Generation", "Alpha", "Beta", "Dip", "DipDirection", "Strike", "Comment", ...customTypeNames];
+        csvRows.push(headers);
     }
     
     measurements.forEach(function(measurement) {
@@ -420,10 +417,14 @@ async function getCSVContent() {
             row.push(measurement.customTypes && measurement.customTypes[name] || '');
         });
         
-        csvContent += row.map(value => `"${value}"`).join(",") + "\n";
+        csvRows.push(row);
     });
 
-    return csvContent;
+    return csvRows.map(row => 
+        row.map(value => 
+            `"${(value + '').replace(/"/g, '""')}"`
+        ).join(',')
+    ).join('\n');
 }
 
 export async function clearMeasurementsWithConfirmation() {
