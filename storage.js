@@ -1,4 +1,4 @@
-import { handleError } from './utils.js';
+import { errorService } from './utils.js';
 import { DEFAULT_SETTINGS, CURRENT_SETTINGS_VERSION } from './constants.js';
 
 /**
@@ -15,7 +15,7 @@ export async function saveMeasurements(measurements) {
         await localStorage.setItem('drillHoleMeasurements', JSON.stringify(measurements));
         console.log("Measurements saved successfully.");
     } catch (error) {
-        handleError(error, "Error saving measurements");
+        errorService.handleError(error, "Error saving measurements");
     }
 }
 
@@ -31,7 +31,7 @@ export async function loadMeasurementsFromStorage() {
         console.log("Measurements loaded successfully.");
         return parsedMeasurements;
     } catch (error) {
-        handleError(error, "Error loading measurements");
+        errorService.handleError(error, "Error loading measurements");
         return [];
     }
 }
@@ -47,7 +47,7 @@ export async function saveDrillHoleInfo(info) {
         await localStorage.setItem('drillHoleInfo', JSON.stringify(info));
         console.log("Drill hole info saved successfully.");
     } catch (error) {
-        handleError(error, "Error saving drill hole info");
+        errorService.handleError(error, "Error saving drill hole info");
     }
 }
 
@@ -63,7 +63,7 @@ export async function loadDrillHoleInfo() {
         console.log("Drill hole info loaded successfully.");
         return parsedDrillHoleInfo;
     } catch (error) {
-        handleError(error, "Error loading drill hole info");
+        errorService.handleError(error, "Error loading drill hole info");
         return null;
     }
 }
@@ -79,7 +79,7 @@ export async function saveSettings(settings) {
         await localStorage.setItem('appSettings', JSON.stringify(settings));
         console.log("Settings saved successfully.");
     } catch (error) {
-        handleError(error, "Error saving settings");
+        errorService.handleError(error, "Error saving settings");
     }
 }
 
@@ -115,7 +115,7 @@ export async function loadSettings() {
         console.log("Settings loaded successfully.");
         return parsedSettings;
     } catch (error) {
-        handleError(error, "Error loading settings");
+        errorService.handleError(error, "Error loading settings");
         return DEFAULT_SETTINGS;
     }
 }

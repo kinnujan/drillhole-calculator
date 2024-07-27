@@ -1,7 +1,7 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { toggleCustomHoleIdInput } from './settings.js';
-import { handleError, calculateStrike } from './utils.js';
+import { errorService, calculateStrike } from './utils.js';
 import { importCSV, getImportedDrillHoleData, getHoleData, setupHoleIdDropdown } from './csv_import.js';
 
 // Update utility function for haptic feedback
@@ -12,7 +12,7 @@ async function triggerHapticFeedback(duration = 10) {
             navigator.vibrate(duration);
         }
     } catch (error) {
-        handleError(error, "Error triggering haptic feedback");
+        errorService.handleError(error, "Error triggering haptic feedback");
     }
 }
 
@@ -367,7 +367,7 @@ export async function updatePreview() {
         
             elements.preview.innerHTML = previewText;
         } catch (error) {
-            handleError(error, "Error updating preview");
+            errorService.handleError(error, "Error updating preview");
         }
     } else {
         console.warn("One or more elements required for preview update not found.");
@@ -448,7 +448,7 @@ export async function updateResultsTable() {
         console.log("Results table updated successfully.");
     } catch (error) {
         console.error("Error updating results table:", error);
-        handleError(error, "Error updating results table");
+        errorService.handleError(error, "Error updating results table");
     }
 }
 
