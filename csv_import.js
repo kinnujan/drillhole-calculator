@@ -14,7 +14,7 @@ export async function importCSV(csvData) {
             throw new Error('Invalid CSV data: empty or not an array');
         }
 
-        const headers = csvData[0].map(h => h.trim().toLowerCase());
+        const headers = csvData[0].map(h => h.trim());
         console.log("CSV headers:", headers);
 
         const data = {};
@@ -30,6 +30,13 @@ export async function importCSV(csvData) {
         if (holeIdIndex === -1 || depthIndex === -1 || azimuthIndex === -1 || dipIndex === -1) {
             throw new Error('One or more required columns not found in CSV');
         }
+
+        console.log("Mapped headers:", {
+            holeId: headers[holeIdIndex],
+            depth: headers[depthIndex],
+            azimuth: headers[azimuthIndex],
+            dip: headers[dipIndex]
+        });
 
         for (let i = 1; i < csvData.length; i++) {
             const values = csvData[i];
@@ -165,12 +172,15 @@ function updateHoleInfo() {
         console.warn('No data found for selected Hole ID');
     }
 }
+function sanitizeFieldName(fieldName) {
+    return fieldName.toLowerCase().replace(/[_\s]/g, '');
+}
+
 function findHeaderIndex(headers, possibleMatches) {
+    const sanitizedHeaders = headers.map(sanitizeFieldName);
     for (const match of possibleMatches) {
-        const index = headers.findIndex(h => 
-            h.toLowerCase().includes(match.toLowerCase()) || 
-            h.toLowerCase().replace(/[_\s]/g, '').includes(match.toLowerCase().replace(/[_\s]/g, ''))
-        );
+        const sanitizedMatch = sanitizeFieldName(match);
+        const index = sanitizedHeaders.findIndex(h => h.includes(sanitizedMatch));
         if (index !== -1) return index;
     }
     return -1;
