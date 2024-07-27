@@ -79,20 +79,57 @@ export function getImportedDrillHoleData() {
 }
 
 function findClosestSurveyPoint(holeData, targetDepth) {
-    if (!holeData || holeData.length === 0) return null;
+    if (!holeData || !Array.isArray(holeData) || holeData.length === 0) {
+        console.warn('Invalid or empty holeData provided to findClosestSurveyPoint');
+        return null;
+    }
+    
+    if (typeof targetDepth !== 'number' || isNaN(targetDepth)) {
+        console.warn('Invalid targetDepth provided to findClosestSurveyPoint');
+        return null;
+    }
     
     return holeData.reduce((closest, current) => {
         if (!closest) return current;
+        if (typeof current.depth !== 'number' || isNaN(current.depth)) {
+            console.warn('Invalid depth in survey point', current);
+            return closest;
+        }
         return Math.abs(current.depth - targetDepth) < Math.abs(closest.depth - targetDepth) ? current : closest;
     }, null);
 }
 
 export function getHoleData(holeId, depth) {
+    if (typeof holeId !== 'string' || holeId.trim() === '') {
+        console.error('Invalid holeId provided to getHoleData');
+        return null;
+    }
+
     const data = getImportedDrillHoleData();
-    if (!data || !data[holeId]) return null;
+    if (!data || typeof data !== 'object') {
+        console.error('Invalid or missing imported drill hole data');
+        return null;
+    }
+
+    if (!data[holeId]) {
+        console.warn(`No data found for holeId: ${holeId}`);
+        return null;
+    }
     
     const holeData = data[holeId];
-    if (!depth) return holeData[0]; // Return first entry if no depth is provided
+    if (!Array.isArray(holeData) || holeData.length === 0) {
+        console.warn(`Invalid or empty data for holeId: ${holeId}`);
+        return null;
+    }
+
+    if (depth === undefined || depth === null) {
+        return holeData[0]; // Return first entry if no depth is provided
+    }
+    
+    if (typeof depth !== 'number' || isNaN(depth)) {
+        console.error('Invalid depth provided to getHoleData');
+        return null;
+    }
     
     return findClosestSurveyPoint(holeData, depth);
 }
