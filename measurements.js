@@ -1,6 +1,7 @@
 import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { updateResultsTable, updatePreview, resetUISelections, enableUndoButton, disableUndoButton } from './ui.js';
-import { toRadians, toDegrees, calculateStrike, validateInputs, errorService } from './utils.js';
+import { toRadians, toDegrees, calculateStrike, validateInputs } from './utils.js';
+import errorService from './errorService.js';
 import { ERROR_MESSAGES, CSV_MIME_TYPE } from './constants.js';
 import { getHoleData } from './csv_import.js';
 

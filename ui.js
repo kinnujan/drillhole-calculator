@@ -1,7 +1,8 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { toggleCustomHoleIdInput } from './settings.js';
-import { errorService, calculateStrike } from './utils.js';
+import { calculateStrike } from './utils.js';
+import errorService from './errorService.js';
 import { importCSV, getImportedDrillHoleData, getHoleData, setupHoleIdDropdown } from './csv_import.js';
 
 // Update utility function for haptic feedback

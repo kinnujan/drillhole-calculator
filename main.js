@@ -1,7 +1,7 @@
 import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
 import { setupSettings } from './settings.js';
-import { errorService } from './utils.js';
+import errorService from './errorService.js';
 import { info, error, warn, debug } from './logger.js';
 
 async function init() {

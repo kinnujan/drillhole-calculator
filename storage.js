@@ -1,4 +1,4 @@
-import { errorService } from './utils.js';
+import errorService from './errorService.js';
 import { DEFAULT_SETTINGS, CURRENT_SETTINGS_VERSION } from './constants.js';
 
 /**
