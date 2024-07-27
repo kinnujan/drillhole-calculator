@@ -18,39 +18,7 @@ export async function importCSV(csvData) {
         console.log("CSV headers:", headers);
 
         const data = {};
-
-        for (let i = 1; i < csvData.length; i++) {
-            const values = csvData[i];
-            if (values.length < 4) {
-                console.warn(`Skipping row ${i + 1} due to insufficient data`);
-                continue;
-            }
-            
-            const holeId = values[0].trim();
-            if (!holeId) {
-                console.warn(`Skipping row ${i + 1} due to empty Hole ID`);
-                continue;
-            }
-            if (!data[holeId]) {
-                data[holeId] = [];
-            }
-            const depth = parseFloat(values[1]);
-            const azimuth = parseFloat(values[2]);
-            const dip = parseFloat(values[3]);
-            
-            if (isNaN(depth) || isNaN(azimuth) || isNaN(dip)) {
-                console.warn(`Invalid data in row ${i + 1}: depth=${values[1]}, azimuth=${values[2]}, dip=${values[3]}`);
-                continue;
-            }
-            
-            data[holeId].push({ depth, azimuth, dip });
-        }
-
-        if (Object.keys(data).length === 0) {
-            throw new Error('No valid data found in CSV');
-        }
-
-        console.log("Processed data:", data);
+        let skippedRows = 0;
 
         // Automatically map fields with more robust matching
         const holeIdIndex = findHeaderIndex(headers, CSV_IMPORT_FIELDS.HOLE_ID);
@@ -66,6 +34,41 @@ export async function importCSV(csvData) {
             throw new Error('One or more required columns not found in CSV');
         }
 
+        for (let i = 1; i < csvData.length; i++) {
+            const values = csvData[i];
+            if (values.length <= Math.max(holeIdIndex, depthIndex, azimuthIndex, dipIndex)) {
+                console.warn(`Skipping row ${i + 1} due to insufficient data`);
+                skippedRows++;
+                continue;
+            }
+            
+            const holeId = values[holeIdIndex].trim();
+            if (!holeId) {
+                console.warn(`Skipping row ${i + 1} due to empty Hole ID`);
+                skippedRows++;
+                continue;
+            }
+            if (!data[holeId]) {
+                data[holeId] = [];
+            }
+            const depth = parseFloat(values[depthIndex]);
+            const azimuth = parseFloat(values[azimuthIndex]);
+            const dip = parseFloat(values[dipIndex]);
+            
+            if (isNaN(depth) || isNaN(azimuth) || isNaN(dip)) {
+                console.warn(`Invalid data in row ${i + 1}: depth=${values[depthIndex]}, azimuth=${values[azimuthIndex]}, dip=${values[dipIndex]}`);
+                skippedRows++;
+                continue;
+            }
+            
+            data[holeId].push({ depth, azimuth, dip });
+        }
+
+        if (Object.keys(data).length === 0) {
+            throw new Error('No valid data found in CSV');
+        }
+
+        console.log(`Processed data: ${Object.keys(data).length} holes, ${skippedRows} rows skipped`);
         console.log("Mapped headers:", {
             holeId: headers[holeIdIndex],
             depth: headers[depthIndex],
