@@ -34,4 +34,34 @@ export const DEFAULT_SETTINGS = {
     }
 };
 
-export const CURRENT_SETTINGS_VERSION = 13; // Incremented from 12 to 13
+export const CURRENT_SETTINGS_VERSION = 13;
+
+export const LOG_LEVELS = {
+    DEBUG: 0,
+    INFO: 1,
+    WARN: 2,
+    ERROR: 3
+};
+
+export const CACHE_NAME = 'drill-hole-orientation-calculator-v1';
+
+export const URLS_TO_CACHE = [
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/main.js',
+  '/measurements.js',
+  '/ui.js',
+  '/storage.js',
+  '/settings.js',
+  '/utils.js',
+  '/constants.js',
+  '/csv_import.js',
+  '/manifest.json',
+  '/favicon.ico',
+  '/apple-touch-icon.png',
+  '/favicon-32x32.png',
+  '/favicon-16x16.png',
+  '/android-chrome-192x192.png',
+  '/android-chrome-512x512.png'
+];

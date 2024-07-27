@@ -1,24 +1,4 @@
-const CACHE_NAME = 'drill-hole-orientation-calculator-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/main.js',
-  '/measurements.js',
-  '/ui.js',
-  '/storage.js',
-  '/settings.js',
-  '/utils.js',
-  '/constants.js',
-  '/csv_import.js',
-  '/manifest.json',
-  '/favicon.ico',
-  '/apple-touch-icon.png',
-  '/favicon-32x32.png',
-  '/favicon-16x16.png',
-  '/android-chrome-192x192.png',
-  '/android-chrome-512x512.png'
-];
+import { CACHE_NAME, URLS_TO_CACHE } from './constants.js';
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing.');
