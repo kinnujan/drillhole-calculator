@@ -3,14 +3,24 @@
  * @param {number} angle - Angle in degrees
  * @returns {number} Angle in radians
  */
-export const toRadians = (angle) => angle * Math.PI / 180;
+export const toRadians = (angle) => {
+    if (typeof angle !== 'number' || isNaN(angle)) {
+        throw new Error('Invalid input: angle must be a valid number');
+    }
+    return angle * Math.PI / 180;
+};
 
 /**
  * Converts radians to degrees
  * @param {number} angle - Angle in radians
  * @returns {number} Angle in degrees
  */
-export const toDegrees = (angle) => angle * 180 / Math.PI;
+export const toDegrees = (angle) => {
+    if (typeof angle !== 'number' || isNaN(angle)) {
+        throw new Error('Invalid input: angle must be a valid number');
+    }
+    return angle * 180 / Math.PI;
+};
 
 /**
  * Calculates strike based on dip direction and strike mode
@@ -19,6 +29,13 @@ export const toDegrees = (angle) => angle * 180 / Math.PI;
  * @returns {number} Strike in degrees
  */
 export function calculateStrike(dipDirection, strikeMode) {
+    if (typeof dipDirection !== 'number' || isNaN(dipDirection) || dipDirection < 0 || dipDirection >= 360) {
+        throw new Error('Invalid dipDirection: must be a number between 0 and 359');
+    }
+    if (typeof strikeMode !== 'string' || (strikeMode !== 'negative' && strikeMode !== 'positive')) {
+        throw new Error('Invalid strike mode: must be either "negative" or "positive"');
+    }
+    
     if (strikeMode === 'negative') {
         return (dipDirection - 90 + 360) % 360;
     } else {
@@ -35,24 +52,21 @@ export function calculateStrike(dipDirection, strikeMode) {
  * @returns {string|null} Error message if validation fails, null otherwise
  */
 export function validateInputs(holeDip, holeAzimuth, alpha, beta) {
-    if (holeDip < -90 || holeDip > 90) return "Hole Dip must be between -90° and 90°";
-    if (holeAzimuth < 0 || holeAzimuth > 360) return "Hole Azimuth must be between 0° and 360°";
-    if (alpha < 0 || alpha > 90) return "Alpha (Core Angle) must be between 0° and 90°";
-    if (beta < 0 || beta > 360) return "Beta must be between 0° and 360°";
-    return null;
+    try {
+        if (holeDip < -90 || holeDip > 90) throw new Error("Hole Dip must be between -90° and 90°");
+        if (holeAzimuth < 0 || holeAzimuth > 360) throw new Error("Hole Azimuth must be between 0° and 360°");
+        if (alpha < 0 || alpha > 90) throw new Error("Alpha (Core Angle) must be between 0° and 90°");
+        if (beta < 0 || beta > 360) throw new Error("Beta must be between 0° and 360°");
+        return null;
+    } catch (error) {
+        console.error('Error in validateInputs:', error);
+        return error.message;
+    }
 }
 
-import { error } from './logger.js';
-
-/**
- * Handles errors by logging them and displaying a message to the user
- * @param {Error} err - The error object
- * @param {string} userMessage - The message to display to the user
- */
-export function handleError(err, userMessage) {
-    error(err);
-    document.getElementById('error').textContent = userMessage;
-}
+// Export errorService for use in other modules
+import errorService from './errorService.js';
+export { errorService };
 
 /**
  * Debounces a function
@@ -65,7 +79,12 @@ export function debounce(func, wait) {
     return function executedFunction(...args) {
         const later = () => {
             clearTimeout(timeout);
-            func(...args);
+            try {
+                func(...args);
+            } catch (error) {
+                console.error('Error in debounced function:', error);
+                throw error;
+            }
         };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);

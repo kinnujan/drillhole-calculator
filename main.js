@@ -1,7 +1,7 @@
 import { loadMeasurements } from './measurements.js';
 import { setupUI, updatePreview } from './ui.js';
 import { setupSettings } from './settings.js';
-import { handleError } from './utils.js';
+import errorService from './errorService.js';
 import { info, error, warn, debug } from './logger.js';
 
 async function init() {
@@ -32,7 +32,7 @@ async function init() {
         error('Error during initialization:', err);
         error('Error stack:', err.stack);
         error('Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
-        handleError(err, "An error occurred during app initialization. Some features may not work correctly.");
+        errorService.handleError(err, "An error occurred during app initialization. Some features may not work correctly.");
     }
     
     // Check for Vibration API support
@@ -92,7 +92,7 @@ if ('serviceWorker' in navigator) {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
         } catch (err) {
             console.error('ServiceWorker registration failed: ', err);
-            handleError(err, 'ServiceWorker registration failed. The app will still work, but offline functionality may be limited.');
+            errorService.handleError(err, 'ServiceWorker registration failed. The app will still work, but offline functionality may be limited.');
         }
     });
 } else {

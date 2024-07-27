@@ -1,6 +1,7 @@
 import { saveMeasurements, loadMeasurementsFromStorage, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { updateResultsTable, updatePreview, resetUISelections, enableUndoButton, disableUndoButton } from './ui.js';
-import { toRadians, toDegrees, calculateStrike, validateInputs, handleError } from './utils.js';
+import { toRadians, toDegrees, calculateStrike, validateInputs } from './utils.js';
+import errorService from './errorService.js';
 import { ERROR_MESSAGES, CSV_MIME_TYPE } from './constants.js';
 import { getHoleData } from './csv_import.js';
 
@@ -18,7 +19,7 @@ export async function loadMeasurements() {
         console.log("Measurements loaded.");
         updateUndoButtonState();
     } catch (error) {
-        handleError(error, "Error loading measurements");
+        errorService.handleError(error, "Error loading measurements");
     }
 }
 
@@ -43,7 +44,7 @@ export async function addMeasurement() {
     const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
     if (errorMessage) {
         console.error("Input validation failed:", errorMessage);
-        handleError(new Error(errorMessage), errorMessage);
+        errorService.handleError(new Error(errorMessage), errorMessage);
         return;
     }
 
@@ -119,7 +120,7 @@ export async function addMeasurement() {
         console.error("Error in addMeasurement:", error);
         console.error("Error stack:", error.stack);
         console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-        handleError(error, "An error occurred while adding the measurement.");
+        errorService.handleError(error, "An error occurred while adding the measurement.");
     }
 }
 
@@ -303,7 +304,7 @@ export async function copyResults() {
             await fallbackCopyTextToClipboard(csvContent);
         }
     } catch (err) {
-        handleError(err, 'Failed to copy results to clipboard.');
+        errorService.handleError(err, 'Failed to copy results to clipboard.');
     }
 }
 
@@ -326,7 +327,7 @@ async function fallbackCopyTextToClipboard(text) {
         }
         console.log(msg);
     } catch (err) {
-        handleError(err, 'Unable to copy results');
+        errorService.handleError(err, 'Unable to copy results');
     } finally {
         document.body.removeChild(textArea);
     }
@@ -390,13 +391,10 @@ async function getCSVContent() {
     const settings = await loadSettings();
     const customTypeNames = settings.customTypes.map(ct => ct.name);
     
-    let csvContent = "";
+    let csvRows = [];
     if (settings.includeHeaderInExport) {
-        csvContent = "HoleID,HoleDip,HoleAzimuth,Depth,Type,Generation,Alpha,Beta,Dip,DipDirection,Strike,Comment";
-        customTypeNames.forEach(name => {
-            csvContent += `,${name}`;
-        });
-        csvContent += "\n";
+        const headers = ["HoleID", "HoleDip", "HoleAzimuth", "Depth", "Type", "Generation", "Alpha", "Beta", "Dip", "DipDirection", "Strike", "Comment", ...customTypeNames];
+        csvRows.push(headers);
     }
     
     measurements.forEach(function(measurement) {
@@ -419,10 +417,14 @@ async function getCSVContent() {
             row.push(measurement.customTypes && measurement.customTypes[name] || '');
         });
         
-        csvContent += row.map(value => `"${value}"`).join(",") + "\n";
+        csvRows.push(row);
     });
 
-    return csvContent;
+    return csvRows.map(row => 
+        row.map(value => 
+            `"${(value + '').replace(/"/g, '""')}"`
+        ).join(',')
+    ).join('\n');
 }
 
 export async function clearMeasurementsWithConfirmation() {
@@ -441,7 +443,7 @@ export async function clearMeasurementsWithConfirmation() {
             updateUndoButtonState();
             console.log("All measurements cleared.");
         } catch (error) {
-            handleError(error, "An error occurred while clearing measurements.");
+            errorService.handleError(error, "An error occurred while clearing measurements.");
         }
     } else {
         console.log("Measurement clearing cancelled.");
@@ -493,7 +495,7 @@ export async function exportData() {
         await copyResults();
         await saveAsCSV();
     } catch (error) {
-        handleError(error, "An error occurred while exporting data.");
+        errorService.handleError(error, "An error occurred while exporting data.");
     }
 }
 

@@ -34,4 +34,23 @@ export const DEFAULT_SETTINGS = {
     }
 };
 
-export const CURRENT_SETTINGS_VERSION = 13; // Incremented from 12 to 13
+export const CURRENT_SETTINGS_VERSION = 13;
+
+export const LOG_LEVELS = {
+    DEBUG: 0,
+    INFO: 1,
+    WARN: 2,
+    ERROR: 3
+};
+
+export const CONFIG = {
+    environment: 'development', // Change this to 'production' for production builds
+    logLevel: 'DEBUG' // This can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
+};
+
+export const CSV_IMPORT_FIELDS = {
+    HOLE_ID: ['Hole number', 'hole', 'id', 'holeid', 'hole_id', 'hole id', 'HOLE', 'ID', 'HOLEID', 'HOLE_ID', 'HOLE ID'],
+    DEPTH: ['Depth', 'depth', 'dep', 'DEPTH', 'DEP'],
+    AZIMUTH: ['Azimuth UTM', 'azimuth', 'azi', 'azimuth_utm', 'azimuth utm', 'AZIMUTH', 'AZI', 'AZIMUTH_UTM'],
+    DIP: ['Dip', 'dip', 'inclination', 'incl', 'DIP', 'INCLINATION', 'INCL']
+};

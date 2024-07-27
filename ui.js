@@ -1,7 +1,8 @@
 import { measurements, calculateDipDirection, setSelectedType, setSelectedGeneration, setSelectedCustomType, addMeasurement, copyResults, saveAsCSV, clearMeasurementsWithConfirmation, exportData, undoLastMeasurement } from './measurements.js';
 import { loadDrillHoleInfo, saveDrillHoleInfo, loadSettings } from './storage.js';
 import { toggleCustomHoleIdInput } from './settings.js';
-import { handleError, calculateStrike } from './utils.js';
+import { calculateStrike } from './utils.js';
+import errorService from './errorService.js';
 import { importCSV, getImportedDrillHoleData, getHoleData, setupHoleIdDropdown } from './csv_import.js';
 
 // Update utility function for haptic feedback
@@ -12,25 +13,35 @@ async function triggerHapticFeedback(duration = 10) {
             navigator.vibrate(duration);
         }
     } catch (error) {
-        handleError(error, "Error triggering haptic feedback");
+        errorService.handleError(error, "Error triggering haptic feedback");
     }
 }
 
 export function enableUndoButton() {
-    const undoButton = document.getElementById('undoMeasurement');
-    if (undoButton) {
-        undoButton.disabled = false;
-    } else {
-        console.warn("Undo button not found.");
+    try {
+        const undoButton = document.getElementById('undoMeasurement');
+        if (undoButton) {
+            undoButton.disabled = false;
+        } else {
+            throw new Error("Undo button not found.");
+        }
+    } catch (error) {
+        console.error('Error in enableUndoButton:', error);
+        errorService.handleError(error, "Failed to enable undo button");
     }
 }
 
 export function disableUndoButton() {
-    const undoButton = document.getElementById('undoMeasurement');
-    if (undoButton) {
-        undoButton.disabled = true;
-    } else {
-        console.warn("Undo button not found.");
+    try {
+        const undoButton = document.getElementById('undoMeasurement');
+        if (undoButton) {
+            undoButton.disabled = true;
+        } else {
+            throw new Error("Undo button not found.");
+        }
+    } catch (error) {
+        console.error('Error in disableUndoButton:', error);
+        errorService.handleError(error, "Failed to disable undo button");
     }
 }
 
@@ -79,13 +90,17 @@ export async function setupUI() {
 }
 
 export function updateHoleInfo() {
+    console.log('updateHoleInfo called');
     const holeIdSelect = document.getElementById('holeIdSelect');
     const holeId = holeIdSelect ? holeIdSelect.value : document.getElementById('holeId').value;
     const depth = parseFloat(document.getElementById('depth').value) || 0;
     
+    console.log(`Updating hole info for holeId: ${holeId}, depth: ${depth}`);
+    
     const holeData = getHoleData(holeId, depth);
     
     if (holeData) {
+        console.log('Hole data found:', holeData);
         document.getElementById('holeId').value = holeId;
         document.getElementById('holeDip').value = holeData.dip;
         document.getElementById('holeDipSlider').value = holeData.dip;
@@ -93,6 +108,9 @@ export function updateHoleInfo() {
         document.getElementById('holeAzimuthSlider').value = holeData.azimuth;
         updateDrillHoleInfoSummary();
         updatePreview();
+    } else {
+        console.warn(`No hole data found for holeId: ${holeId} at depth: ${depth}`);
+        // Optionally, you can clear the fields or set them to default values here
     }
 }
 
@@ -367,7 +385,7 @@ export async function updatePreview() {
         
             elements.preview.innerHTML = previewText;
         } catch (error) {
-            handleError(error, "Error updating preview");
+            errorService.handleError(error, "Error updating preview");
         }
     } else {
         console.warn("One or more elements required for preview update not found.");
@@ -448,17 +466,23 @@ export async function updateResultsTable() {
         console.log("Results table updated successfully.");
     } catch (error) {
         console.error("Error updating results table:", error);
-        handleError(error, "Error updating results table");
+        errorService.handleError(error, "Error updating results table");
     }
 }
 
 export function adjustDepth(amount) {
     const depthInput = document.getElementById('depth');
-    if (depthInput) {
-        depthInput.value = (parseFloat(depthInput.value) + amount).toFixed(2);
-    } else {
-        console.warn("Depth input not found.");
+    if (!depthInput) {
+        throw new Error("Depth input element not found");
     }
+    if (typeof amount !== 'number' || isNaN(amount)) {
+        throw new Error("Invalid amount: must be a valid number");
+    }
+    const currentDepth = parseFloat(depthInput.value);
+    if (isNaN(currentDepth)) {
+        throw new Error("Current depth is not a valid number");
+    }
+    depthInput.value = (currentDepth + amount).toFixed(2);
 }
 
 export function resetUISelections() {

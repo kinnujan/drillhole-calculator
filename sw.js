@@ -1,5 +1,5 @@
 const CACHE_NAME = 'drill-hole-orientation-calculator-v1';
-const urlsToCache = [
+const URLS_TO_CACHE = [
   '/',
   '/index.html',
   '/styles.css',
@@ -26,7 +26,7 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Cache opened');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(URLS_TO_CACHE);
       })
   );
 });
