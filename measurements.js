@@ -41,41 +41,37 @@ export async function addMeasurement() {
         console.log("Using manually entered hole data");
     }
 
-    const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
-    if (errorMessage) {
-        console.error("Input validation failed:", errorMessage);
-        errorService.handleError(new Error(errorMessage), errorMessage);
-        return;
-    }
-
-
     const errorElement = document.getElementById('error');
     if (errorElement) errorElement.textContent = '';
 
     try {
-        console.log("Calculating dip direction...");
-        const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
-        console.log("Dip direction calculated:", { dip, dipDirection });
-
-        console.log("Loading settings...");
-        const settings = await loadSettings();
-        console.log("Settings loaded:", settings);
-
-        console.log("Calculating strike...");
-        const strike = calculateStrike(dipDirection, settings.strikeMode);
-        console.log("Strike calculated:", strike);
-        
         const result = {
             holeId,
-            holeDip: holeDip.toFixed(1),
-            holeAzimuth: holeAzimuth.toFixed(1),
             depth: depth.toFixed(2),
-            alpha: alpha.toFixed(1),
-            beta: beta.toFixed(1),
-            dip: dip.toFixed(1),
-            dipDirection: dipDirection.toFixed(1),
-            strike: strike.toFixed(1),
         };
+
+        if (!isNaN(holeDip)) result.holeDip = holeDip.toFixed(1);
+        if (!isNaN(holeAzimuth)) result.holeAzimuth = holeAzimuth.toFixed(1);
+
+        if (!isNaN(alpha) && !isNaN(beta) && (!isNaN(holeDip) || !isNaN(holeAzimuth))) {
+            console.log("Calculating dip direction...");
+            const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+            console.log("Dip direction calculated:", { dip, dipDirection });
+
+            console.log("Loading settings...");
+            const settings = await loadSettings();
+            console.log("Settings loaded:", settings);
+
+            console.log("Calculating strike...");
+            const strike = calculateStrike(dipDirection, settings.strikeMode);
+            console.log("Strike calculated:", strike);
+
+            result.alpha = alpha.toFixed(1);
+            result.beta = beta.toFixed(1);
+            result.dip = dip.toFixed(1);
+            result.dipDirection = dipDirection.toFixed(1);
+            result.strike = strike.toFixed(1);
+        }
 
         if (selectedType) result.type = selectedType;
         if (selectedGeneration) result.generation = selectedGeneration;

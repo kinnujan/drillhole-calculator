@@ -445,12 +445,12 @@ export async function updateResultsTable() {
             try {
                 const row = tbody.insertRow();
 
-                row.insertCell().textContent = measurement.depth;
+                row.insertCell().textContent = measurement.depth || '-';
                 row.insertCell().textContent = measurement.type || '-';
                 row.insertCell().textContent = measurement.generation || '-';
-                row.insertCell().textContent = measurement.dip + '°';
-                row.insertCell().textContent = measurement.dipDirection + '°';
-                row.insertCell().textContent = measurement.strike + '°';
+                row.insertCell().textContent = measurement.dip ? measurement.dip + '°' : '-';
+                row.insertCell().textContent = measurement.dipDirection ? measurement.dipDirection + '°' : '-';
+                row.insertCell().textContent = measurement.strike ? measurement.strike + '°' : '-';
                 
                 const commentCell = row.insertCell();
                 commentCell.textContent = (measurement.comment && measurement.comment.length > 20 ? 
