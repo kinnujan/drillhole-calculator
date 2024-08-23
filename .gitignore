@@ -1,3 +1,13 @@
 .aider*
 start_server.sh
 app.log
+.aider*
+start_server.sh
+app.log
+aider_env
+
+# Virtual Environment
+venv/
+env/
+.venv/
+.env/
