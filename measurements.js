@@ -53,25 +53,23 @@ export async function addMeasurement() {
         if (!isNaN(holeDip)) result.holeDip = holeDip.toFixed(1);
         if (!isNaN(holeAzimuth)) result.holeAzimuth = holeAzimuth.toFixed(1);
 
-        if (!isNaN(alpha) && !isNaN(beta) && (!isNaN(holeDip) || !isNaN(holeAzimuth))) {
-            console.log("Calculating dip direction...");
-            const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
-            console.log("Dip direction calculated:", { dip, dipDirection });
+        console.log("Calculating dip direction...");
+        const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
+        console.log("Dip direction calculated:", { dip, dipDirection });
 
-            console.log("Loading settings...");
-            const settings = await loadSettings();
-            console.log("Settings loaded:", settings);
+        console.log("Loading settings...");
+        const settings = await loadSettings();
+        console.log("Settings loaded:", settings);
 
-            console.log("Calculating strike...");
-            const strike = calculateStrike(dipDirection, settings.strikeMode);
-            console.log("Strike calculated:", strike);
+        console.log("Calculating strike...");
+        const strike = calculateStrike(dipDirection, settings.strikeMode);
+        console.log("Strike calculated:", strike);
 
-            result.alpha = alpha.toFixed(1);
-            result.beta = beta.toFixed(1);
-            result.dip = dip.toFixed(1);
-            result.dipDirection = dipDirection.toFixed(1);
-            result.strike = strike.toFixed(1);
-        }
+        result.alpha = alpha.toFixed(1);
+        result.beta = beta.toFixed(1);
+        result.dip = dip.toFixed(1);
+        result.dipDirection = dipDirection.toFixed(1);
+        result.strike = strike.toFixed(1);
 
         if (selectedType) result.type = selectedType;
         if (selectedGeneration) result.generation = selectedGeneration;
@@ -151,6 +149,12 @@ export async function addMeasurement() {
 
 export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth) {
     console.log("Calculating dip direction with inputs:", { inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth });
+
+    // Handle the case where both alpha and beta are 0
+    if (inputAlpha === 0 && inputBeta === 0) {
+        console.log("Alpha and Beta are both 0, returning hole dip and azimuth");
+        return [-inputHoleDip, inputHoleAzimuth];
+    }
 
     const alphaRad = toRadians(inputAlpha);
     const betaRad = toRadians(inputBeta);
