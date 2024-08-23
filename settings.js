@@ -19,7 +19,6 @@ export async function setupSettings() {
         setupUndoButton(settings.undoEnabled);
         setupIncludeHeaderInExport(settings.includeHeaderInExport);
         setupSurveyImportToggle(settings.surveyImportEnabled);
-        setupSkipInvalidCSVRows(settings.skipInvalidCSVRows);
         
         // Add this line to export the toggleCustomHoleIdInput function
         window.toggleCustomHoleIdInput = toggleCustomHoleIdInput;
@@ -32,28 +31,6 @@ export async function setupSettings() {
         const addGenerationTypeBtn = document.getElementById('addGenerationType');
         if (addGenerationTypeBtn) {
             addGenerationTypeBtn.addEventListener('click', () => addType('generationTypes'));
-        }
-
-        // Add the setupSkipInvalidCSVRows function
-        function setupSkipInvalidCSVRows(initialState) {
-            const skipInvalidRowsToggle = document.getElementById('skipInvalidCSVRows');
-            if (skipInvalidRowsToggle) {
-                skipInvalidRowsToggle.checked = initialState;
-
-                skipInvalidRowsToggle.addEventListener('change', async () => {
-                    const skipInvalidRows = skipInvalidRowsToggle.checked;
-                    try {
-                        const settings = await loadSettings();
-                        settings.skipInvalidCSVRows = skipInvalidRows;
-                        await saveSettings(settings);
-                        console.log(`Skip invalid CSV rows ${skipInvalidRows ? 'enabled' : 'disabled'}`);
-                    } catch (error) {
-                        handleError(error, "Error saving skip invalid CSV rows setting");
-                    }
-                });
-            } else {
-                console.error('Skip invalid CSV rows toggle not found in the DOM');
-            }
         }
         document.getElementById('addCustomType').addEventListener('click', addCustomType);
         setupResetButton();
