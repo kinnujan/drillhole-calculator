@@ -116,7 +116,36 @@ export async function addMeasurement() {
         console.error("Error in addMeasurement:", error);
         console.error("Error stack:", error.stack);
         console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-        errorService.handleError(error, "An error occurred while adding the measurement.");
+        
+        // Log input values
+        console.log("Input values:", {
+            holeId,
+            depth,
+            holeDip,
+            holeAzimuth,
+            alpha,
+            beta,
+            comment,
+            selectedType,
+            selectedGeneration,
+            selectedCustomTypes
+        });
+        
+        // Check if any required functions or modules are undefined
+        console.log("Function checks:", {
+            calculateDipDirection: typeof calculateDipDirection,
+            loadSettings: typeof loadSettings,
+            calculateStrike: typeof calculateStrike,
+            saveMeasurements: typeof saveMeasurements,
+            saveDrillHoleInfo: typeof saveDrillHoleInfo,
+            updateResultsTable: typeof updateResultsTable,
+            resetInputFields: typeof resetInputFields,
+            resetSelections: typeof resetSelections,
+            updatePreview: typeof updatePreview,
+            enableUndoButton: typeof enableUndoButton
+        });
+        
+        errorService.handleError(error, "An error occurred while adding the measurement. Check console for details.");
     }
 }
 
