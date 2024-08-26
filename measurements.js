@@ -41,18 +41,18 @@ export async function addMeasurement() {
         console.log("Using manually entered hole data");
     }
 
-    const errorMessage = validateInputs(holeDip, holeAzimuth, alpha, beta);
-    if (errorMessage) {
-        console.error("Input validation failed:", errorMessage);
-        errorService.handleError(new Error(errorMessage), errorMessage);
-        return;
-    }
-
-
     const errorElement = document.getElementById('error');
     if (errorElement) errorElement.textContent = '';
 
     try {
+        const result = {
+            holeId,
+            depth: depth.toFixed(2),
+        };
+
+        if (!isNaN(holeDip)) result.holeDip = holeDip.toFixed(1);
+        if (!isNaN(holeAzimuth)) result.holeAzimuth = holeAzimuth.toFixed(1);
+
         console.log("Calculating dip direction...");
         const [dip, dipDirection] = calculateDipDirection(alpha, beta, holeDip, holeAzimuth);
         console.log("Dip direction calculated:", { dip, dipDirection });
@@ -64,18 +64,12 @@ export async function addMeasurement() {
         console.log("Calculating strike...");
         const strike = calculateStrike(dipDirection, settings.strikeMode);
         console.log("Strike calculated:", strike);
-        
-        const result = {
-            holeId,
-            holeDip: holeDip.toFixed(1),
-            holeAzimuth: holeAzimuth.toFixed(1),
-            depth: depth.toFixed(2),
-            alpha: alpha.toFixed(1),
-            beta: beta.toFixed(1),
-            dip: dip.toFixed(1),
-            dipDirection: dipDirection.toFixed(1),
-            strike: strike.toFixed(1),
-        };
+
+        result.alpha = alpha.toFixed(1);
+        result.beta = beta.toFixed(1);
+        result.dip = dip.toFixed(1);
+        result.dipDirection = dipDirection.toFixed(1);
+        result.strike = strike.toFixed(1);
 
         if (selectedType) result.type = selectedType;
         if (selectedGeneration) result.generation = selectedGeneration;
@@ -120,12 +114,47 @@ export async function addMeasurement() {
         console.error("Error in addMeasurement:", error);
         console.error("Error stack:", error.stack);
         console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-        errorService.handleError(error, "An error occurred while adding the measurement.");
+        
+        // Log input values
+        console.log("Input values:", {
+            holeId,
+            depth,
+            holeDip,
+            holeAzimuth,
+            alpha,
+            beta,
+            comment,
+            selectedType,
+            selectedGeneration,
+            selectedCustomTypes
+        });
+        
+        // Check if any required functions or modules are undefined
+        console.log("Function checks:", {
+            calculateDipDirection: typeof calculateDipDirection,
+            loadSettings: typeof loadSettings,
+            calculateStrike: typeof calculateStrike,
+            saveMeasurements: typeof saveMeasurements,
+            saveDrillHoleInfo: typeof saveDrillHoleInfo,
+            updateResultsTable: typeof updateResultsTable,
+            resetInputFields: typeof resetInputFields,
+            resetSelections: typeof resetSelections,
+            updatePreview: typeof updatePreview,
+            enableUndoButton: typeof enableUndoButton
+        });
+        
+        errorService.handleError(error, "An error occurred while adding the measurement. Check console for details.");
     }
 }
 
 export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth) {
     console.log("Calculating dip direction with inputs:", { inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth });
+
+    // Handle the case where both alpha and beta are 0
+    if (inputAlpha === 0 && inputBeta === 0) {
+        console.log("Alpha and Beta are both 0, returning hole dip and azimuth");
+        return [-inputHoleDip, inputHoleAzimuth];
+    }
 
     const alphaRad = toRadians(inputAlpha);
     const betaRad = toRadians(inputBeta);
