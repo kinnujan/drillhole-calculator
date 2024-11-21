@@ -11,12 +11,19 @@ import {
   Typography,
   Box,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import AddIcon from '@mui/icons-material/Add';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
 import { LogEntry } from '../types';
 import DatabaseService from '../services/DatabaseService';
 import CSVService from '../services/CSVService';
@@ -27,11 +34,21 @@ interface LogEntryListProps {
   onEdit: (entry: LogEntry) => void;
   onDelete: (entry: LogEntry) => void;
   onAddBetween?: (prefill: Partial<LogEntry>) => void;
+  onSplit?: (entry: LogEntry) => void;
 }
 
-const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete, onAddBetween }) => {
+const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete, onAddBetween, onSplit }) => {
   const [fields, setFields] = useState<FieldConfig[]>([]);
   const [styles, setStyles] = useState<Record<string, any>>({});
+  const [splitDialog, setSplitDialog] = useState<{
+    open: boolean;
+    entry: LogEntry | null;
+    splitPoint: number;
+  }>({
+    open: false,
+    entry: null,
+    splitPoint: 0
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -80,86 +97,154 @@ const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete, 
   };
 
   return (
-    <Paper elevation={3}>
-      <TableContainer>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Actions</TableCell>
-              {fields.map(field => (
-                <TableCell key={field.field_name}>
-                  <Tooltip title={field.description}>
-                    <Typography variant="subtitle2">
-                      {field.field_name}
-                    </Typography>
-                  </Tooltip>
-                </TableCell>
-              ))}
-              <TableCell>Sync Status</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {entries.map((entry, index) => (
-              <React.Fragment key={entry.id}>
-                <TableRow>
-                  <TableCell>
-                    <IconButton size="small" onClick={() => onEdit(entry)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => onDelete(entry)}>
-                      <DeleteIcon />
-                    </IconButton>
+    <>
+      <Paper elevation={3}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Actions</TableCell>
+                {fields.map(field => (
+                  <TableCell key={field.field_name}>
+                    <Tooltip title={field.description}>
+                      <Typography variant="subtitle2">
+                        {field.field_name}
+                      </Typography>
+                    </Tooltip>
                   </TableCell>
-                  {fields.map(field => (
-                    <TableCell key={field.field_name}>
-                      {getDisplayValue(entry, field)}
-                    </TableCell>
-                  ))}
-                  <TableCell>
-                    {entry.synced ? <CloudDoneIcon color="success" /> : <CloudOffIcon color="disabled" />}
-                  </TableCell>
-                </TableRow>
-                {/* Add "+" button row between entries */}
-                {index < entries.length - 1 && (
+                ))}
+                <TableCell>Sync Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {entries.map((entry, index) => (
+                <React.Fragment key={entry.id}>
                   <TableRow>
-                    <TableCell colSpan={fields.length + 2} sx={{ border: 0, p: 0 }}>
-                      <Box 
-                        sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'center', 
-                          py: 0.5,
-                          opacity: 0.3,
-                          '&:hover': {
-                            opacity: 1,
-                          }
-                        }}
-                      >
-                        <Tooltip title="Add entry here">
-                          <IconButton 
-                            size="small"
-                            onClick={() => {
-                              const nextEntry = entries[index + 1];
-                              const prefill: Partial<LogEntry> = {
-                                from: entry.to,
-                                to: nextEntry.from,
-                                drillhole_id: entry.drillhole_id,
-                              };
-                              onAddBetween?.(prefill);
-                            }}
-                          >
-                            <AddIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <IconButton size="small" onClick={() => onEdit(entry)}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton size="small" onClick={() => onDelete(entry)}>
+                          <DeleteIcon />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => onSplit?.(entry)}
+                          title="Split interval"
+                        >
+                          <ContentCutIcon />
+                        </IconButton>
                       </Box>
                     </TableCell>
+                    {fields.map(field => (
+                      <TableCell key={field.field_name}>
+                        {getDisplayValue(entry, field)}
+                      </TableCell>
+                    ))}
+                    <TableCell>
+                      {entry.synced ? <CloudDoneIcon color="success" /> : <CloudOffIcon color="disabled" />}
+                    </TableCell>
                   </TableRow>
-                )}
-              </React.Fragment>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Paper>
+                  {/* Add "+" button row between entries */}
+                  {index < entries.length - 1 && (
+                    <TableRow>
+                      <TableCell colSpan={fields.length + 2} sx={{ border: 0, p: 0 }}>
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            py: 0.5,
+                            opacity: 0.3,
+                            '&:hover': {
+                              opacity: 1,
+                            }
+                          }}
+                        >
+                          <Tooltip title="Add entry here">
+                            <IconButton 
+                              size="small"
+                              onClick={() => {
+                                const nextEntry = entries[index + 1];
+                                const prefill: Partial<LogEntry> = {
+                                  from: entry.to,
+                                  to: nextEntry.from,
+                                  drillhole_id: entry.drillhole_id,
+                                };
+                                onAddBetween?.(prefill);
+                              }}
+                            >
+                              <AddIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+      
+      {/* Split Dialog */}
+      <Dialog 
+        open={splitDialog.open} 
+        onClose={() => setSplitDialog(prev => ({ ...prev, open: false }))}
+      >
+        <DialogTitle>Split Interval</DialogTitle>
+        <DialogContent>
+          <Box sx={{ p: 2 }}>
+            <Typography variant="body1" gutterBottom>
+              Current interval: {splitDialog.entry?.from} - {splitDialog.entry?.to}
+            </Typography>
+            <TextField
+              label="Split Point"
+              type="number"
+              value={splitDialog.splitPoint}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value) && splitDialog.entry) {
+                  // Ensure split point is within the interval
+                  const constrainedValue = Math.min(
+                    Math.max(value, splitDialog.entry.from),
+                    splitDialog.entry.to
+                  );
+                  setSplitDialog(prev => ({
+                    ...prev,
+                    splitPoint: constrainedValue
+                  }));
+                }
+              }}
+              inputProps={{
+                step: 0.01,
+                min: splitDialog.entry?.from,
+                max: splitDialog.entry?.to
+              }}
+              fullWidth
+              sx={{ mt: 2 }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSplitDialog(prev => ({ ...prev, open: false }))}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={() => {
+              if (splitDialog.entry) {
+                onSplit?.(splitDialog.entry, splitDialog.splitPoint);
+                setSplitDialog(prev => ({ ...prev, open: false }));
+              }
+            }}
+            variant="contained"
+          >
+            Split
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

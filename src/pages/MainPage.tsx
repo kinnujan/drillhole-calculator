@@ -30,6 +30,10 @@ const MainPage: React.FC = () => {
   const [showNewEntryDialog, setShowNewEntryDialog] = useState(false);
   const [showStriplog, setShowStriplog] = useState(false);
   const [prefillData, setPrefillData] = useState<Partial<LogEntry> | null>(null);
+  const [splitData, setSplitData] = useState<{
+    originalEntry: LogEntry;
+    splitPoint: number;
+  } | null>(null);
 
   // Load entries for selected drillhole
   useEffect(() => {
@@ -50,15 +54,44 @@ const MainPage: React.FC = () => {
   const handleSubmit = async (entry: LogEntry) => {
     try {
       const dbService = DatabaseService.getInstance();
+      
       if (editEntry) {
+        // If this was a split entry, adjust surrounding entries
+        const allEntries = await dbService.getEntriesByHole(selectedDrillhole!);
+        const currentIndex = allEntries.findIndex(e => e.id === editEntry.id);
+        
+        if (currentIndex > -1) {
+          const beforeEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
+          const afterEntry = currentIndex < allEntries.length - 1 ? allEntries[currentIndex + 1] : null;
+          
+          // Adjust the entry before this one
+          if (beforeEntry && beforeEntry.to !== entry.from) {
+            await dbService.updateEntry({
+              ...beforeEntry,
+              to: entry.from
+            });
+          }
+          
+          // Adjust the entry after this one
+          if (afterEntry && afterEntry.from !== entry.to) {
+            await dbService.updateEntry({
+              ...afterEntry,
+              from: entry.to
+            });
+          }
+        }
+        
+        // Update the current entry
         await dbService.updateEntry(entry);
         setEditEntry(null);
       } else {
         await dbService.addEntry(entry);
       }
+      
       // Close dialogs and reset state
       setShowNewEntryDialog(false);
       setPrefillData(null);
+      
       // Refresh entries after submit
       const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
       setEntries(updatedEntries);
@@ -89,6 +122,57 @@ const MainPage: React.FC = () => {
   const handleAddBetween = (prefill: Partial<LogEntry>) => {
     setPrefillData(prefill);
     setShowNewEntryDialog(true);
+  };
+
+  const handleSplit = async (entry: LogEntry) => {
+    try {
+      const dbService = DatabaseService.getInstance();
+      
+      // Calculate three equal parts
+      const intervalLength = entry.to - entry.from;
+      const thirdLength = intervalLength / 3;
+      const firstBreak = entry.from + thirdLength;
+      const secondBreak = entry.from + (2 * thirdLength);
+      
+      // Create three new entries, all with the same values
+      const beforeEntry: LogEntry = {
+        ...entry,
+        id: undefined, // Let DB assign new ID
+        from: entry.from,
+        to: firstBreak,
+      };
+      
+      const middleEntry: LogEntry = {
+        ...entry,
+        id: undefined, // Let DB assign new ID
+        from: firstBreak,
+        to: secondBreak,
+      };
+      
+      const afterEntry: LogEntry = {
+        ...entry,
+        id: undefined, // Let DB assign new ID
+        from: secondBreak,
+        to: entry.to,
+      };
+
+      // Delete the original entry
+      await dbService.deleteEntry(entry.id!);
+      
+      // Add the new entries
+      await dbService.addEntry(beforeEntry);
+      const newMiddleEntry = await dbService.addEntry(middleEntry);
+      await dbService.addEntry(afterEntry);
+
+      // Set up the middle entry for editing
+      setEditEntry(newMiddleEntry);
+
+      // Refresh entries
+      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
+      setEntries(updatedEntries);
+    } catch (error) {
+      console.error('Error splitting entry:', error);
+    }
   };
 
   if (!selectedDrillhole) {
@@ -132,6 +216,7 @@ const MainPage: React.FC = () => {
               onEdit={setEditEntry}
               onDelete={setDeleteEntry}
               onAddBetween={handleAddBetween}
+              onSplit={handleSplit}
             />
           </Paper>
         </Grid>
