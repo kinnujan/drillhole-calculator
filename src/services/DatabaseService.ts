@@ -9,6 +9,12 @@ class QuickLoggerDB extends Dexie {
 
   constructor() {
     super('QuickLoggerDB');
+    this.version(2).stores({
+      logEntries: 'id,drillhole_id,from,to,synced',
+      backups: 'id,timestamp',
+      errorLogs: 'id,timestamp'
+    });
+
     this.version(1).stores({
       logEntries: 'id,holeid,from,to,synced',
       backups: 'id,timestamp',
@@ -45,50 +51,62 @@ class DatabaseService {
   }
 
   public async addEntry(entry: LogEntry): Promise<string> {
-    return await this.db.logEntries.add(entry);
+    const newEntry = {
+      ...entry,
+      id: entry.id || crypto.randomUUID(),
+      created: entry.created || new Date(),
+      modified: new Date(),
+      synced: false
+    };
+    return await this.db.logEntries.add(newEntry);
   }
 
-  public async getEntry(id: string): Promise<LogEntry | undefined> {
-    return await this.db.logEntries.get(id);
-  }
-
-  public async updateEntry(entry: LogEntry): Promise<number> {
-    return await this.db.logEntries.update(entry.id, entry);
+  public async updateEntry(entry: LogEntry): Promise<string> {
+    const updatedEntry = {
+      ...entry,
+      modified: new Date(),
+      synced: false
+    };
+    await this.db.logEntries.put(updatedEntry);
+    return entry.id!;
   }
 
   public async deleteEntry(id: string): Promise<void> {
     await this.db.logEntries.delete(id);
   }
 
+  public async getEntry(id: string): Promise<LogEntry | undefined> {
+    return await this.db.logEntries.get(id);
+  }
+
   public async getAllEntries(): Promise<LogEntry[]> {
     return await this.db.logEntries.toArray();
   }
 
-  public async getUnsyncedEntries(): Promise<LogEntry[]> {
-    return await this.db.logEntries.where('synced').equals(false).toArray();
-  }
-
-  public async getEntriesByHole(holeid: string): Promise<LogEntry[]> {
+  public async getEntriesByHole(drillholeId: string): Promise<LogEntry[]> {
     return await this.db.logEntries
-      .where('holeid')
-      .equals(holeid)
+      .where('drillhole_id')
+      .equals(drillholeId)
       .sortBy('from');
   }
 
-  public async markAsSynced(id: string): Promise<number> {
-    return await this.db.logEntries.update(id, { synced: true });
+  public async getUnsyncedEntries(): Promise<LogEntry[]> {
+    return await this.db.logEntries
+      .where('synced')
+      .equals(false)
+      .toArray();
   }
 
-  public async createBackup(backup: BackupEntry): Promise<string> {
+  public async markAsSynced(id: string): Promise<void> {
+    await this.db.logEntries.update(id, { synced: true });
+  }
+
+  public async addBackup(backup: BackupEntry): Promise<string> {
     return await this.db.backups.add(backup);
   }
 
-  public async getBackup(id: string): Promise<BackupEntry | undefined> {
-    return await this.db.backups.get(id);
-  }
-
-  public async createErrorLog(errorLog: ErrorLog): Promise<string> {
-    return await this.db.errorLogs.add(errorLog);
+  public async logError(error: ErrorLog): Promise<string> {
+    return await this.db.errorLogs.add(error);
   }
 
   public async getFieldStyle(fieldName: string, value: any): Promise<any> {
