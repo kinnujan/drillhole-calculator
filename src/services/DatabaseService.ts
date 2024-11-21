@@ -72,7 +72,7 @@ class DatabaseService {
     }
   }
 
-  public async addEntry(entry: LogEntry): Promise<string> {
+  public async addEntry(entry: LogEntry): Promise<LogEntry> {
     await this.initialize();
     const newEntry = {
       ...entry,
@@ -81,7 +81,8 @@ class DatabaseService {
       modified: new Date(),
       synced: false
     };
-    return await this.db.logEntries.add(newEntry);
+    await this.db.logEntries.add(newEntry);
+    return newEntry;
   }
 
   public async updateEntry(entry: LogEntry): Promise<string> {

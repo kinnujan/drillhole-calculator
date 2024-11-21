@@ -135,21 +135,21 @@ const MainPage: React.FC = () => {
       const secondBreak = entry.from + (2 * thirdLength);
       
       // Create three new entries, all with the same values
-      const beforeEntry: LogEntry = {
+      const beforeEntry: Partial<LogEntry> = {
         ...entry,
         id: undefined, // Let DB assign new ID
         from: entry.from,
         to: firstBreak,
       };
       
-      const middleEntry: LogEntry = {
+      const middleEntry: Partial<LogEntry> = {
         ...entry,
         id: undefined, // Let DB assign new ID
         from: firstBreak,
         to: secondBreak,
       };
       
-      const afterEntry: LogEntry = {
+      const afterEntry: Partial<LogEntry> = {
         ...entry,
         id: undefined, // Let DB assign new ID
         from: secondBreak,
@@ -159,15 +159,15 @@ const MainPage: React.FC = () => {
       // Delete the original entry
       await dbService.deleteEntry(entry.id!);
       
-      // Add the new entries
-      await dbService.addEntry(beforeEntry);
-      const newMiddleEntry = await dbService.addEntry(middleEntry);
-      await dbService.addEntry(afterEntry);
+      // Add the new entries in order
+      await dbService.addEntry(beforeEntry as LogEntry);
+      const newMiddleEntry = await dbService.addEntry(middleEntry as LogEntry);
+      await dbService.addEntry(afterEntry as LogEntry);
 
       // Set up the middle entry for editing
       setEditEntry(newMiddleEntry);
 
-      // Refresh entries
+      // Refresh entries to update the list
       const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
       setEntries(updatedEntries);
     } catch (error) {
@@ -267,11 +267,13 @@ const MainPage: React.FC = () => {
       >
         <DialogTitle>Edit Log Entry</DialogTitle>
         <DialogContent>
-          <QuickLogForm
-            onSubmit={handleSubmit}
-            editEntry={editEntry}
-            drillholeId={selectedDrillhole}
-          />
+          {editEntry && (
+            <QuickLogForm
+              onSubmit={handleSubmit}
+              editEntry={editEntry}
+              drillholeId={selectedDrillhole}
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditEntry(null)}>Cancel</Button>
