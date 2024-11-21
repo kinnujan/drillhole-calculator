@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import DatabaseService from '../services/DatabaseService';
 import { LogEntry } from '../types';
@@ -23,6 +24,8 @@ const DrillholeSelector: React.FC<DrillholeSelectorProps> = ({ onDrillholeSelect
   const [drillholes, setDrillholes] = useState<string[]>([]);
   const [newDrillholeDialogOpen, setNewDrillholeDialogOpen] = useState(false);
   const [newDrillholeId, setNewDrillholeId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDrillholes();
@@ -30,21 +33,53 @@ const DrillholeSelector: React.FC<DrillholeSelectorProps> = ({ onDrillholeSelect
 
   const loadDrillholes = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const dbService = DatabaseService.getInstance();
       const entries = await dbService.getAllEntries();
       const uniqueDrillholes = [...new Set(entries.map(entry => entry.drillhole_id))];
       setDrillholes(uniqueDrillholes);
     } catch (error) {
       console.error('Error loading drillholes:', error);
+      setError('Failed to load drillholes. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCreateNewDrillhole = () => {
+  const handleCreateNewDrillhole = async () => {
     if (!newDrillholeId.trim()) return;
-    onDrillholeSelect(newDrillholeId.trim());
-    setNewDrillholeDialogOpen(false);
-    setNewDrillholeId('');
+    
+    try {
+      const dbService = DatabaseService.getInstance();
+      // Create an initial entry for the new drillhole
+      await dbService.addEntry({
+        id: crypto.randomUUID(),
+        drillhole_id: newDrillholeId.trim(),
+        from: 0,
+        to: 0,
+        created: new Date(),
+        modified: new Date(),
+        synced: false
+      });
+      
+      await loadDrillholes(); // Reload the list
+      onDrillholeSelect(newDrillholeId.trim());
+      setNewDrillholeDialogOpen(false);
+      setNewDrillholeId('');
+    } catch (error) {
+      console.error('Error creating new drillhole:', error);
+      setError('Failed to create new drillhole. Please try again.');
+    }
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 3 }}>
@@ -61,27 +96,39 @@ const DrillholeSelector: React.FC<DrillholeSelectorProps> = ({ onDrillholeSelect
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {drillholes.map((drillholeId) => (
-          <Grid item xs={12} sm={6} md={4} key={drillholeId}>
-            <Card
-              sx={{
-                cursor: 'pointer',
-                '&:hover': {
-                  boxShadow: 6,
-                },
-              }}
-              onClick={() => onDrillholeSelect(drillholeId)}
-            >
-              <CardContent>
-                <Typography variant="h6" component="div">
-                  {drillholeId}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      {drillholes.length === 0 ? (
+        <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', my: 4 }}>
+          No drillholes found. Create a new one to get started.
+        </Typography>
+      ) : (
+        <Grid container spacing={3}>
+          {drillholes.map((drillholeId) => (
+            <Grid item xs={12} sm={6} md={4} key={drillholeId}>
+              <Card
+                sx={{
+                  cursor: 'pointer',
+                  '&:hover': {
+                    boxShadow: 6,
+                  },
+                }}
+                onClick={() => onDrillholeSelect(drillholeId)}
+              >
+                <CardContent>
+                  <Typography variant="h6" component="div">
+                    {drillholeId}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Dialog open={newDrillholeDialogOpen} onClose={() => setNewDrillholeDialogOpen(false)}>
         <DialogTitle>Create New Drillhole</DialogTitle>

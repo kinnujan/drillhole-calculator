@@ -7,13 +7,42 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: true // Disable service worker temporarily
+      disable: process.env.NODE_ENV === 'development',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'serviceWorker.ts',
+      registerType: 'prompt',
+      injectRegister: 'auto',
+      manifest: {
+        name: 'QuickLogger',
+        short_name: 'QuickLog',
+        description: 'Geological Logging PWA',
+        theme_color: '#1976d2',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: '/vite.svg',
+            sizes: '32x32',
+            type: 'image/svg+xml'
+          }
+        ]
+      },
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globIgnores: ['**/node_modules/**/*']
+      },
+      devOptions: {
+        enabled: false,
+        type: 'module'
+      }
     })
   ],
   server: {
-    hmr: {
-      overlay: false // Disable the HMR error overlay
-    }
+    port: 5174,
+    strictPort: true,
+    host: true
   },
   optimizeDeps: {
     include: [

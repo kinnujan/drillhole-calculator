@@ -34,11 +34,11 @@ class DatabaseService {
   private static instance: DatabaseService;
   private db: QuickLoggerDB;
   private csvService: CSVService;
+  private initialized: boolean = false;
 
   private constructor() {
     this.db = new QuickLoggerDB();
     this.csvService = CSVService.getInstance();
-    this.initialize().catch(console.error);
   }
 
   public static getInstance(): DatabaseService {
@@ -49,9 +49,23 @@ class DatabaseService {
   }
 
   public async initialize(): Promise<void> {
+    if (this.initialized) return;
+    
     try {
       await this.csvService.loadConfiguration();
-      await this.csvService.loadQuicklog();
+      const quicklogData = await this.csvService.loadQuicklog();
+      
+      // Check if database is empty
+      const count = await this.db.logEntries.count();
+      if (count === 0) {
+        // Load initial data from CSV
+        const entries = await this.csvService.loadQuicklog();
+        if (entries && entries.length > 0) {
+          await this.db.logEntries.bulkAdd(entries);
+        }
+      }
+      
+      this.initialized = true;
     } catch (error) {
       console.error('Error initializing database:', error);
       throw error;
@@ -59,6 +73,7 @@ class DatabaseService {
   }
 
   public async addEntry(entry: LogEntry): Promise<string> {
+    await this.initialize();
     const newEntry = {
       ...entry,
       id: entry.id || crypto.randomUUID(),
@@ -70,6 +85,7 @@ class DatabaseService {
   }
 
   public async updateEntry(entry: LogEntry): Promise<string> {
+    await this.initialize();
     const updatedEntry = {
       ...entry,
       modified: new Date(),
@@ -80,18 +96,22 @@ class DatabaseService {
   }
 
   public async deleteEntry(id: string): Promise<void> {
+    await this.initialize();
     await this.db.logEntries.delete(id);
   }
 
   public async getEntry(id: string): Promise<LogEntry | undefined> {
+    await this.initialize();
     return await this.db.logEntries.get(id);
   }
 
   public async getAllEntries(): Promise<LogEntry[]> {
+    await this.initialize();
     return await this.db.logEntries.toArray();
   }
 
   public async getEntriesByHole(drillholeId: string): Promise<LogEntry[]> {
+    await this.initialize();
     return await this.db.logEntries
       .where('drillhole_id')
       .equals(drillholeId)
@@ -99,6 +119,7 @@ class DatabaseService {
   }
 
   public async getUnsyncedEntries(): Promise<LogEntry[]> {
+    await this.initialize();
     return await this.db.logEntries
       .where('synced')
       .equals(false)
@@ -106,18 +127,22 @@ class DatabaseService {
   }
 
   public async markAsSynced(id: string): Promise<void> {
+    await this.initialize();
     await this.db.logEntries.update(id, { synced: true });
   }
 
   public async addBackup(backup: BackupEntry): Promise<string> {
+    await this.initialize();
     return await this.db.backups.add(backup);
   }
 
   public async logError(error: ErrorLog): Promise<string> {
+    await this.initialize();
     return await this.db.errorLogs.add(error);
   }
 
   public async getFieldStyle(fieldName: string, value: any): Promise<any> {
+    await this.initialize();
     return this.csvService.getFieldStyle(fieldName, value);
   }
 }
