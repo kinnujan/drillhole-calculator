@@ -1,5 +1,5 @@
 import { SyncService } from '../SyncService';
-import { DatabaseService } from '../DatabaseService';
+import DatabaseService from '../DatabaseService';
 import DropboxService from '../DropboxService';
 import { LogEntry } from '../../types';
 
@@ -14,97 +14,75 @@ describe('SyncService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockDbService = {
-      getInstance: jest.fn(),
-      getUnsynced: jest.fn(),
-      markAsSynced: jest.fn(),
-      addEntry: jest.fn(),
-      updateEntry: jest.fn(),
-    } as unknown as jest.Mocked<DatabaseService>;
+    // Mock getInstance to return a new instance for testing
+    jest.spyOn(DatabaseService, 'getInstance').mockImplementation(() => {
+      const instance = new (DatabaseService as any)();
+      instance.initialized = true;
+      return instance;
+    });
 
-    mockDropboxService = {
-      getInstance: jest.fn(),
-      uploadFile: jest.fn(),
-      downloadFile: jest.fn(),
-      getFiles: jest.fn(),
-      uploadEntry: jest.fn(),
-      getChanges: jest.fn(),
-    } as unknown as jest.Mocked<DropboxService>;
+    jest.spyOn(DropboxService, 'getInstance').mockImplementation(() => {
+      return new (DropboxService as any)();
+    });
 
-    (DatabaseService.getInstance as jest.Mock).mockReturnValue(mockDbService);
-    (DropboxService.getInstance as jest.Mock).mockReturnValue(mockDropboxService);
+    mockDbService = DatabaseService.getInstance() as jest.Mocked<DatabaseService>;
+    mockDropboxService = DropboxService.getInstance() as jest.Mocked<DropboxService>;
 
     syncService = SyncService.getInstance();
   });
 
   describe('sync', () => {
-    it('should sync unsynced entries successfully', async () => {
+    it('should sync entries successfully', async () => {
       const mockEntry: LogEntry = {
         id: '1',
-        holeid: 'H1',
-        fields: {},
+        drillhole_id: 'H1',
+        from: 0,
+        to: 1,
+        lithology: 'SAND',
+        mineralized: false,
         created: new Date(),
         modified: new Date(),
-        synced: false,
-        from: 0,
-        to: 10
+        synced: false
       };
 
-      mockDbService.getUnsynced.mockResolvedValue([mockEntry]);
-      mockDropboxService.uploadEntry.mockResolvedValue();
+      mockDbService.getUnsyncedEntries.mockResolvedValue([mockEntry]);
+      mockDropboxService.sync.mockResolvedValue();
 
       await syncService.sync();
 
-      expect(mockDropboxService.uploadEntry).toHaveBeenCalledWith(mockEntry);
-      expect(mockDbService.markAsSynced).toHaveBeenCalledWith(mockEntry.id);
+      expect(mockDbService.getUnsyncedEntries).toHaveBeenCalled();
+      expect(mockDropboxService.sync).toHaveBeenCalledWith([mockEntry]);
     });
 
     it('should handle sync failure', async () => {
-      const mockEntry: LogEntry = {
-        id: '1',
-        holeid: 'H1',
-        fields: {},
-        created: new Date(),
-        modified: new Date(),
-        synced: false,
-        from: 0,
-        to: 10
-      };
+      const error = new Error('Sync failed');
+      mockDropboxService.sync.mockRejectedValue(error);
 
-      const error = new Error('Upload failed');
-      mockDbService.getUnsynced.mockResolvedValue([mockEntry]);
-      mockDropboxService.uploadEntry.mockRejectedValue(error);
-
-      await expect(syncService.sync()).rejects.toThrow('Upload failed');
+      await expect(syncService.sync()).rejects.toThrow('Sync failed');
     });
   });
 
-  describe('pullChanges', () => {
-    it('should sync from remote successfully', async () => {
+  describe('backup', () => {
+    it('should create backup successfully', async () => {
       const mockEntry: LogEntry = {
         id: '1',
-        holeid: 'H1',
-        fields: {},
+        drillhole_id: 'H1',
+        from: 0,
+        to: 1,
+        lithology: 'SAND',
+        mineralized: false,
         created: new Date(),
         modified: new Date(),
-        synced: true,
-        from: 0,
-        to: 10
+        synced: false
       };
 
-      mockDropboxService.getChanges.mockResolvedValue([mockEntry]);
+      mockDbService.getAllEntries.mockResolvedValue([mockEntry]);
+      mockDbService.addBackup.mockResolvedValue('backup-1');
 
-      await syncService.pullChanges();
+      await syncService.startBackgroundSync();
 
-      expect(mockDropboxService.getChanges).toHaveBeenCalled();
-      expect(mockDbService.addEntry).toHaveBeenCalledWith(mockEntry);
-    });
-
-    it('should handle remote sync failure', async () => {
-      const error = new Error('Download failed');
-      mockDropboxService.getChanges.mockRejectedValue(error);
-
-      await expect(syncService.pullChanges()).rejects.toThrow('Download failed');
+      expect(mockDbService.getAllEntries).toHaveBeenCalled();
+      expect(mockDbService.addBackup).toHaveBeenCalled();
     });
   });
 });

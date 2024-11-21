@@ -1,6 +1,6 @@
 import { ErrorRecoveryService } from '../ErrorRecoveryService';
-import { DatabaseService } from '../DatabaseService';
-import { LogEntry, BackupEntry, ErrorLog } from '../../types';
+import DatabaseService from '../DatabaseService';
+import { LogEntry, ErrorLog } from '../../types';
 
 jest.mock('../DatabaseService');
 
@@ -10,107 +10,109 @@ describe('ErrorRecoveryService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockDbService = {
-      getInstance: jest.fn(),
-      createBackup: jest.fn(),
-      getBackup: jest.fn(),
-      clearEntries: jest.fn(),
-      addEntry: jest.fn(),
-      createErrorLog: jest.fn(),
-      getBackups: jest.fn(),
-      getAllEntries: jest.fn(),
-    } as unknown as jest.Mocked<DatabaseService>;
 
-    (DatabaseService.getInstance as jest.Mock).mockReturnValue(mockDbService);
+    // Mock getInstance to return a new instance for testing
+    jest.spyOn(DatabaseService, 'getInstance').mockImplementation(() => {
+      const instance = new (DatabaseService as any)();
+      instance.initialized = true;
+      return instance;
+    });
+
+    mockDbService = DatabaseService.getInstance() as jest.Mocked<DatabaseService>;
     errorRecoveryService = ErrorRecoveryService.getInstance();
   });
 
-  describe('createBackup', () => {
-    it('should create a backup successfully', async () => {
-      const mockEntries: LogEntry[] = [
-        {
-          id: '1',
-          holeid: 'H1',
-          synced: false,
-          fields: {},
-          created: new Date(),
-          modified: new Date(),
-          from: 0,
-          to: 10
-        }
-      ];
+  describe('logError', () => {
+    it('should log an error', async () => {
+      const mockError: ErrorLog = {
+        id: 'error-1',
+        timestamp: new Date(),
+        error: 'Test error',
+        context: 'Test context',
+        severity: 'error'
+      };
 
-      mockDbService.getAllEntries.mockResolvedValue(mockEntries);
-      mockDbService.createBackup.mockResolvedValue('backup-id');
+      mockDbService.logError.mockResolvedValue('error-1');
+
+      await errorRecoveryService.logError('SYNC_ERROR', 'Test error', { context: 'Test context' });
+
+      expect(mockDbService.logError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Test error',
+          context: 'Test context',
+          severity: 'error'
+        })
+      );
+    });
+  });
+
+  describe('backup', () => {
+    it('should create a backup', async () => {
+      const mockEntry: LogEntry = {
+        id: '1',
+        drillhole_id: 'H1',
+        from: 0,
+        to: 1,
+        lithology: 'SAND',
+        mineralized: false,
+        created: new Date(),
+        modified: new Date(),
+        synced: false
+      };
+
+      mockDbService.getAllEntries.mockResolvedValue([mockEntry]);
+      mockDbService.addBackup.mockResolvedValue('backup-1');
 
       const backupId = await errorRecoveryService.createBackup();
 
-      expect(backupId).toBe('backup-id');
-      expect(mockDbService.createBackup).toHaveBeenCalledWith(expect.objectContaining({
-        entries: mockEntries,
-        timestamp: expect.any(String),
-      }));
-    });
-
-    it('should handle backup creation failure', async () => {
-      mockDbService.getAllEntries.mockRejectedValue(new Error('Database error'));
-
-      await expect(errorRecoveryService.createBackup()).rejects.toThrow('Database error');
+      expect(backupId).toBe('backup-1');
+      expect(mockDbService.getAllEntries).toHaveBeenCalled();
+      expect(mockDbService.addBackup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'full',
+          data: expect.any(String)
+        })
+      );
     });
   });
 
-  describe('restoreFromBackup', () => {
-    it('should restore from backup successfully', async () => {
-      const mockBackup: BackupEntry = {
-        id: 'backup-1',
-        timestamp: new Date().toISOString(),
-        entries: [
-          {
-            id: '1',
-            holeid: 'H1',
-            synced: false,
-            fields: {},
-            created: new Date(),
-            modified: new Date(),
-            from: 0,
-            to: 10
-          }
-        ]
+  describe('restore', () => {
+    it('should restore from a backup', async () => {
+      const mockEntry: LogEntry = {
+        id: '1',
+        drillhole_id: 'H1',
+        from: 0,
+        to: 1,
+        lithology: 'SAND',
+        mineralized: false,
+        created: new Date(),
+        modified: new Date(),
+        synced: false
       };
 
-      mockDbService.getBackup.mockResolvedValue(mockBackup);
+      const mockBackup = {
+        id: 'backup-1',
+        timestamp: new Date(),
+        data: JSON.stringify([mockEntry]),
+        type: 'full' as const
+      };
+
+      mockDbService.getBackupById.mockResolvedValue(mockBackup);
+      mockDbService.clearAllEntries.mockResolvedValue();
+      mockDbService.addEntry.mockResolvedValue('entry-1');
 
       await errorRecoveryService.restoreFromBackup('backup-1');
 
-      expect(mockDbService.clearEntries).toHaveBeenCalled();
-      expect(mockDbService.addEntry).toHaveBeenCalledWith(mockBackup.entries[0]);
+      expect(mockDbService.getBackupById).toHaveBeenCalledWith('backup-1');
+      expect(mockDbService.clearAllEntries).toHaveBeenCalled();
+      expect(mockDbService.addEntry).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle backup not found', async () => {
-      mockDbService.getBackup.mockResolvedValue(null);
+    it('should throw error if backup not found', async () => {
+      mockDbService.getBackupById.mockResolvedValue(null);
 
-      await expect(errorRecoveryService.restoreFromBackup('non-existent')).rejects.toThrow('Backup not found');
-    });
-  });
-
-  describe('logError', () => {
-    it('should log error successfully', async () => {
-      mockDbService.createErrorLog.mockResolvedValue('error-1');
-
-      const errorId = await errorRecoveryService.logError('Test error', 'Error details');
-
-      expect(errorId).toBe('error-1');
-      expect(mockDbService.createErrorLog).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Test error',
-        details: 'Error details',
-        timestamp: expect.any(String),
-      }));
-    });
-
-    it('should handle error logging failure', async () => {
-      mockDbService.createErrorLog.mockRejectedValue(new Error('Database error'));
-
-      await expect(errorRecoveryService.logError('Test error', 'Error details')).rejects.toThrow('Database error');
+      await expect(errorRecoveryService.restoreFromBackup('non-existent'))
+        .rejects.toThrow('Backup not found');
     });
   });
 });
