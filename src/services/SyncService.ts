@@ -1,4 +1,4 @@
-import { DatabaseService } from './DatabaseService';
+import DatabaseService from './DatabaseService';
 import { DropboxService } from './DropboxService';
 import { ErrorRecoveryService } from './ErrorRecoveryService';
 import { LogEntry } from '../models/LogEntry';

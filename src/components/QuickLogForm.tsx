@@ -20,12 +20,13 @@ import { FieldConfig } from '../services/CSVService';
 
 interface QuickLogFormProps {
   onSubmit: (entry: LogEntry) => void;
-  initialValues?: Partial<LogEntry>;
+  editEntry: LogEntry | null;
+  drillholeId: string;
 }
 
-const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, initialValues }) => {
+const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, editEntry, drillholeId }) => {
   const [formData, setFormData] = useState<Partial<LogEntry>>({
-    holeid: '',
+    drillhole_id: drillholeId,
     from: 0,
     to: 0,
     lithology: '',
@@ -35,11 +36,21 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, initialValues }) 
     mineralized: false,
     structures: '',
     notes: '',
-    ...initialValues
   });
 
   const [fields, setFields] = useState<FieldConfig[]>([]);
   const [lastInterval, setLastInterval] = useState<{ from: number; to: number } | null>(null);
+
+  useEffect(() => {
+    if (editEntry) {
+      setFormData(editEntry);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        drillhole_id: drillholeId,
+      }));
+    }
+  }, [editEntry, drillholeId]);
 
   useEffect(() => {
     const loadConfiguration = async () => {
@@ -49,24 +60,32 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, initialValues }) 
     };
 
     const loadLastInterval = async () => {
-      const dbService = DatabaseService.getInstance();
-      const entries = await dbService.getAllEntries();
-      if (entries.length > 0) {
-        const lastEntry = entries[entries.length - 1];
-        setLastInterval({ from: lastEntry.from, to: lastEntry.to });
-        if (!initialValues) {
-          setFormData(prev => ({
-            ...prev,
-            holeid: lastEntry.holeid,
-            from: lastEntry.to
-          }));
+      try {
+        const dbService = DatabaseService.getInstance();
+        const entries = await dbService.getEntriesByHole(drillholeId);
+        if (entries.length > 0) {
+          const lastEntry = entries[entries.length - 1];
+          setLastInterval({
+            from: lastEntry.from,
+            to: lastEntry.to,
+          });
+          
+          if (!editEntry) {
+            setFormData(prev => ({
+              ...prev,
+              from: lastEntry.to,
+              to: lastEntry.to + 1,
+            }));
+          }
         }
+      } catch (error) {
+        console.error('Error loading last interval:', error);
       }
     };
 
     loadConfiguration();
     loadLastInterval();
-  }, [initialValues]);
+  }, [drillholeId]);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -75,20 +94,25 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, initialValues }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const entry: LogEntry = {
-      id: initialValues?.id || crypto.randomUUID(),
-      created: initialValues?.created || new Date(),
-      modified: new Date(),
-      synced: false,
-      ...formData
+      ...formData,
+      drillhole_id: drillholeId,
     } as LogEntry;
-
+    
     onSubmit(entry);
-    if (!initialValues) {
-      setFormData(prev => ({
-        ...prev,
-        from: formData.to,
-        to: formData.to
-      }));
+    
+    if (!editEntry) {
+      setFormData({
+        drillhole_id: drillholeId,
+        from: entry.to,
+        to: entry.to + 1,
+        lithology: '',
+        color: '',
+        texture: '',
+        minerals: '',
+        mineralized: false,
+        structures: '',
+        notes: '',
+      });
     }
   };
 
@@ -165,11 +189,11 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, initialValues }) 
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {initialValues ? 'Edit Log Entry' : 'New Log Entry'}
+        {editEntry ? 'Edit Log Entry' : 'New Log Entry'}
       </Typography>
       <form onSubmit={handleSubmit}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {lastInterval && !initialValues && (
+          {lastInterval && !editEntry && (
             <Typography variant="body2" color="text.secondary">
               Last interval: {lastInterval.from}m to {lastInterval.to}m
             </Typography>
@@ -181,7 +205,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, initialValues }) 
             color="primary"
             sx={{ mt: 2 }}
           >
-            {initialValues ? 'Update' : 'Add'} Entry
+            {editEntry ? 'Update' : 'Add'} Entry
           </Button>
         </Box>
       </form>

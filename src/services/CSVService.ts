@@ -45,7 +45,7 @@ class CSVService {
                 let styleConfig = {};
                 if (row.style_config && typeof row.style_config === 'string') {
                   try {
-                    styleConfig = JSON.parse(row.style_config.replace(/'/g, '"'));
+                    styleConfig = JSON.parse(row.style_config);
                   } catch (e) {
                     console.warn(`Failed to parse style_config for ${row.field_name}:`, e);
                   }
@@ -121,7 +121,7 @@ class CSVService {
                 created: new Date(row.created || Date.now()),
                 modified: new Date(row.modified || Date.now()),
                 synced: row.synced === 'true',
-                holeid: row.holeid,
+                drillhole_id: row.drillhole_id || row.holeid,
                 from: parseFloat(row.from),
                 to: parseFloat(row.to),
                 lithology: row.lithology,

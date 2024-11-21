@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import { LogEntry, BackupEntry, ErrorLog } from '../types';
-import { CSVService } from './CSVService';
+import CSVService from './CSVService';
 
 class QuickLoggerDB extends Dexie {
   logEntries!: Dexie.Table<LogEntry, string>;
@@ -30,7 +30,7 @@ class QuickLoggerDB extends Dexie {
   }
 }
 
-export class DatabaseService {
+class DatabaseService {
   private static instance: DatabaseService;
   private db: QuickLoggerDB;
   private csvService: CSVService;
@@ -122,3 +122,4 @@ export class DatabaseService {
   }
 }
 
+export default DatabaseService;

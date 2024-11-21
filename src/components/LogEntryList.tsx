@@ -22,26 +22,22 @@ import CSVService from '../services/CSVService';
 import { FieldConfig } from '../services/CSVService';
 
 interface LogEntryListProps {
+  entries: LogEntry[];
   onEdit: (entry: LogEntry) => void;
   onDelete: (entry: LogEntry) => void;
 }
 
-const LogEntryList: React.FC<LogEntryListProps> = ({ onEdit, onDelete }) => {
-  const [entries, setEntries] = useState<LogEntry[]>([]);
+const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete }) => {
   const [fields, setFields] = useState<FieldConfig[]>([]);
   const [styles, setStyles] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const loadData = async () => {
-      const dbService = DatabaseService.getInstance();
       const csvService = CSVService.getInstance();
       
       await csvService.loadConfiguration();
       const config = csvService.getConfiguration();
       setFields(config);
-
-      const allEntries = await dbService.getAllEntries();
-      setEntries(allEntries.sort((a, b) => a.from - b.from));
 
       // Pre-compute styles for each field value
       const styleMap: Record<string, any> = {};
