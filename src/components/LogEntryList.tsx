@@ -16,6 +16,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
+import AddIcon from '@mui/icons-material/Add';
 import { LogEntry } from '../types';
 import DatabaseService from '../services/DatabaseService';
 import CSVService from '../services/CSVService';
@@ -25,9 +26,10 @@ interface LogEntryListProps {
   entries: LogEntry[];
   onEdit: (entry: LogEntry) => void;
   onDelete: (entry: LogEntry) => void;
+  onAddBetween?: (prefill: Partial<LogEntry>) => void;
 }
 
-const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete }) => {
+const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete, onAddBetween }) => {
   const [fields, setFields] = useState<FieldConfig[]>([]);
   const [styles, setStyles] = useState<Record<string, any>>({});
 
@@ -97,33 +99,62 @@ const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete }
             </TableRow>
           </TableHead>
           <TableBody>
-            {entries.map((entry) => (
-              <TableRow key={entry.id}>
-                <TableCell>
-                  <IconButton size="small" onClick={() => onEdit(entry)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => onDelete(entry)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-                {fields.map(field => (
-                  <TableCell key={field.field_name}>
-                    {getDisplayValue(entry, field)}
+            {entries.map((entry, index) => (
+              <React.Fragment key={entry.id}>
+                <TableRow>
+                  <TableCell>
+                    <IconButton size="small" onClick={() => onEdit(entry)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => onDelete(entry)}>
+                      <DeleteIcon />
+                    </IconButton>
                   </TableCell>
-                ))}
-                <TableCell>
-                  {entry.synced ? (
-                    <Tooltip title="Synced">
-                      <CloudDoneIcon color="success" />
-                    </Tooltip>
-                  ) : (
-                    <Tooltip title="Not synced">
-                      <CloudOffIcon color="warning" />
-                    </Tooltip>
-                  )}
-                </TableCell>
-              </TableRow>
+                  {fields.map(field => (
+                    <TableCell key={field.field_name}>
+                      {getDisplayValue(entry, field)}
+                    </TableCell>
+                  ))}
+                  <TableCell>
+                    {entry.synced ? <CloudDoneIcon color="success" /> : <CloudOffIcon color="disabled" />}
+                  </TableCell>
+                </TableRow>
+                {/* Add "+" button row between entries */}
+                {index < entries.length - 1 && (
+                  <TableRow>
+                    <TableCell colSpan={fields.length + 2} sx={{ border: 0, p: 0 }}>
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'center', 
+                          py: 0.5,
+                          opacity: 0.3,
+                          '&:hover': {
+                            opacity: 1,
+                          }
+                        }}
+                      >
+                        <Tooltip title="Add entry here">
+                          <IconButton 
+                            size="small"
+                            onClick={() => {
+                              const nextEntry = entries[index + 1];
+                              const prefill: Partial<LogEntry> = {
+                                from: entry.to,
+                                to: nextEntry.from,
+                                drillhole_id: entry.drillhole_id,
+                              };
+                              onAddBetween?.(prefill);
+                            }}
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>

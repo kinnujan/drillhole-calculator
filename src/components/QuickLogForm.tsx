@@ -22,9 +22,15 @@ interface QuickLogFormProps {
   onSubmit: (entry: LogEntry) => void;
   editEntry: LogEntry | null;
   drillholeId: string;
+  prefillData?: Partial<LogEntry> | null;
 }
 
-const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, editEntry, drillholeId }) => {
+const QuickLogForm: React.FC<QuickLogFormProps> = ({ 
+  onSubmit, 
+  editEntry, 
+  drillholeId,
+  prefillData 
+}) => {
   const [formData, setFormData] = useState<Partial<LogEntry>>({
     drillhole_id: drillholeId,
     from: 0,
@@ -44,13 +50,18 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, editEntry, drillh
   useEffect(() => {
     if (editEntry) {
       setFormData(editEntry);
+    } else if (prefillData) {
+      setFormData(prev => ({
+        ...prev,
+        ...prefillData,
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
         drillhole_id: drillholeId,
       }));
     }
-  }, [editEntry, drillholeId]);
+  }, [editEntry, drillholeId, prefillData]);
 
   useEffect(() => {
     const loadConfiguration = async () => {
@@ -88,7 +99,28 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, editEntry, drillh
   }, [drillholeId]);
 
   const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // If editing from/to fields, ensure they're valid numbers
+      if (field === 'from' || field === 'to') {
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) {
+          newData[field] = numValue;
+          
+          // When editing 'from', adjust 'to' if it would become invalid
+          if (field === 'from' && newData.to !== undefined && numValue > newData.to) {
+            newData.to = numValue;
+          }
+          // When editing 'to', adjust 'from' if it would become invalid
+          if (field === 'to' && newData.from !== undefined && numValue < newData.from) {
+            newData.from = numValue;
+          }
+        }
+      }
+      
+      return newData;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -29,6 +29,7 @@ const MainPage: React.FC = () => {
   const [selectedDrillhole, setSelectedDrillhole] = useState<string | null>(null);
   const [showNewEntryDialog, setShowNewEntryDialog] = useState(false);
   const [showStriplog, setShowStriplog] = useState(false);
+  const [prefillData, setPrefillData] = useState<Partial<LogEntry> | null>(null);
 
   // Load entries for selected drillhole
   useEffect(() => {
@@ -55,8 +56,9 @@ const MainPage: React.FC = () => {
       } else {
         await dbService.addEntry(entry);
       }
-      // Close the dialog if it was a new entry
+      // Close dialogs and reset state
       setShowNewEntryDialog(false);
+      setPrefillData(null);
       // Refresh entries after submit
       const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
       setEntries(updatedEntries);
@@ -82,6 +84,11 @@ const MainPage: React.FC = () => {
 
   const handleDrillholeSelect = (drillholeId: string) => {
     setSelectedDrillhole(drillholeId);
+  };
+
+  const handleAddBetween = (prefill: Partial<LogEntry>) => {
+    setPrefillData(prefill);
+    setShowNewEntryDialog(true);
   };
 
   if (!selectedDrillhole) {
@@ -124,6 +131,7 @@ const MainPage: React.FC = () => {
               entries={entries}
               onEdit={setEditEntry}
               onDelete={setDeleteEntry}
+              onAddBetween={handleAddBetween}
             />
           </Paper>
         </Grid>
@@ -139,7 +147,10 @@ const MainPage: React.FC = () => {
       {/* New Entry Dialog */}
       <Dialog 
         open={showNewEntryDialog} 
-        onClose={() => setShowNewEntryDialog(false)}
+        onClose={() => {
+          setShowNewEntryDialog(false);
+          setPrefillData(null);
+        }}
         maxWidth="md"
         fullWidth
       >
@@ -149,10 +160,16 @@ const MainPage: React.FC = () => {
             onSubmit={handleSubmit}
             editEntry={null}
             drillholeId={selectedDrillhole}
+            prefillData={prefillData}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowNewEntryDialog(false)}>Cancel</Button>
+          <Button onClick={() => {
+            setShowNewEntryDialog(false);
+            setPrefillData(null);
+          }}>
+            Cancel
+          </Button>
         </DialogActions>
       </Dialog>
 
