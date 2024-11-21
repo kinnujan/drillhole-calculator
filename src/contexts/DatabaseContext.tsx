@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { DatabaseService } from '../services/DatabaseService';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import DatabaseService from '../services/DatabaseService';
 import { LogEntry } from '../models/LogEntry';
 
 interface DatabaseContextType {

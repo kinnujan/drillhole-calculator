@@ -13,7 +13,7 @@ import {
   Grid,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { DatabaseService } from '../services/DatabaseService';
+import DatabaseService from '../services/DatabaseService';
 import { ConfigService } from '../services/ConfigService';
 import { LogEntry, LogEntryField } from '../models/LogEntry';
 import { QuickLogForm } from './QuickLogForm';

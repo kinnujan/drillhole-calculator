@@ -1,5 +1,5 @@
 import { LogEntry } from '../models/LogEntry';
-import { DatabaseService } from './DatabaseService';
+import DatabaseService from './DatabaseService';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ErrorLog {

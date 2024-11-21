@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Typography, Paper, List, ListItem, ListItemText, CircularProgress, Alert, Grid } from '@mui/material';
-import { DatabaseService } from '../services/DatabaseService';
+import DatabaseService from '../services/DatabaseService';
 import { LogEntry } from '../models/LogEntry';
 import { DropboxSync } from './DropboxSync';
 import { LogEntryList } from './LogEntryList';
