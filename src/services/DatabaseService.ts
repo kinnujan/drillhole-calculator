@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import { LogEntry, BackupEntry, ErrorLog } from '../types';
-import CSVService from './CSVService';
+import { CSVService } from './CSVService';
 
 class QuickLoggerDB extends Dexie {
   logEntries!: Dexie.Table<LogEntry, string>;
