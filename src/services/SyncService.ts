@@ -39,11 +39,14 @@ export class SyncService {
     }, intervalMinutes * 60 * 1000);
   }
 
-  async sync(): Promise<void> {
+  async sync(retryCount: number = 0): Promise<void> {
     if (this.syncInProgress) {
       console.log('Sync already in progress');
       return;
     }
+
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = (retryCount: number) => Math.min(1000 * Math.pow(2, retryCount), 30000);
 
     try {
       this.syncInProgress = true;
@@ -92,6 +95,11 @@ export class SyncService {
     } catch (error) {
       console.error('Sync failed:', error);
       await this.errorRecoveryService.logError('Sync failed', error.message);
+      
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying sync in ${RETRY_DELAY(retryCount)}ms...`);
+        setTimeout(() => this.sync(retryCount + 1), RETRY_DELAY(retryCount));
+      }
     } finally {
       this.syncInProgress = false;
     }

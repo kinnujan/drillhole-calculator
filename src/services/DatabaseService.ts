@@ -64,8 +64,15 @@ class DatabaseService {
     return await this.db.logEntries.toArray();
   }
 
-  public async getUnsynced(): Promise<LogEntry[]> {
+  public async getUnsyncedEntries(): Promise<LogEntry[]> {
     return await this.db.logEntries.where('synced').equals(false).toArray();
+  }
+
+  public async getEntriesByHole(holeid: string): Promise<LogEntry[]> {
+    return await this.db.logEntries
+      .where('holeid')
+      .equals(holeid)
+      .sortBy('from');
   }
 
   public async markAsSynced(id: string): Promise<number> {

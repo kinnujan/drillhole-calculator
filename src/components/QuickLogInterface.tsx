@@ -78,6 +78,18 @@ export const QuickLogInterface: React.FC<QuickLogInterfaceProps> = ({ holeid }) 
         [fieldName]: value,
       },
     }));
+
+    // Clear existing auto-save timer
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+
+    // Set new auto-save timer
+    const timer = setTimeout(() => {
+      handleSave(true);
+    }, 3000); // Auto-save after 3 seconds of inactivity
+
+    setAutoSaveTimer(timer);
   };
 
   const handleIntervalChange = (field: 'from' | 'to', value: string) => {
@@ -121,10 +133,15 @@ export const QuickLogInterface: React.FC<QuickLogInterfaceProps> = ({ holeid }) 
     return errors;
   };
 
-  const handleSave = async () => {
+  // Auto-save timer
+  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const handleSave = async (isAutoSave: boolean = false) => {
     const validationErrors = validateEntry();
     if (validationErrors.length > 0) {
-      setErrors(validationErrors);
+      if (!isAutoSave) {
+        setErrors(validationErrors);
+      }
       return;
     }
 
