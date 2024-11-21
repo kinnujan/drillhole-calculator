@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import DatabaseService from './services/DatabaseService';
 import MainPage from './pages/MainPage';
-import { CircularProgress, Box, ThemeProvider, CssBaseline } from '@mui/material';
+import { CircularProgress, Box, ThemeProvider, CssBaseline, Alert } from '@mui/material';
 import { theme } from './theme';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -47,10 +48,20 @@ function App() {
   }
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <MainPage />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {error ? (
+          <Box p={3}>
+            <Alert severity="error" variant="filled">
+              {error}
+            </Alert>
+          </Box>
+        ) : (
+          <MainPage />
+        )}
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
