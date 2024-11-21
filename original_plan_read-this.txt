@@ -1,0 +1,133 @@
+# QUICKLOG PWA - Project Plan
+
+## Core Architecture
+
+### Data Model
+- LogEntry structure based on configuration.csv
+  - Required fields: holeid, from, to
+  - Dynamic fields from configuration (domains, booleans, numbers, text)
+- Smart interval handling
+  - Auto-population of from/to fields based on adjacent intervals
+  - Validation of interval continuity
+  - No gaps allowed between intervals
+
+### Configuration Management
+- Configuration.csv as source of truth
+  - Field definitions
+  - Domain lists
+  - Validation rules
+- Sync with Dropbox
+  - Automatic sync with quicklog.csv
+  - Version tracking for conflict resolution
+
+### Storage & Sync
+- IndexedDB for local storage
+- Dropbox integration
+  - File versioning for conflict resolution
+  - UUID-based entry identification
+  - Background sync with copy preservation
+- Offline capability
+  - Local-first architecture
+  - Automatic background sync
+  - Conflict resolution with version preservation
+
+## Technical Implementation
+
+### Frontend
+- React + TypeScript
+- Material-UI components
+- Tailwind CSS for styling
+- PWA features
+  - Service Worker
+  - Offline support
+  - Background sync
+  - Cache strategies
+
+### Core Services
+1. Database Service
+   - Local storage management
+   - CSV import/export
+   - Interval validation
+   - UUID generation for entries
+
+2. Config Service
+   - Configuration.csv parsing
+   - Domain list management
+   - Field validation
+   - Dynamic form generation
+
+3. Dropbox Service
+   - File synchronization
+   - Token authentication
+   - Version management
+   - Conflict detection
+
+4. Sync Service
+   - Background synchronization
+   - Conflict resolution
+   - File version preservation
+   - Change detection
+
+5. Error Recovery Service
+   - Error logging
+   - Data backup
+   - Version rollback
+   - Sync failure handling
+
+### UI Components
+1. Dashboard
+   - Hole list view
+   - Sync status indicators
+   - Error notifications
+   - Loading states
+
+2. QuickLog Interface
+   - Dynamic form based on configuration
+   - Striplog visualization
+   - Interval validation
+   - Auto-save functionality
+
+3. Form Components
+   - Field validation
+   - Domain list dropdowns
+   - Error messaging
+   - Input masks
+
+## Development Phases
+
+### Phase 1: Core Functionality
+- Basic data model implementation
+- Configuration parsing
+- Local storage setup
+- Essential UI components
+
+### Phase 2: Sync & Offline
+- Dropbox integration
+- Background sync
+- Conflict resolution
+- Error recovery
+
+### Phase 3: Enhancement
+- UI/UX improvements
+- Performance optimization
+- Testing suite
+- Documentation
+
+## Testing Strategy
+1. Unit Tests
+   - Data model validation
+   - Configuration parsing
+   - Interval handling
+   - UUID generation
+
+2. Integration Tests
+   - Sync functionality
+   - Offline capability
+   - Error recovery
+   - Configuration updates
+
+3. End-to-End Tests
+   - Complete workflow
+   - Edge cases
+   - Error scenarios
+   - Performance testing
