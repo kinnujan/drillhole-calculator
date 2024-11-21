@@ -9,21 +9,28 @@ class QuickLoggerDB extends Dexie {
 
   constructor() {
     super('QuickLoggerDB');
-    this.version(2).stores({
-      logEntries: 'id,drillhole_id,from,to,synced',
-      backups: 'id,timestamp',
-      errorLogs: 'id,timestamp'
-    });
-
     this.version(1).stores({
       logEntries: 'id,holeid,from,to,synced',
       backups: 'id,timestamp',
       errorLogs: 'id,timestamp'
     });
+
+    this.version(2).stores({
+      logEntries: 'id,drillhole_id,from,to,synced',
+      backups: 'id,timestamp',
+      errorLogs: 'id,timestamp'
+    }).upgrade(tx => {
+      return tx.logEntries.toCollection().modify(entry => {
+        if (entry.holeid && !entry.drillhole_id) {
+          entry.drillhole_id = entry.holeid;
+          delete entry.holeid;
+        }
+      });
+    });
   }
 }
 
-class DatabaseService {
+export class DatabaseService {
   private static instance: DatabaseService;
   private db: QuickLoggerDB;
   private csvService: CSVService;
@@ -31,6 +38,7 @@ class DatabaseService {
   private constructor() {
     this.db = new QuickLoggerDB();
     this.csvService = CSVService.getInstance();
+    this.initialize().catch(console.error);
   }
 
   public static getInstance(): DatabaseService {
@@ -114,4 +122,3 @@ class DatabaseService {
   }
 }
 
-export default DatabaseService;
