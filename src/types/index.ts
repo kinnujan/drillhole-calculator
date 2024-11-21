@@ -1,12 +1,18 @@
 export interface LogEntry {
   id: string;
   holeid: string;
-  fields: Record<string, any>;
+  from: number;
+  to: number;
+  lithology: string;
+  color?: string;
+  texture?: string;
+  minerals?: string;
+  mineralized: boolean;
+  structures?: string;
+  notes?: string;
   created: Date;
   modified: Date;
   synced: boolean;
-  from?: number;
-  to?: number;
 }
 
 export interface BackupEntry {
@@ -17,9 +23,9 @@ export interface BackupEntry {
 
 export interface ErrorLog {
   id: string;
-  timestamp: string;
   message: string;
-  details: string;
+  details?: string;
+  timestamp: string;
 }
 
 export interface ConfigField {
@@ -33,4 +39,9 @@ export interface ConfigField {
     max?: number;
     pattern?: string;
   };
+}
+
+export interface StyleConfig {
+  colors?: Record<string, string>;
+  icons?: Record<string, string>;
 }

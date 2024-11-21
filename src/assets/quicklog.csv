@@ -1,0 +1,11 @@
+id,holeid,from,to,lithology,color,texture,minerals,mineralized,structures,notes,created,modified,synced
+1,BH-001,0,5,sandstone,brown,massive,quartz,false,,Top soil layer,2024-01-15T10:00:00Z,2024-01-15T10:00:00Z,true
+2,BH-001,5,12,siltstone,grey,laminated,mica,false,,Shell fragments present,2024-01-15T10:05:00Z,2024-01-15T10:05:00Z,true
+3,BH-001,12,18,shale,black,bioturbated,pyrite,true,normal fault,Organic rich with mineralization,2024-01-15T10:10:00Z,2024-01-15T10:10:00Z,true
+4,BH-001,18,25,limestone,grey,massive,calcite,false,,Reef structure,2024-01-15T10:15:00Z,2024-01-15T10:15:00Z,true
+5,BH-002,0,8,sandstone,red,cross-bedded,feldspar,false,,Desert environment,2024-01-15T11:00:00Z,2024-01-15T11:00:00Z,true
+6,BH-002,8,15,siltstone,brown,laminated,,true,,Alternating layers with mineralization,2024-01-15T11:05:00Z,2024-01-15T11:05:00Z,true
+7,BH-002,15,22,coal,black,massive,,false,joint,Plant remains visible,2024-01-15T11:10:00Z,2024-01-15T11:10:00Z,true
+8,BH-003,0,6,sandstone,grey,massive,quartz,false,,Well sorted,2024-01-15T12:00:00Z,2024-01-15T12:00:00Z,true
+9,BH-003,6,14,shale,black,laminated,,true,,Fissile texture with mineralization,2024-01-15T12:05:00Z,2024-01-15T12:05:00Z,true
+10,BH-003,14,20,limestone,grey,massive,calcite,false,fold,Fossil rich zone,2024-01-15T12:10:00Z,2024-01-15T12:10:00Z,true

@@ -1,113 +1,116 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Box,
   TextField,
-  Select,
-  MenuItem,
+  Button,
   FormControl,
   InputLabel,
-  Switch,
+  Select,
+  MenuItem,
   FormControlLabel,
-  Button,
+  Checkbox,
   Paper,
   Typography,
-  Alert,
+  SelectChangeEvent,
 } from '@mui/material';
-import { ConfigService } from '../services/ConfigService';
-import { DatabaseService } from '../services/DatabaseService';
-import { LogEntry, LogEntryField, LogEntryManager } from '../models/LogEntry';
+import { LogEntry } from '../types';
+import DatabaseService from '../services/DatabaseService';
+import CSVService from '../services/CSVService';
+import { FieldConfig } from '../services/CSVService';
 
 interface QuickLogFormProps {
-  holeid: string;
-  previousEntry?: LogEntry;
-  onSave?: () => void;
+  onSubmit: (entry: LogEntry) => void;
+  initialValues?: Partial<LogEntry>;
 }
 
-export const QuickLogForm: React.FC<QuickLogFormProps> = ({
-  holeid,
-  previousEntry,
-  onSave,
-}) => {
-  const [fields, setFields] = useState<LogEntryField[]>([]);
-  const [values, setValues] = useState<Record<string, any>>({});
-  const [errors, setErrors] = useState<string[]>([]);
-  const [from, setFrom] = useState<number>(previousEntry ? previousEntry.to : 0);
-  const [to, setTo] = useState<number>(previousEntry ? previousEntry.to + 1 : 1);
+const QuickLogForm: React.FC<QuickLogFormProps> = ({ onSubmit, initialValues }) => {
+  const [formData, setFormData] = useState<Partial<LogEntry>>({
+    holeid: '',
+    from: 0,
+    to: 0,
+    lithology: '',
+    color: '',
+    texture: '',
+    minerals: '',
+    mineralized: false,
+    structures: '',
+    notes: '',
+    ...initialValues
+  });
+
+  const [fields, setFields] = useState<FieldConfig[]>([]);
+  const [lastInterval, setLastInterval] = useState<{ from: number; to: number } | null>(null);
 
   useEffect(() => {
-    const configService = ConfigService.getInstance();
-    setFields(configService.getFields());
-  }, []);
+    const loadConfiguration = async () => {
+      const csvService = CSVService.getInstance();
+      await csvService.loadConfiguration();
+      setFields(csvService.getConfiguration());
+    };
 
-  useEffect(() => {
-    if (previousEntry) {
-      setFrom(previousEntry.to);
-      setTo(previousEntry.to + 1);
-    }
-  }, [previousEntry]);
+    const loadLastInterval = async () => {
+      const dbService = DatabaseService.getInstance();
+      const entries = await dbService.getAllEntries();
+      if (entries.length > 0) {
+        const lastEntry = entries[entries.length - 1];
+        setLastInterval({ from: lastEntry.from, to: lastEntry.to });
+        if (!initialValues) {
+          setFormData(prev => ({
+            ...prev,
+            holeid: lastEntry.holeid,
+            from: lastEntry.to
+          }));
+        }
+      }
+    };
 
-  const handleChange = (fieldName: string, value: any) => {
-    setValues((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-  };
+    loadConfiguration();
+    loadLastInterval();
+  }, [initialValues]);
 
-  const validateForm = (): boolean => {
-    const validationErrors: string[] = [];
-
-    // Validate intervals
-    if (from >= to) {
-      validationErrors.push('From value must be less than To value');
-    }
-
-    // Validate fields
-    const entry = LogEntryManager.createEntry(holeid, from, to, values);
-    const fieldErrors = LogEntryManager.validateFields(entry, fields);
-    validationErrors.push(...fieldErrors);
-
-    setErrors(validationErrors);
-    return validationErrors.length === 0;
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const entry: LogEntry = {
+      id: initialValues?.id || crypto.randomUUID(),
+      created: initialValues?.created || new Date(),
+      modified: new Date(),
+      synced: false,
+      ...formData
+    } as LogEntry;
 
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      const entry = LogEntryManager.createEntry(holeid, from, to, values);
-      const dbService = DatabaseService.getInstance();
-      await dbService.addEntry(entry);
-      
-      // Reset form
-      setValues({});
-      setFrom(to);
-      setTo(to + 1);
-      setErrors([]);
-      
-      onSave?.();
-    } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to save entry']);
+    onSubmit(entry);
+    if (!initialValues) {
+      setFormData(prev => ({
+        ...prev,
+        from: formData.to,
+        to: formData.to
+      }));
     }
   };
 
-  const renderField = (field: LogEntryField) => {
-    switch (field.type) {
+  const renderField = (field: FieldConfig) => {
+    switch (field.field_type) {
       case 'domain':
         return (
-          <FormControl fullWidth margin="normal" key={field.name}>
-            <InputLabel>{field.name}</InputLabel>
+          <FormControl fullWidth key={field.field_name} margin="normal">
+            <InputLabel>{field.description}</InputLabel>
             <Select
-              value={values[field.name] || ''}
-              onChange={(e) => handleChange(field.name, e.target.value)}
-              label={field.name}
+              value={formData[field.field_name as keyof LogEntry] || ''}
+              onChange={(e: SelectChangeEvent) => handleChange(field.field_name, e.target.value)}
+              label={field.description}
               required={field.required}
             >
-              {field.domain?.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
+              {field.domain_values?.map(value => (
+                <MenuItem 
+                  key={value} 
+                  value={value}
+                  style={field.style_config?.colors ? { color: field.style_config.colors[value] } : {}}
+                >
+                  {field.style_config?.icons ? field.style_config.icons[value] : ''} {value}
                 </MenuItem>
               ))}
             </Select>
@@ -117,95 +120,73 @@ export const QuickLogForm: React.FC<QuickLogFormProps> = ({
       case 'boolean':
         return (
           <FormControlLabel
-            key={field.name}
+            key={field.field_name}
             control={
-              <Switch
-                checked={values[field.name] || false}
-                onChange={(e) => handleChange(field.name, e.target.checked)}
+              <Checkbox
+                checked={formData[field.field_name as keyof LogEntry] as boolean || false}
+                onChange={(e) => handleChange(field.field_name, e.target.checked)}
               />
             }
-            label={field.name}
+            label={field.description}
           />
         );
 
       case 'number':
         return (
           <TextField
-            key={field.name}
+            key={field.field_name}
             fullWidth
+            label={field.description}
             type="number"
-            label={field.name}
-            value={values[field.name] || ''}
-            onChange={(e) => handleChange(field.name, Number(e.target.value))}
+            value={formData[field.field_name as keyof LogEntry] || ''}
+            onChange={(e) => handleChange(field.field_name, parseFloat(e.target.value))}
             required={field.required}
-            inputProps={{
-              min: field.min,
-              max: field.max,
-              step: 'any',
-            }}
             margin="normal"
           />
         );
 
-      default: // text
+      default:
         return (
           <TextField
-            key={field.name}
+            key={field.field_name}
             fullWidth
-            label={field.name}
-            value={values[field.name] || ''}
-            onChange={(e) => handleChange(field.name, e.target.value)}
+            label={field.description}
+            value={formData[field.field_name as keyof LogEntry] || ''}
+            onChange={(e) => handleChange(field.field_name, e.target.value)}
             required={field.required}
             margin="normal"
+            multiline={field.field_name === 'notes'}
+            rows={field.field_name === 'notes' ? 4 : 1}
           />
         );
     }
   };
 
   return (
-    <Paper className="p-4">
-      <Typography variant="h6" component="h2" gutterBottom>
-        Log Entry
+    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        {initialValues ? 'Edit Log Entry' : 'New Log Entry'}
       </Typography>
-
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-4 mb-4">
-          <TextField
-            label="From"
-            type="number"
-            value={from}
-            onChange={(e) => setFrom(Number(e.target.value))}
-            required
-            inputProps={{ step: 'any' }}
-          />
-          <TextField
-            label="To"
-            type="number"
-            value={to}
-            onChange={(e) => setTo(Number(e.target.value))}
-            required
-            inputProps={{ step: 'any' }}
-          />
-        </div>
-
-        {errors.length > 0 && (
-          <Alert severity="error" className="mb-4">
-            <ul>
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </Alert>
-        )}
-
-        {fields.map(renderField)}
-
-        <div className="mt-4">
-          <Button type="submit" variant="contained" color="primary">
-            Save Entry
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {lastInterval && !initialValues && (
+            <Typography variant="body2" color="text.secondary">
+              Last interval: {lastInterval.from}m to {lastInterval.to}m
+            </Typography>
+          )}
+          {fields.map(field => renderField(field))}
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+          >
+            {initialValues ? 'Update' : 'Add'} Entry
           </Button>
-        </div>
+        </Box>
       </form>
     </Paper>
   );
 };
+
+export default QuickLogForm;

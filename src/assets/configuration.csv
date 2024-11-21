@@ -1,0 +1,11 @@
+field_name,field_type,required,domain_values,default_value,description,style_config
+holeid,text,true,,,"Hole identifier",{}
+from,number,true,,,Starting depth of the interval,{}
+to,number,true,,,Ending depth of the interval,{}
+lithology,domain,true,"sandstone,siltstone,shale,limestone,coal",,"Primary rock type","{\"colors\":{\"sandstone\":\"#FFD700\",\"siltstone\":\"#8B4513\",\"shale\":\"#696969\",\"limestone\":\"#B8B8B8\",\"coal\":\"#000000\"}}"
+color,domain,false,"grey,black,brown,red,green",,"Rock color",{}
+texture,domain,false,"massive,laminated,cross-bedded,bioturbated",,"Sedimentary texture","{\"icons\":{\"massive\":\"▅\",\"laminated\":\"≡\",\"cross-bedded\":\"⋰\",\"bioturbated\":\"◊\"}}"
+minerals,text,false,,,"Notable minerals",{}
+mineralized,boolean,false,,false,"Presence of mineralization","{\"colors\":{\"true\":\"#FFD700\",\"false\":\"transparent\"}}"
+structures,domain,false,"normal fault,reverse fault,fold,joint",,"Geological structures","{\"icons\":{\"normal fault\":\"⟍\",\"reverse fault\":\"⟋\",\"fold\":\"⌢\",\"joint\":\"┃\"}}"
+notes,text,false,,,"Additional observations",{}

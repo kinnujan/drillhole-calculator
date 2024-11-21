@@ -7,43 +7,32 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      manifest: {
-        name: 'QuickLog',
-        short_name: 'QuickLog',
-        description: 'Geological Logging PWA',
-        theme_color: '#1976d2',
-        background_color: '#ffffff',
-        display: 'standalone',
-        icons: [
-          {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\.dropboxapi\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'dropbox-api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24, // 24 hours
-              },
-            },
-          },
-        ],
-      },
-    }),
+      disable: true // Disable service worker temporarily
+    })
   ],
+  server: {
+    hmr: {
+      overlay: false // Disable the HMR error overlay
+    }
+  },
+  optimizeDeps: {
+    include: [
+      '@mui/material',
+      '@mui/icons-material',
+      'react',
+      'react-dom',
+      'papaparse'
+    ]
+  },
+  build: {
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', '@mui/material', '@mui/icons-material'],
+          utils: ['papaparse']
+        }
+      }
+    }
+  }
 });

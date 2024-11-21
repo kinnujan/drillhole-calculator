@@ -1,64 +1,139 @@
-import React from 'react';
-import { List, ListItem, ListItemText, Typography, Box, CircularProgress, Alert } from '@mui/material';
-import { LogEntry } from '../models/LogEntry';
+import React, { useState, useEffect } from 'react';
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Typography,
+  Box,
+  Tooltip,
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloudDoneIcon from '@mui/icons-material/CloudDone';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import { LogEntry } from '../types';
+import DatabaseService from '../services/DatabaseService';
+import CSVService from '../services/CSVService';
+import { FieldConfig } from '../services/CSVService';
 
 interface LogEntryListProps {
-  entries: LogEntry[];
-  isLoading: boolean;
-  error?: string;
+  onEdit: (entry: LogEntry) => void;
+  onDelete: (entry: LogEntry) => void;
 }
 
-export const LogEntryList: React.FC<LogEntryListProps> = ({ entries, isLoading, error }) => {
-  if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" p={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+const LogEntryList: React.FC<LogEntryListProps> = ({ onEdit, onDelete }) => {
+  const [entries, setEntries] = useState<LogEntry[]>([]);
+  const [fields, setFields] = useState<FieldConfig[]>([]);
+  const [styles, setStyles] = useState<Record<string, any>>({});
 
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
+  useEffect(() => {
+    const loadData = async () => {
+      const dbService = DatabaseService.getInstance();
+      const csvService = CSVService.getInstance();
+      
+      await csvService.loadConfiguration();
+      const config = csvService.getConfiguration();
+      setFields(config);
 
-  if (entries.length === 0) {
-    return (
-      <Box textAlign="center" py={4}>
-        <Typography variant="body1" color="textSecondary">
-          No entries found. Start logging to see your data here.
-        </Typography>
-      </Box>
-    );
-  }
+      const allEntries = await dbService.getAllEntries();
+      setEntries(allEntries.sort((a, b) => a.from - b.from));
 
-  // Group entries by holeid
-  const holeGroups = entries.reduce((groups, entry) => {
-    const group = groups[entry.holeid] || { entries: [], totalDepth: 0 };
-    group.entries.push(entry);
-    group.totalDepth = Math.max(group.totalDepth, entry.to || 0);
-    groups[entry.holeid] = group;
-    return groups;
-  }, {} as Record<string, { entries: LogEntry[], totalDepth: number }>);
+      // Pre-compute styles for each field value
+      const styleMap: Record<string, any> = {};
+      config.forEach(field => {
+        if (field.style_config) {
+          styleMap[field.field_name] = {};
+          if (field.domain_values) {
+            field.domain_values.forEach(value => {
+              styleMap[field.field_name][value] = csvService.getFieldStyle(field.field_name, value);
+            });
+          }
+        }
+      });
+      setStyles(styleMap);
+    };
+
+    loadData();
+  }, []);
+
+  const getDisplayValue = (entry: LogEntry, field: FieldConfig) => {
+    const value = entry[field.field_name as keyof LogEntry];
+    
+    if (field.field_type === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+    
+    if (field.field_type === 'domain' && styles[field.field_name]?.[value as string]) {
+      const style = styles[field.field_name][value as string];
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {style.icon && <span>{style.icon}</span>}
+          <span style={{ color: style.color }}>{value}</span>
+        </Box>
+      );
+    }
+
+    return value || '';
+  };
 
   return (
-    <List>
-      {Object.entries(holeGroups).map(([holeid, group]) => (
-        <ListItem
-          key={holeid}
-          divider
-          button
-          onClick={() => {/* TODO: Navigate to hole details */}}
-        >
-          <ListItemText
-            primary={holeid}
-            secondary={`${group.entries.length} intervals | Total Depth: ${group.totalDepth}m`}
-          />
-        </ListItem>
-      ))}
-    </List>
+    <Paper elevation={3}>
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Actions</TableCell>
+              {fields.map(field => (
+                <TableCell key={field.field_name}>
+                  <Tooltip title={field.description}>
+                    <Typography variant="subtitle2">
+                      {field.field_name}
+                    </Typography>
+                  </Tooltip>
+                </TableCell>
+              ))}
+              <TableCell>Sync Status</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {entries.map((entry) => (
+              <TableRow key={entry.id}>
+                <TableCell>
+                  <IconButton size="small" onClick={() => onEdit(entry)}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => onDelete(entry)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+                {fields.map(field => (
+                  <TableCell key={field.field_name}>
+                    {getDisplayValue(entry, field)}
+                  </TableCell>
+                ))}
+                <TableCell>
+                  {entry.synced ? (
+                    <Tooltip title="Synced">
+                      <CloudDoneIcon color="success" />
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="Not synced">
+                      <CloudOffIcon color="warning" />
+                    </Tooltip>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 };
+
+export default LogEntryList;
