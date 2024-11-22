@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import DatabaseService from './services/DatabaseService';
 import MainPage from './pages/MainPage';
+import ConfigurationPage from './pages/ConfigurationPage';
+import ConfigurationService from './services/ConfigurationService';
 import { CircularProgress, Box, ThemeProvider, CssBaseline, Alert } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { theme } from './theme';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -24,6 +27,9 @@ function App() {
 
     initializeApp();
   }, []);
+
+  const configService = ConfigurationService.getInstance();
+  const theme = configService.getTheme();
 
   if (isLoading) {
     return (
@@ -51,15 +57,12 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {error ? (
-          <Box p={3}>
-            <Alert severity="error" variant="filled">
-              {error}
-            </Alert>
-          </Box>
-        ) : (
-          <MainPage />
-        )}
+        <Router>
+          <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/config" element={<ConfigurationPage />} />
+          </Routes>
+        </Router>
       </ThemeProvider>
     </ErrorBoundary>
   );

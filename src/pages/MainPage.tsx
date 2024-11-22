@@ -11,6 +11,7 @@ import {
   Box,
   IconButton,
   Collapse,
+  Typography
 } from '@mui/material';
 import QuickLogForm from '../components/QuickLogForm';
 import LogEntryList from '../components/LogEntryList';
@@ -21,6 +22,8 @@ import DatabaseService from '../services/DatabaseService';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { useNavigate } from 'react-router-dom';
 
 const MainPage: React.FC = () => {
   const [editEntry, setEditEntry] = useState<LogEntry | null>(null);
@@ -34,6 +37,8 @@ const MainPage: React.FC = () => {
     originalEntry: LogEntry;
     splitPoint: number;
   } | null>(null);
+
+  const navigate = useNavigate();
 
   // Load entries for selected drillhole
   useEffect(() => {
@@ -189,6 +194,14 @@ const MainPage: React.FC = () => {
 
   return (
     <Container maxWidth="xl">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" component="h1">
+          QuickLogger
+        </Typography>
+        <IconButton onClick={() => navigate('/config')} color="primary">
+          <SettingsIcon />
+        </IconButton>
+      </Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} mt={2}>
         <h2>Drillhole: {selectedDrillhole}</h2>
         <Box>
