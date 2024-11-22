@@ -3,246 +3,245 @@ import {
   Box,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
   FormControlLabel,
-  Checkbox,
+  Switch,
+  Tabs,
+  Tab,
   Paper,
-  Typography,
-  SelectChangeEvent,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { LogEntry } from '../types';
-import DatabaseService from '../services/DatabaseService';
-import CSVService from '../services/CSVService';
-import { FieldConfig } from '../services/CSVService';
+import CSVService, { FieldConfig, PageInfo, VisibilityStyle } from '../services/CSVService';
 
 interface QuickLogFormProps {
   onSubmit: (entry: LogEntry) => void;
-  editEntry: LogEntry | null;
+  initialValues?: LogEntry;
   drillholeId: string;
-  prefillData?: Partial<LogEntry> | null;
 }
 
-const QuickLogForm: React.FC<QuickLogFormProps> = ({ 
-  onSubmit, 
-  editEntry, 
-  drillholeId,
-  prefillData 
-}) => {
-  const [formData, setFormData] = useState<Partial<LogEntry>>({
-    drillhole_id: drillholeId,
-    from: 0,
-    to: 0,
-    lithology: '',
-    color: '',
-    texture: '',
-    minerals: '',
-    mineralized: false,
-    structures: '',
-    notes: '',
-  });
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
-  const [fields, setFields] = useState<FieldConfig[]>([]);
-  const [lastInterval, setLastInterval] = useState<{ from: number; to: number } | null>(null);
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
-  useEffect(() => {
-    if (editEntry) {
-      setFormData(editEntry);
-    } else if (prefillData) {
-      setFormData(prev => ({
-        ...prev,
-        ...prefillData,
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        drillhole_id: drillholeId,
-      }));
-    }
-  }, [editEntry, drillholeId, prefillData]);
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+export default function QuickLogForm({ onSubmit, initialValues, drillholeId }: QuickLogFormProps) {
+  const [formData, setFormData] = useState<any>(initialValues || {});
+  const [pages, setPages] = useState<PageInfo[]>([]);
+  const [currentTab, setCurrentTab] = useState(0);
+  const csvService = CSVService.getInstance();
 
   useEffect(() => {
-    const loadConfiguration = async () => {
-      const csvService = CSVService.getInstance();
+    const loadPages = async () => {
       await csvService.loadConfiguration();
-      setFields(csvService.getConfiguration());
-    };
-
-    const loadLastInterval = async () => {
-      try {
-        const dbService = DatabaseService.getInstance();
-        const entries = await dbService.getEntriesByHole(drillholeId);
-        if (entries.length > 0) {
-          const lastEntry = entries[entries.length - 1];
-          setLastInterval({
-            from: lastEntry.from,
-            to: lastEntry.to,
-          });
-          
-          if (!editEntry) {
-            setFormData(prev => ({
-              ...prev,
-              from: lastEntry.to,
-              to: lastEntry.to + 1,
-            }));
-          }
+      setPages(csvService.getPages());
+      
+      // Set hidden field values
+      const hiddenFields = csvService.getHiddenFields();
+      const hiddenValues: Record<string, any> = {};
+      hiddenFields.forEach(field => {
+        if (field.field_name === 'drillhole_id') {
+          hiddenValues[field.field_name] = drillholeId;
         }
-      } catch (error) {
-        console.error('Error loading last interval:', error);
-      }
+      });
+      setFormData(prev => ({ ...prev, ...hiddenValues }));
     };
-
-    loadConfiguration();
-    loadLastInterval();
+    loadPages();
   }, [drillholeId]);
 
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      
-      // If editing from/to fields, ensure they're valid numbers
-      if (field === 'from' || field === 'to') {
-        const numValue = parseFloat(value);
-        if (!isNaN(numValue)) {
-          newData[field] = numValue;
-          
-          // When editing 'from', adjust 'to' if it would become invalid
-          if (field === 'from' && newData.to !== undefined && numValue > newData.to) {
-            newData.to = numValue;
-          }
-          // When editing 'to', adjust 'from' if it would become invalid
-          if (field === 'to' && newData.from !== undefined && numValue < newData.from) {
-            newData.from = numValue;
-          }
-        }
-      }
-      
-      return newData;
+  const handleChange = (field: string) => (
+    event: React.ChangeEvent<HTMLInputElement> | React.MouseEvent<HTMLElement> | null,
+    newValue: string | boolean | null
+  ) => {
+    let value = newValue;
+    
+    // Handle different event types
+    if (event?.target instanceof HTMLInputElement) {
+      value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    }
+    
+    if (value !== null) {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    onSubmit({
+      id: formData.id || crypto.randomUUID(),
+      created: formData.created || new Date(),
+      modified: new Date(),
+      synced: false,
+      ...formData
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const entry: LogEntry = {
-      ...formData,
-      drillhole_id: drillholeId,
-    } as LogEntry;
-    
-    onSubmit(entry);
-    
-    if (!editEntry) {
-      setFormData({
-        drillhole_id: drillholeId,
-        from: entry.to,
-        to: entry.to + 1,
-        lithology: '',
-        color: '',
-        texture: '',
-        minerals: '',
-        mineralized: false,
-        structures: '',
-        notes: '',
-      });
-    }
-  };
-
   const renderField = (field: FieldConfig) => {
-    switch (field.field_type) {
-      case 'domain':
+    if (field.visibility_style === 'hidden') {
+      return null;
+    }
+
+    switch (field.visibility_style) {
+      case 'buttons':
+        return (
+          <Box key={field.field_name} sx={{ mb: 2 }}>
+            <InputLabel>{field.description}</InputLabel>
+            <ToggleButtonGroup
+              value={formData[field.field_name] || ''}
+              exclusive
+              onChange={(e, value) => handleChange(field.field_name)(e, value)}
+              aria-label={field.description}
+              sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}
+            >
+              {field.domain_values.map(value => {
+                const style = field.style_config?.colors?.[value] 
+                  ? { backgroundColor: field.style_config.colors[value], color: '#fff' }
+                  : {};
+                const icon = field.style_config?.icons?.[value];
+                return (
+                  <ToggleButton 
+                    key={value} 
+                    value={value}
+                    sx={{
+                      ...style,
+                      '&.Mui-selected': {
+                        ...style,
+                        opacity: 1,
+                      },
+                      '&:not(.Mui-selected)': {
+                        opacity: 0.6,
+                      }
+                    }}
+                  >
+                    {icon ? `${icon} ${value}` : value}
+                  </ToggleButton>
+                );
+              })}
+            </ToggleButtonGroup>
+          </Box>
+        );
+
+      case 'dropdown':
         return (
           <FormControl fullWidth key={field.field_name} margin="normal">
             <InputLabel>{field.description}</InputLabel>
             <Select
-              value={formData[field.field_name as keyof LogEntry] || ''}
-              onChange={(e: SelectChangeEvent) => handleChange(field.field_name, e.target.value)}
+              value={formData[field.field_name] || ''}
+              onChange={e => handleChange(field.field_name)(e as any, e.target.value)}
               label={field.description}
               required={field.required}
             >
-              {field.domain_values?.map(value => (
-                <MenuItem 
-                  key={value} 
-                  value={value}
-                  style={field.style_config?.colors ? { color: field.style_config.colors[value] } : {}}
-                >
-                  {field.style_config?.icons ? field.style_config.icons[value] : ''} {value}
-                </MenuItem>
+              {field.domain_values.map(value => (
+                <MenuItem key={value} value={value}>{value}</MenuItem>
               ))}
             </Select>
           </FormControl>
         );
 
-      case 'boolean':
+      case 'switch':
         return (
           <FormControlLabel
             key={field.field_name}
             control={
-              <Checkbox
-                checked={formData[field.field_name as keyof LogEntry] as boolean || false}
-                onChange={(e) => handleChange(field.field_name, e.target.checked)}
+              <Switch
+                checked={formData[field.field_name] || false}
+                onChange={e => handleChange(field.field_name)(e, e.target.checked)}
               />
             }
             label={field.description}
           />
         );
 
-      case 'number':
+      case 'textarea':
         return (
           <TextField
             key={field.field_name}
             fullWidth
+            multiline
+            rows={4}
             label={field.description}
-            type="number"
-            value={formData[field.field_name as keyof LogEntry] || ''}
-            onChange={(e) => handleChange(field.field_name, parseFloat(e.target.value))}
+            value={formData[field.field_name] || ''}
+            onChange={e => handleChange(field.field_name)(e, e.target.value)}
             required={field.required}
             margin="normal"
           />
         );
 
+      case 'visible':
       default:
         return (
           <TextField
             key={field.field_name}
             fullWidth
             label={field.description}
-            value={formData[field.field_name as keyof LogEntry] || ''}
-            onChange={(e) => handleChange(field.field_name, e.target.value)}
+            type={field.field_type === 'number' ? 'number' : 'text'}
+            value={formData[field.field_name] || ''}
+            onChange={e => handleChange(field.field_name)(e, e.target.value)}
             required={field.required}
             margin="normal"
-            multiline={field.field_name === 'notes'}
-            rows={field.field_name === 'notes' ? 4 : 1}
           />
         );
     }
   };
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setCurrentTab(newValue);
+  };
+
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        {editEntry ? 'Edit Log Entry' : 'New Log Entry'}
-      </Typography>
+    <Paper sx={{ p: 2 }}>
       <form onSubmit={handleSubmit}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {lastInterval && !editEntry && (
-            <Typography variant="body2" color="text.secondary">
-              Last interval: {lastInterval.from}m to {lastInterval.to}m
-            </Typography>
-          )}
-          {fields.map(field => renderField(field))}
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-          >
-            {editEntry ? 'Update' : 'Add'} Entry
+        {/* System fields (non-hidden) */}
+        <Box sx={{ mb: 2 }}>
+          {csvService.getFieldsForPage('System').map(renderField)}
+        </Box>
+
+        {/* Tabs for other pages */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={currentTab} onChange={handleTabChange}>
+            {pages.filter(page => page.name !== 'System').map((page, index) => (
+              <Tab key={page.name} label={page.name} id={`simple-tab-${index}`} />
+            ))}
+          </Tabs>
+        </Box>
+
+        {pages.filter(page => page.name !== 'System').map((page, index) => (
+          <TabPanel key={page.name} value={currentTab} index={index}>
+            {csvService.getFieldsForPage(page.name).map(renderField)}
+          </TabPanel>
+        ))}
+
+        <Box sx={{ mt: 2 }}>
+          <Button type="submit" variant="contained" color="primary">
+            Save Entry
           </Button>
         </Box>
       </form>
     </Paper>
   );
-};
-
-export default QuickLogForm;
+}
