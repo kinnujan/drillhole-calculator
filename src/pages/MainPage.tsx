@@ -135,23 +135,31 @@ const MainPage: React.FC = () => {
       const secondBreak = entry.from + (2 * thirdLength);
       
       // Create three new entries, all with the same values
-      const beforeEntry: Partial<LogEntry> = {
-        ...entry,
-        id: undefined, // Let DB assign new ID
+      const commonFields = {
+        drillhole_id: entry.drillhole_id,
+        lithology: entry.lithology,
+        color: entry.color || '',
+        texture: entry.texture || '',
+        minerals: entry.minerals || '',
+        mineralized: entry.mineralized || false,
+        structures: entry.structures || '',
+        notes: entry.notes || '',
+      };
+
+      const beforeEntry: LogEntry = {
+        ...commonFields,
         from: entry.from,
         to: firstBreak,
       };
       
-      const middleEntry: Partial<LogEntry> = {
-        ...entry,
-        id: undefined, // Let DB assign new ID
+      const middleEntry: LogEntry = {
+        ...commonFields,
         from: firstBreak,
         to: secondBreak,
       };
       
-      const afterEntry: Partial<LogEntry> = {
-        ...entry,
-        id: undefined, // Let DB assign new ID
+      const afterEntry: LogEntry = {
+        ...commonFields,
         from: secondBreak,
         to: entry.to,
       };
@@ -160,9 +168,9 @@ const MainPage: React.FC = () => {
       await dbService.deleteEntry(entry.id!);
       
       // Add the new entries in order
-      await dbService.addEntry(beforeEntry as LogEntry);
-      const newMiddleEntry = await dbService.addEntry(middleEntry as LogEntry);
-      await dbService.addEntry(afterEntry as LogEntry);
+      await dbService.addEntry(beforeEntry);
+      const newMiddleEntry = await dbService.addEntry(middleEntry);
+      await dbService.addEntry(afterEntry);
 
       // Set up the middle entry for editing
       setEditEntry(newMiddleEntry);
