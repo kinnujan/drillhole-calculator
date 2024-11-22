@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import DatabaseService from './services/DatabaseService';
-import MainPage from './pages/MainPage';
-import ConfigurationPage from './pages/ConfigurationPage';
-import ConfigurationService from './services/ConfigurationService';
 import { CircularProgress, Box, ThemeProvider, CssBaseline, Alert } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { theme } from './theme';
+import MainPage from './pages/MainPage';
+import ConfigurationService from './services/ConfigurationService';
+import DatabaseService from './services/DatabaseService';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const configService = ConfigurationService.getInstance();
+  const theme = configService.getTheme();
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -18,18 +17,15 @@ function App() {
         const dbService = DatabaseService.getInstance();
         await dbService.initialize();
         setIsLoading(false);
-      } catch (err) {
-        console.error('Error initializing app:', err);
-        setError('Failed to initialize the application. Please check the console for details.');
+      } catch (error) {
+        console.error('Error initializing app:', error);
+        setError('Failed to initialize the application. Please try refreshing the page.');
         setIsLoading(false);
       }
     };
 
     initializeApp();
   }, []);
-
-  const configService = ConfigurationService.getInstance();
-  const theme = configService.getTheme();
 
   if (isLoading) {
     return (
@@ -57,12 +53,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="/config" element={<ConfigurationPage />} />
-          </Routes>
-        </Router>
+        <MainPage />
       </ThemeProvider>
     </ErrorBoundary>
   );

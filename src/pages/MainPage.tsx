@@ -11,7 +11,12 @@ import {
   Box,
   IconButton,
   Collapse,
-  Typography
+  Typography,
+  Card,
+  CardContent,
+  FormControlLabel,
+  Switch,
+  Divider,
 } from '@mui/material';
 import QuickLogForm from '../components/QuickLogForm';
 import LogEntryList from '../components/LogEntryList';
@@ -19,11 +24,12 @@ import StripLog from '../components/StripLog';
 import DrillholeSelector from '../components/DrillholeSelector';
 import { LogEntry } from '../types';
 import DatabaseService from '../services/DatabaseService';
+import ConfigurationService from '../services/ConfigurationService';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useNavigate } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
 
 const MainPage: React.FC = () => {
   const [editEntry, setEditEntry] = useState<LogEntry | null>(null);
@@ -37,8 +43,15 @@ const MainPage: React.FC = () => {
     originalEntry: LogEntry;
     splitPoint: number;
   } | null>(null);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(ConfigurationService.getInstance().getConfig().darkMode);
 
-  const navigate = useNavigate();
+  const handleDarkModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newDarkMode = event.target.checked;
+    setDarkMode(newDarkMode);
+    ConfigurationService.getInstance().updateConfig({ darkMode: newDarkMode });
+    window.location.reload();
+  };
 
   // Load entries for selected drillhole
   useEffect(() => {
@@ -198,9 +211,6 @@ const MainPage: React.FC = () => {
         <Typography variant="h4" component="h1">
           QuickLogger
         </Typography>
-        <IconButton onClick={() => navigate('/config')} color="primary">
-          <SettingsIcon />
-        </IconButton>
       </Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} mt={2}>
         <h2>Drillhole: {selectedDrillhole}</h2>
@@ -212,12 +222,19 @@ const MainPage: React.FC = () => {
           >
             {showStriplog ? <VisibilityOffIcon /> : <VisibilityIcon />}
           </IconButton>
-          <IconButton
+          <IconButton 
             onClick={() => setShowNewEntryDialog(true)}
             color="primary"
             title="Add New Entry"
           >
             <AddIcon />
+          </IconButton>
+          <IconButton 
+            onClick={() => setConfigOpen(true)} 
+            color="primary"
+            title="Settings"
+          >
+            <SettingsIcon />
           </IconButton>
           <Button
             variant="outlined"
@@ -312,6 +329,48 @@ const MainPage: React.FC = () => {
           <Button onClick={handleDelete} color="error">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Configuration Dialog */}
+      <Dialog 
+        open={configOpen} 
+        onClose={() => setConfigOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            Configuration
+            <IconButton onClick={() => setConfigOpen(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Appearance
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={darkMode}
+                    onChange={handleDarkModeChange}
+                    color="primary"
+                  />
+                }
+                label="Dark Mode"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Add more configuration sections here */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfigOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Container>
