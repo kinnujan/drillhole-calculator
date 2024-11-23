@@ -35,6 +35,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import HistoryService, { DeleteEntryCommand, AddEntryCommand, UpdateEntryCommand, SplitEntryCommand } from '../services/HistoryService';
 import { v4 as uuidv4 } from 'uuid';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const MainPage: React.FC = () => {
   const [editEntry, setEditEntry] = useState<LogEntry | null>(null);
@@ -465,22 +466,85 @@ const MainPage: React.FC = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>New Log Entry</DialogTitle>
+        <DialogTitle>
+          New Log Entry
+          <IconButton
+            aria-label="close"
+            onClick={() => {
+              setShowNewEntryDialog(false);
+              setPrefillData(null);
+            }}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <QuickLogForm
-            onSubmit={handleNewEntrySubmit}
+            onSubmit={handleSubmit}
             editEntry={null}
-            drillholeId={selectedDrillhole}
+            drillholeId={selectedDrillhole || ''}
             prefillData={prefillData}
+            previousEntry={entries.length > 0 ? entries[entries.length - 1] : null}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setShowNewEntryDialog(false);
-            setPrefillData(null);
-          }}>
-            Cancel
-          </Button>
+        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
+          <Box>
+            {entries.length > 0 && (
+              <Button
+                onClick={() => {
+                  const previousEntry = entries[entries.length - 1];
+                  // Calculate new depths
+                  const depthDiff = previousEntry.to - previousEntry.from;
+                  const newFrom = previousEntry.to;
+                  const newTo = Number((newFrom + depthDiff).toFixed(2));
+
+                  // Set prefill data with values from previous entry
+                  setPrefillData({
+                    from: newFrom,
+                    to: newTo,
+                    lithology: previousEntry.lithology,
+                    color: previousEntry.color,
+                    texture: previousEntry.texture,
+                    minerals: previousEntry.minerals,
+                    mineralized: previousEntry.mineralized,
+                    structures: previousEntry.structures,
+                    fields: { ...previousEntry.fields },
+                    drillhole_id: selectedDrillhole || '',
+                    created: new Date(),
+                    modified: new Date(),
+                    synced: false
+                  });
+                }}
+                startIcon={<ContentCopyIcon />}
+                variant="outlined"
+              >
+                Quick Fill
+              </Button>
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button 
+              onClick={() => {
+                setShowNewEntryDialog(false);
+                setPrefillData(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              color="primary"
+              type="submit"
+              form="entry-form"
+            >
+              Save Entry
+            </Button>
+          </Box>
         </DialogActions>
       </Dialog>
 
@@ -491,13 +555,28 @@ const MainPage: React.FC = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Edit Log Entry</DialogTitle>
+        <DialogTitle>
+          Edit Log Entry
+          <IconButton
+            aria-label="close"
+            onClick={() => setEditEntry(null)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           {editEntry && (
             <QuickLogForm
               onSubmit={handleSubmit}
               editEntry={editEntry}
-              drillholeId={selectedDrillhole}
+              drillholeId={selectedDrillhole || ''}
+              prefillData={null}
+              previousEntry={null}
             />
           )}
         </DialogContent>

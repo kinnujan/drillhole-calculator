@@ -18,12 +18,15 @@ import {
 import { LogEntry } from '../types';
 import CSVService, { FieldConfig, PageInfo, VisibilityStyle } from '../services/CSVService';
 import { v4 as uuidv4 } from 'uuid';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 interface QuickLogFormProps {
   onSubmit: (entry: Omit<LogEntry, 'id'>) => void;
-  editEntry: LogEntry | null;
-  drillholeId: string | null;
-  prefillData: Partial<LogEntry> | null;
+  editEntry?: LogEntry | null;
+  drillholeId?: string;
+  prefillData?: Partial<LogEntry> | null;
+  previousEntry?: LogEntry | null;
+  onQuickFill?: () => void;
 }
 
 interface TabPanelProps {
@@ -52,7 +55,7 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefillData }: QuickLogFormProps) {
+export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefillData, previousEntry, onQuickFill }: QuickLogFormProps) {
   const [formData, setFormData] = useState<Partial<LogEntry>>({});
   const [pages, setPages] = useState<PageInfo[]>([]);
   const [currentTab, setCurrentTab] = useState(0);
@@ -241,34 +244,26 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <form onSubmit={handleSubmit}>
-        {/* System fields (non-hidden) */}
-        <Box sx={{ mb: 2 }}>
-          {csvService.getFieldsForPage('System').map(renderField)}
-        </Box>
+    <Box component="form" onSubmit={handleSubmit} sx={{ p: 2 }}>
+      {/* System fields (non-hidden) */}
+      <Box sx={{ mb: 2 }}>
+        {csvService.getFieldsForPage('System').map(renderField)}
+      </Box>
 
-        {/* Tabs for other pages */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={currentTab} onChange={handleTabChange}>
-            {pages.filter(page => page.name !== 'System').map((page, index) => (
-              <Tab key={page.name} label={page.name} id={`simple-tab-${index}`} />
-            ))}
-          </Tabs>
-        </Box>
+      {/* Tabs for other pages */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={currentTab} onChange={handleTabChange}>
+          {pages.filter(page => page.name !== 'System').map((page, index) => (
+            <Tab key={page.name} label={page.name} id={`simple-tab-${index}`} />
+          ))}
+        </Tabs>
+      </Box>
 
-        {pages.filter(page => page.name !== 'System').map((page, index) => (
-          <TabPanel key={page.name} value={currentTab} index={index}>
-            {csvService.getFieldsForPage(page.name).map(renderField)}
-          </TabPanel>
-        ))}
-
-        <Box sx={{ mt: 2 }}>
-          <Button type="submit" variant="contained" color="primary">
-            Save Entry
-          </Button>
-        </Box>
-      </form>
-    </Paper>
+      {pages.filter(page => page.name !== 'System').map((page, index) => (
+        <TabPanel key={page.name} value={currentTab} index={index}>
+          {csvService.getFieldsForPage(page.name).map(renderField)}
+        </TabPanel>
+      ))}
+    </Box>
   );
 }
