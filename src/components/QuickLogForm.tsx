@@ -17,11 +17,13 @@ import {
 } from '@mui/material';
 import { LogEntry } from '../types';
 import CSVService, { FieldConfig, PageInfo, VisibilityStyle } from '../services/CSVService';
+import { v4 as uuidv4 } from 'uuid';
 
 interface QuickLogFormProps {
-  onSubmit: (entry: LogEntry) => void;
-  initialValues?: LogEntry;
-  drillholeId: string;
+  onSubmit: (entry: Omit<LogEntry, 'id'>) => void;
+  editEntry: LogEntry | null;
+  drillholeId: string | null;
+  prefillData: Partial<LogEntry> | null;
 }
 
 interface TabPanelProps {
@@ -50,55 +52,79 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-export default function QuickLogForm({ onSubmit, initialValues, drillholeId }: QuickLogFormProps) {
-  const [formData, setFormData] = useState<any>(initialValues || {});
+export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefillData }: QuickLogFormProps) {
+  const [formData, setFormData] = useState<Partial<LogEntry>>({});
   const [pages, setPages] = useState<PageInfo[]>([]);
   const [currentTab, setCurrentTab] = useState(0);
   const csvService = CSVService.getInstance();
 
   useEffect(() => {
+    console.log('[QuickLogForm] Initializing form data with:', { editEntry, prefillData });
+    if (editEntry) {
+      setFormData(editEntry);
+    } else if (prefillData) {
+      setFormData(prefillData);
+    } else {
+      setFormData({
+        drillhole_id: drillholeId || '',
+        from: 0,
+        to: 0,
+        lithology: '',
+        color: '',
+        texture: '',
+        minerals: '',
+        mineralized: false,
+        structures: '',
+        notes: '',
+        synced: false,
+        fields: {},
+        created: new Date(),
+        modified: new Date()
+      });
+    }
+  }, [editEntry, prefillData, drillholeId]);
+
+  useEffect(() => {
     const loadPages = async () => {
       await csvService.loadConfiguration();
       setPages(csvService.getPages());
-      
-      // Set hidden field values
-      const hiddenFields = csvService.getHiddenFields();
-      const hiddenValues: Record<string, any> = {};
-      hiddenFields.forEach(field => {
-        if (field.field_name === 'drillhole_id') {
-          hiddenValues[field.field_name] = drillholeId;
-        }
-      });
-      setFormData(prev => ({ ...prev, ...hiddenValues }));
     };
     loadPages();
-  }, [drillholeId]);
+  }, []);
 
   const handleChange = (field: string) => (
-    event: React.ChangeEvent<HTMLInputElement> | React.MouseEvent<HTMLElement> | null,
-    newValue: string | boolean | null
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.MouseEvent<HTMLElement> | null,
+    newValue?: string | boolean | null
   ) => {
+    console.log('[QuickLogForm] Field change:', { field, event, newValue });
     let value = newValue;
     
     // Handle different event types
-    if (event?.target instanceof HTMLInputElement) {
-      value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    if (event?.target instanceof HTMLInputElement || event?.target instanceof HTMLTextAreaElement) {
+      value = event.target.type === 'checkbox' ? 
+        (event.target as HTMLInputElement).checked : 
+        event.target.value;
     }
     
-    if (value !== null) {
+    if (value !== null && value !== undefined) {
+      // Convert numeric fields to numbers
+      if (field === 'from' || field === 'to') {
+        value = Number(value);
+      }
+      
       setFormData(prev => ({ ...prev, [field]: value }));
     }
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    console.log('[QuickLogForm] Submitting form data:', formData);
     onSubmit({
-      id: formData.id || crypto.randomUUID(),
-      created: formData.created || new Date(),
+      ...formData,
+      drillhole_id: drillholeId || '',
       modified: new Date(),
       synced: false,
-      ...formData
-    });
+    } as LogEntry);
   };
 
   const renderField = (field: FieldConfig) => {
@@ -204,6 +230,7 @@ export default function QuickLogForm({ onSubmit, initialValues, drillholeId }: Q
             onChange={e => handleChange(field.field_name)(e, e.target.value)}
             required={field.required}
             margin="normal"
+            inputProps={{ step: 'any' }}
           />
         );
     }

@@ -18,55 +18,75 @@ import {
   Button,
   TextField,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import AddIcon from '@mui/icons-material/Add';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CallSplitIcon from '@mui/icons-material/CallSplit';
 import { LogEntry } from '../types';
 import DatabaseService from '../services/DatabaseService';
 import CSVService from '../services/CSVService';
-import { FieldConfig } from '../services/CSVService';
+import { v4 as uuidv4 } from 'uuid';
+import { validateIntervals, getIntervalColor, IntervalValidation } from '../utils/intervalUtils';
+
+interface Field {
+  name: string;
+  type: string;
+  page_name: string;
+  page_order: number;
+  visibility_style: string;
+  required?: boolean;
+  domain_values?: string[];
+  default_value?: string;
+  description?: string;
+  style_config?: any;
+}
 
 interface LogEntryListProps {
   entries: LogEntry[];
-  onEdit: (entry: LogEntry) => void;
-  onDelete: (entry: LogEntry) => void;
-  onAddBetween?: (prefill: Partial<LogEntry>) => void;
+  onEdit?: (entry: LogEntry) => void;
+  onDelete?: (id: string) => void;
+  onAddBetween?: (from: number, to: number) => void;
   onSplit?: (entry: LogEntry) => void;
+  onCancelSplit?: (originalEntryId: string) => Promise<void>;
 }
 
-const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete, onAddBetween, onSplit }) => {
-  const [fields, setFields] = useState<FieldConfig[]>([]);
+const LogEntryList: React.FC<LogEntryListProps> = ({ 
+  entries, 
+  onEdit, 
+  onDelete, 
+  onAddBetween, 
+  onSplit,
+  onCancelSplit
+}) => {
+  const theme = useTheme();
+  const [fields, setFields] = useState<Field[]>([]);
   const [styles, setStyles] = useState<Record<string, any>>({});
-  const [splitDialog, setSplitDialog] = useState<{
-    open: boolean;
-    entry: LogEntry | null;
-    splitPoint: number;
-  }>({
-    open: false,
-    entry: null,
-    splitPoint: 0
-  });
+  const [intervalValidations, setIntervalValidations] = useState<IntervalValidation[]>([]);
 
   useEffect(() => {
+    console.log('[LogEntryList] Entries updated:', entries);
+    // Validate intervals whenever entries change
+    const validations = validateIntervals(entries);
+    setIntervalValidations(validations);
+    console.log('[LogEntryList] Interval validations:', validations);
+
     const loadData = async () => {
       const csvService = CSVService.getInstance();
-      
-      await csvService.loadConfiguration();
-      const config = csvService.getConfiguration();
+      const config = await csvService.loadConfiguration();
       setFields(config);
 
       // Pre-compute styles for each field value
       const styleMap: Record<string, any> = {};
       config.forEach(field => {
         if (field.style_config) {
-          styleMap[field.field_name] = {};
-          if (field.domain_values) {
-            field.domain_values.forEach(value => {
-              styleMap[field.field_name][value] = csvService.getFieldStyle(field.field_name, value);
-            });
+          const config = JSON.parse(typeof field.style_config === 'string' ? field.style_config : JSON.stringify(field.style_config));
+          if (config.colors || config.icons) {
+            styleMap[field.name] = config;
           }
         }
       });
@@ -74,176 +94,277 @@ const LogEntryList: React.FC<LogEntryListProps> = ({ entries, onEdit, onDelete, 
     };
 
     loadData();
-  }, []);
+  }, [entries]);
 
-  const getDisplayValue = (entry: LogEntry, field: FieldConfig) => {
-    const value = entry[field.field_name as keyof LogEntry];
-    
-    if (field.field_type === 'boolean') {
-      return value ? 'Yes' : 'No';
+  // Sort entries by depth
+  const sortedEntries = [...entries].sort((a, b) => a.from - b.from);
+  console.log('[LogEntryList] Sorted entries:', sortedEntries);
+
+  const getDisplayValue = (entry: LogEntry, field: Field) => {
+    const value = entry[field.name as keyof LogEntry];
+    if (value === undefined || value === null) return '';
+
+    if (field.type === 'boolean') {
+      return value === true ? 'Yes' : 'No';
     }
-    
-    if (field.field_type === 'domain' && styles[field.field_name]?.[value as string]) {
-      const style = styles[field.field_name][value as string];
+
+    if (field.type === 'domain') {
+      const style = styles[field.name];
       return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {style.icon && <span>{style.icon}</span>}
-          <span style={{ color: style.color }}>{value}</span>
+          {style?.icons?.[value] && (
+            <Typography component="span" sx={{ fontSize: '1.2em' }}>
+              {style.icons[value]}
+            </Typography>
+          )}
+          <Typography
+            component="span"
+            sx={{
+              color: style?.colors?.[value] || 'inherit',
+              fontWeight: style?.colors?.[value] ? 'bold' : 'inherit'
+            }}
+          >
+            {value}
+          </Typography>
         </Box>
       );
     }
 
-    return value || '';
+    return value.toString();
+  };
+
+  const getCellStyle = (field: Field, value: any) => {
+    if (!styles[field.name] || !value) return {};
+
+    const style = styles[field.name];
+    return {
+      color: style.colors?.[value] || 'inherit',
+      backgroundColor: style.background?.[value],
+      ...(style.cellStyle?.[value] || {})
+    };
+  };
+
+  const handleSplitClick = async (entry: LogEntry) => {
+    console.log(`[UI] Split button clicked for entry:`, entry);
+    try {
+      await onSplit(entry);
+    } catch (error) {
+      console.error('[UI] Error in split handler:', error);
+    }
+  };
+
+  const handleCancelSplit = async (entryId: string) => {
+    if (onCancelSplit) {
+      await onCancelSplit(entryId);
+    }
+  };
+
+  // Filter out system fields that should be hidden and get unique visible fields
+  const visibleFields = fields
+    .filter(field => field.visibility_style !== 'hidden')
+    .filter((field, index, self) => 
+      index === self.findIndex(f => f.name === field.name)
+    );
+
+  // Function to render gap indicator row
+  const renderGapIndicator = (gapStart: number, gapEnd: number) => (
+    <TableRow sx={{ 
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? getIntervalColor({ hasGap: true, hasOverlap: false }).dark
+        : getIntervalColor({ hasGap: true, hasOverlap: false }).light 
+    }}>
+      <TableCell colSpan={visibleFields.length + 3} sx={{ py: 1, textAlign: 'center' }}>
+        <Typography variant="body2" color="warning.main">
+          Gap: {gapStart.toFixed(2)} - {gapEnd.toFixed(2)}
+        </Typography>
+      </TableCell>
+    </TableRow>
+  );
+
+  // Function to get row style based on validation
+  const getRowStyle = (validation: IntervalValidation) => {
+    const prevColors = getIntervalColor(validation.prevStatus);
+    const nextColors = getIntervalColor(validation.nextStatus);
+    
+    const color = prevColors.light !== 'transparent' || nextColors.light !== 'transparent'
+      ? theme.palette.mode === 'dark'
+        ? prevColors.dark || nextColors.dark
+        : prevColors.light || nextColors.light
+      : 'transparent';
+    
+    return {
+      backgroundColor: color,
+      position: 'relative' as const
+    };
   };
 
   return (
     <>
-      <Paper elevation={3}>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Actions</TableCell>
-                {fields.map(field => (
-                  <TableCell key={field.field_name}>
-                    <Tooltip title={field.description}>
-                      <Typography variant="subtitle2">
-                        {field.field_name}
-                      </Typography>
-                    </Tooltip>
-                  </TableCell>
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>From</TableCell>
+              <TableCell>To</TableCell>
+              {visibleFields
+                .filter(field => !['from', 'to'].includes(field.name))
+                .map((field) => (
+                  <TableCell key={field.name}>{field.name}</TableCell>
                 ))}
-                <TableCell>Sync Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {/* Add button at the start */}
+            {sortedEntries.length > 0 && (
+              <TableRow>
+                <TableCell colSpan={visibleFields.length + 3} align="center" sx={{ py: 0 }}>
+                  <Tooltip title="Add Entry at Start">
+                    <IconButton
+                      size="small"
+                      sx={{ my: 0.5 }}
+                      onClick={() => onAddBetween && onAddBetween(0, sortedEntries[0].from)}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {entries.map((entry, index) => (
+            )}
+
+            {/* Existing entries with between buttons and gap indicators */}
+            {sortedEntries.map((entry, index) => {
+              const validation = intervalValidations[index];
+              return (
                 <React.Fragment key={entry.id}>
-                  <TableRow>
+                  <TableRow sx={validation ? getRowStyle(validation) : undefined}>
                     <TableCell>
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <IconButton size="small" onClick={() => onEdit(entry)}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {entry.from}
+                        {validation?.prevStatus.hasOverlap && (
+                          <Tooltip title={`Overlap with previous: ${validation.prevStatus.overlapStart} - ${validation.prevStatus.overlapEnd}`}>
+                            <Box component="span" sx={{ ml: 1, color: 'error.main' }}>⚠️</Box>
+                          </Tooltip>
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {entry.to}
+                        {validation?.nextStatus.hasOverlap && (
+                          <Tooltip title={`Overlap with next: ${validation.nextStatus.overlapStart} - ${validation.nextStatus.overlapEnd}`}>
+                            <Box component="span" sx={{ ml: 1, color: 'error.main' }}>⚠️</Box>
+                          </Tooltip>
+                        )}
+                      </Box>
+                    </TableCell>
+                    {visibleFields
+                      .filter(field => !['from', 'to'].includes(field.name))
+                      .map((field) => (
+                        <TableCell key={field.name} style={getCellStyle(field, entry[field.name as keyof LogEntry])}>
+                          {getDisplayValue(entry, field)}
+                        </TableCell>
+                      ))}
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => onEdit && onEdit(entry)}
+                        >
                           <EditIcon />
                         </IconButton>
-                        <IconButton size="small" onClick={() => onDelete(entry)}>
-                          <DeleteIcon />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          onClick={() => onSplit?.(entry)}
-                          title="Split interval"
+                        <IconButton
+                          size="small"
+                          onClick={() => onSplit && onSplit(entry)}
                         >
-                          <ContentCutIcon />
+                          <CallSplitIcon />
+                        </IconButton>
+                        {entry.originalEntryId && onCancelSplit && (
+                          <IconButton
+                            size="small"
+                            onClick={() => onCancelSplit(entry.originalEntryId!)}
+                          >
+                            <CancelIcon />
+                          </IconButton>
+                        )}
+                        <IconButton
+                          size="small"
+                          onClick={() => onDelete && onDelete(entry.id)}
+                        >
+                          <DeleteIcon />
                         </IconButton>
                       </Box>
                     </TableCell>
-                    {fields.map(field => (
-                      <TableCell key={field.field_name}>
-                        {getDisplayValue(entry, field)}
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      {entry.synced ? <CloudDoneIcon color="success" /> : <CloudOffIcon color="disabled" />}
-                    </TableCell>
                   </TableRow>
-                  {/* Add "+" button row between entries */}
-                  {index < entries.length - 1 && (
+
+                  {/* Show gap indicator if there's a gap */}
+                  {validation?.nextStatus.hasGap && renderGapIndicator(
+                    validation.nextStatus.gapStart!,
+                    validation.nextStatus.gapEnd!
+                  )}
+
+                  {/* Add button between entries */}
+                  {onAddBetween && index < sortedEntries.length - 1 && (
                     <TableRow>
-                      <TableCell colSpan={fields.length + 2} sx={{ border: 0, p: 0 }}>
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'center', 
-                            py: 0.5,
-                            opacity: 0.3,
-                            '&:hover': {
-                              opacity: 1,
+                      <TableCell colSpan={visibleFields.length + 3} align="center" sx={{ py: 0 }}>
+                        <Tooltip title="Add Entry Between">
+                          <IconButton
+                            size="small"
+                            sx={{ my: 0.5 }}
+                            onClick={() =>
+                              onAddBetween(entry.to, sortedEntries[index + 1].from)
                             }
-                          }}
-                        >
-                          <Tooltip title="Add entry here">
-                            <IconButton 
-                              size="small"
-                              onClick={() => {
-                                const nextEntry = entries[index + 1];
-                                const prefill: Partial<LogEntry> = {
-                                  from: entry.to,
-                                  to: nextEntry.from,
-                                  drillhole_id: entry.drillhole_id,
-                                };
-                                onAddBetween?.(prefill);
-                              }}
-                            >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
+                          >
+                            <AddIcon />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   )}
                 </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-      
-      {/* Split Dialog */}
-      <Dialog 
-        open={splitDialog.open} 
-        onClose={() => setSplitDialog(prev => ({ ...prev, open: false }))}
-      >
-        <DialogTitle>Split Interval</DialogTitle>
-        <DialogContent>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body1" gutterBottom>
-              Current interval: {splitDialog.entry?.from} - {splitDialog.entry?.to}
-            </Typography>
-            <TextField
-              label="Split Point"
-              type="number"
-              value={splitDialog.splitPoint}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                if (!isNaN(value) && splitDialog.entry) {
-                  // Ensure split point is within the interval
-                  const constrainedValue = Math.min(
-                    Math.max(value, splitDialog.entry.from),
-                    splitDialog.entry.to
-                  );
-                  setSplitDialog(prev => ({
-                    ...prev,
-                    splitPoint: constrainedValue
-                  }));
-                }
-              }}
-              inputProps={{
-                step: 0.01,
-                min: splitDialog.entry?.from,
-                max: splitDialog.entry?.to
-              }}
-              fullWidth
-              sx={{ mt: 2 }}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSplitDialog(prev => ({ ...prev, open: false }))}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={() => {
-              if (splitDialog.entry) {
-                onSplit?.(splitDialog.entry, splitDialog.splitPoint);
-                setSplitDialog(prev => ({ ...prev, open: false }));
-              }
-            }}
-            variant="contained"
-          >
-            Split
-          </Button>
-        </DialogActions>
-      </Dialog>
+              );
+            })}
+
+            {/* Add button at the end */}
+            {sortedEntries.length > 0 && (
+              <TableRow>
+                <TableCell colSpan={visibleFields.length + 3} align="center" sx={{ py: 0 }}>
+                  <Tooltip title="Add Entry at End">
+                    <IconButton
+                      size="small"
+                      sx={{ my: 0.5 }}
+                      onClick={() => onAddBetween && onAddBetween(sortedEntries[sortedEntries.length - 1].to, sortedEntries[sortedEntries.length - 1].to + 5)}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            )}
+
+            {/* Show message when no entries exist */}
+            {sortedEntries.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={visibleFields.length + 3} align="center">
+                  <Box sx={{ py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body1">No entries yet</Typography>
+                    {onAddBetween && (
+                      <Tooltip title="Add First Entry">
+                        <IconButton
+                          size="small"
+                          onClick={() => onAddBetween(0, 5)}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   );
 };

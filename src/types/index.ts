@@ -1,31 +1,26 @@
 export interface LogEntry {
   id: string;
-  holeid: string;
+  drillhole_id: string;
   from: number;
   to: number;
-  lithology: string;
-  color?: string;
-  texture?: string;
-  minerals?: string;
-  mineralized: boolean;
-  structures?: string;
-  notes?: string;
   created: Date;
   modified: Date;
   synced: boolean;
+  fields: Record<string, any>;
+  originalEntryId?: string;
 }
 
 export interface BackupEntry {
   id: string;
-  timestamp: string;
-  entries: LogEntry[];
+  entry: LogEntry;
+  timestamp: Date;
 }
 
 export interface ErrorLog {
   id: string;
   message: string;
-  details?: string;
-  timestamp: string;
+  timestamp: Date;
+  details?: any;
 }
 
 export interface ConfigField {

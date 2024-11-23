@@ -8,10 +8,13 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const configService = ConfigurationService.getInstance();
-  const theme = configService.getTheme();
+  const [theme, setTheme] = useState(ConfigurationService.getInstance().getTheme());
 
   useEffect(() => {
+    const configService = ConfigurationService.getInstance();
+    const savedConfig = configService.getConfig();
+    setTheme(configService.getTheme());
+
     const initializeApp = async () => {
       try {
         const dbService = DatabaseService.getInstance();
@@ -42,8 +45,10 @@ function App() {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" color="error.main">
-          {error}
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+          <Alert severity="error" variant="filled">
+            {error}
+          </Alert>
         </Box>
       </ThemeProvider>
     );

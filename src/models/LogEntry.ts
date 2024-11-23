@@ -1,42 +1,31 @@
 import { v4 as uuidv4 } from 'uuid';
+import { LogEntry } from '../types';
 
 export interface LogEntryField {
   name: string;
-  type: 'domain' | 'boolean' | 'number' | 'text';
+  type: string;
   required: boolean;
   domain?: string[];
-  min?: number;
-  max?: number;
-}
-
-export interface LogEntry {
-  id: string;
-  holeid: string;
-  from: number;
-  to: number;
-  fields: Record<string, string | number | boolean>;
-  created: Date;
-  modified: Date;
-  synced: boolean;
 }
 
 export class LogEntryManager {
   static createEntry(
-    holeid: string,
+    drillhole_id: string,
     from: number,
     to: number,
-    fields: Record<string, string | number | boolean>
+    fields: Record<string, any>
   ): LogEntry {
-    const now = new Date();
     return {
       id: uuidv4(),
-      holeid,
+      drillhole_id,
       from,
       to,
+      lithology: '',
       fields,
-      created: now,
-      modified: now,
+      created: new Date(),
+      modified: new Date(),
       synced: false,
+      originalEntryId: null
     };
   }
 
@@ -65,48 +54,12 @@ export class LogEntryManager {
     return true;
   }
 
-  static validateFields(entry: LogEntry, config: LogEntryField[]): string[] {
+  static validateFields(entry: LogEntry, fields: LogEntryField[]): string[] {
     const errors: string[] = [];
 
-    // Validate required fields
-    config.forEach((field) => {
-      const value = entry.fields[field.name];
-
-      if (field.required && (value === undefined || value === '')) {
+    fields.forEach((field) => {
+      if (field.required && !entry.fields[field.name]) {
         errors.push(`${field.name} is required`);
-        return;
-      }
-
-      if (value === undefined || value === '') {
-        return;
-      }
-
-      switch (field.type) {
-        case 'domain':
-          if (field.domain && !field.domain.includes(value as string)) {
-            errors.push(`${field.name} must be one of: ${field.domain.join(', ')}`);
-          }
-          break;
-
-        case 'number':
-          const numValue = Number(value);
-          if (isNaN(numValue)) {
-            errors.push(`${field.name} must be a number`);
-          } else {
-            if (field.min !== undefined && numValue < field.min) {
-              errors.push(`${field.name} must be greater than or equal to ${field.min}`);
-            }
-            if (field.max !== undefined && numValue > field.max) {
-              errors.push(`${field.name} must be less than or equal to ${field.max}`);
-            }
-          }
-          break;
-
-        case 'boolean':
-          if (typeof value !== 'boolean') {
-            errors.push(`${field.name} must be a boolean`);
-          }
-          break;
       }
     });
 

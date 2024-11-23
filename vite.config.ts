@@ -1,11 +1,45 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'fs';
+import path from 'path';
+
+// Custom plugin for handling configuration save
+function configurationPlugin() {
+  return {
+    name: 'configuration-handler',
+    configureServer(server) {
+      server.middlewares.use('/api/save-configuration', async (req, res) => {
+        if (req.method === 'POST') {
+          try {
+            let body = '';
+            for await (const chunk of req) {
+              body += chunk;
+            }
+            
+            const configPath = path.join(process.cwd(), 'src', 'assets', 'configuration.csv');
+            fs.writeFileSync(configPath, body, 'utf-8');
+            res.statusCode = 200;
+            res.end(JSON.stringify({ message: 'Configuration saved successfully' }));
+          } catch (error) {
+            console.error('Error saving configuration:', error);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ message: 'Error saving configuration' }));
+          }
+        } else {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ message: 'Method not allowed' }));
+        }
+      });
+    }
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    configurationPlugin(),
     VitePWA({
       disable: process.env.NODE_ENV === 'development',
       strategies: 'injectManifest',

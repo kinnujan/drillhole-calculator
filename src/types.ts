@@ -1,5 +1,5 @@
 export interface LogEntry {
-  id?: string;
+  id: string;
   drillhole_id: string;
   from: number;
   to: number;
@@ -13,13 +13,14 @@ export interface LogEntry {
   created?: Date;
   modified?: Date;
   synced?: boolean;
+  originalEntryId?: string;
+  fields: Record<string, any>;
 }
 
 export interface BackupEntry {
   id: string;
+  entry: LogEntry;
   timestamp: Date;
-  data: string;
-  type: 'full' | 'incremental';
 }
 
 export interface ErrorLog {

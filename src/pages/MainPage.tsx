@@ -22,6 +22,7 @@ import QuickLogForm from '../components/QuickLogForm';
 import LogEntryList from '../components/LogEntryList';
 import StripLog from '../components/StripLog';
 import DrillholeSelector from '../components/DrillholeSelector';
+import ConfigurationDialog from '../components/ConfigurationDialog';
 import { LogEntry } from '../types';
 import DatabaseService from '../services/DatabaseService';
 import ConfigurationService from '../services/ConfigurationService';
@@ -30,6 +31,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CloseIcon from '@mui/icons-material/Close';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import HistoryService, { DeleteEntryCommand, AddEntryCommand, UpdateEntryCommand, SplitEntryCommand } from '../services/HistoryService';
+import { v4 as uuidv4 } from 'uuid';
 
 const MainPage: React.FC = () => {
   const [editEntry, setEditEntry] = useState<LogEntry | null>(null);
@@ -44,13 +49,41 @@ const MainPage: React.FC = () => {
     splitPoint: number;
   } | null>(null);
   const [configOpen, setConfigOpen] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [darkMode, setDarkMode] = useState(ConfigurationService.getInstance().getConfig().darkMode);
 
-  const handleDarkModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newDarkMode = event.target.checked;
+  const historyService = HistoryService.getInstance();
+
+  useEffect(() => {
+    // Update undo/redo state
+    setCanUndo(historyService.canUndo());
+    setCanRedo(historyService.canRedo());
+  }, [entries]);
+
+  const handleDarkModeChange = (newDarkMode: boolean) => {
     setDarkMode(newDarkMode);
-    ConfigurationService.getInstance().updateConfig({ darkMode: newDarkMode });
+    const configService = ConfigurationService.getInstance();
+    configService.updateConfig({ darkMode: newDarkMode });
     window.location.reload();
+  };
+
+  const handleUndo = async () => {
+    await historyService.undo();
+    if (selectedDrillhole) {
+      const dbService = DatabaseService.getInstance();
+      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      setEntries(updatedEntries);
+    }
+  };
+
+  const handleRedo = async () => {
+    await historyService.redo();
+    if (selectedDrillhole) {
+      const dbService = DatabaseService.getInstance();
+      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      setEntries(updatedEntries);
+    }
   };
 
   // Load entries for selected drillhole
@@ -100,10 +133,12 @@ const MainPage: React.FC = () => {
         }
         
         // Update the current entry
-        await dbService.updateEntry(entry);
+        const command = new UpdateEntryCommand(editEntry, entry);
+        await historyService.executeCommand(command);
         setEditEntry(null);
       } else {
-        await dbService.addEntry(entry);
+        const command = new AddEntryCommand(entry);
+        await historyService.executeCommand(command);
       }
       
       // Close dialogs and reset state
@@ -112,21 +147,35 @@ const MainPage: React.FC = () => {
       
       // Refresh entries after submit
       const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
+      console.log('[MainPage] Updated entries:', updatedEntries);
       setEntries(updatedEntries);
     } catch (error) {
       console.error('Error submitting entry:', error);
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteEntry) return;
+  const handleDeleteClick = (id: string) => {
+    // Find the entry to delete
+    const entryToDelete = entries.find(entry => entry.id === id);
+    if (entryToDelete) {
+      setDeleteEntry(entryToDelete);
+    }
+  };
 
+  const handleDelete = async () => {
     try {
-      const dbService = DatabaseService.getInstance();
-      await dbService.deleteEntry(deleteEntry.id!);
+      if (!deleteEntry || !selectedDrillhole) return;
+
+      const command = new DeleteEntryCommand(deleteEntry, selectedDrillhole);
+      await historyService.executeCommand(command);
+      
+      // Clear the delete state
       setDeleteEntry(null);
-      // Refresh entries after delete
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
+      
+      // Refresh the entries list
+      const dbService = DatabaseService.getInstance();
+      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      console.log('[MainPage] Updated entries after delete:', updatedEntries);
       setEntries(updatedEntries);
     } catch (error) {
       console.error('Error deleting entry:', error);
@@ -137,67 +186,173 @@ const MainPage: React.FC = () => {
     setSelectedDrillhole(drillholeId);
   };
 
-  const handleAddBetween = (prefill: Partial<LogEntry>) => {
-    setPrefillData(prefill);
+  const handleAddBetween = (from: number, to: number) => {
+    console.log('[MainPage] Opening add dialog for interval:', { from, to });
+    setPrefillData({
+      from: from,
+      to: to,
+      drillhole_id: selectedDrillhole || '',
+      lithology: '',
+      color: '',
+      texture: '',
+      minerals: '',
+      mineralized: false,
+      structures: '',
+      notes: '',
+      synced: false,
+      fields: {},
+      created: new Date(),
+      modified: new Date()
+    });
     setShowNewEntryDialog(true);
+  };
+
+  const handleNewEntrySubmit = async (entry: Omit<LogEntry, 'id'>) => {
+    try {
+      console.log('[MainPage] Submitting new entry:', entry);
+      const dbService = DatabaseService.getInstance();
+      
+      // Add ID to the entry
+      const newEntry: LogEntry = {
+        ...entry,
+        id: uuidv4()
+      };
+
+      // Create and execute command
+      const command = new AddEntryCommand(newEntry);
+      await historyService.executeCommand(command);
+      
+      // Clear dialog state
+      setShowNewEntryDialog(false);
+      setPrefillData(null);
+      
+      // Refresh entries after submit
+      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
+      console.log('[MainPage] Updated entries:', updatedEntries);
+      setEntries(updatedEntries);
+    } catch (error) {
+      console.error('[MainPage] Error submitting entry:', error);
+    }
   };
 
   const handleSplit = async (entry: LogEntry) => {
     try {
+      if (!entry || !selectedDrillhole) {
+        console.error('[MainPage] Cannot split: No entry or drillhole selected');
+        return;
+      }
+
+      const dbService = DatabaseService.getInstance();
+      console.log('[MainPage] Starting split operation for entry:', entry);
+      
+      // First verify the entry still exists and get fresh data
+      const currentEntry = await dbService.getEntry(entry.id);
+      if (!currentEntry) {
+        console.error(`[MainPage] Entry ${entry.id} no longer exists`);
+        return;
+      }
+      console.log('[MainPage] Current entry found:', currentEntry);
+      
+      // Calculate the midpoint
+      const midpoint = Number(((currentEntry.from + currentEntry.to) / 2).toFixed(2));
+      console.log(`[MainPage] Calculated midpoint: ${midpoint}`);
+      
+      // Create two new entries with the same values
+      const commonFields = {
+        drillhole_id: currentEntry.drillhole_id,
+        fields: { ...currentEntry.fields },
+        lithology: currentEntry.lithology,
+        color: currentEntry.color || '',
+        texture: currentEntry.texture || '',
+        minerals: currentEntry.minerals || '',
+        mineralized: currentEntry.mineralized || false,
+        structures: currentEntry.structures || '',
+        notes: currentEntry.notes || '',
+        created: new Date(),
+        modified: new Date(),
+        synced: false
+      };
+
+      // Create first half
+      const firstHalf: LogEntry = {
+        ...commonFields,
+        id: uuidv4(),
+        from: currentEntry.from,
+        to: midpoint,
+        originalEntryId: currentEntry.id
+      };
+      
+      // Create second half
+      const secondHalf: LogEntry = {
+        ...commonFields,
+        id: uuidv4(),
+        from: midpoint,
+        to: currentEntry.to,
+        originalEntryId: currentEntry.id
+      };
+
+      console.log('[MainPage] Created new entries:', { firstHalf, secondHalf });
+      
+      // Create and execute the command
+      console.log('[MainPage] Creating split command...');
+      const command = new SplitEntryCommand(currentEntry, firstHalf, secondHalf);
+      console.log('[MainPage] Executing split command...');
+      await historyService.executeCommand(command);
+
+      console.log(`[MainPage] Successfully split entry from ${currentEntry.from}-${currentEntry.to} into ${firstHalf.from}-${firstHalf.to} and ${secondHalf.from}-${secondHalf.to}`);
+
+      // Refresh the entries list
+      console.log('[MainPage] Refreshing entries list...');
+      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      console.log('[MainPage] Updated entries:', updatedEntries);
+      setEntries(updatedEntries);
+      console.log('[MainPage] Split operation completed successfully');
+    } catch (error) {
+      console.error('[MainPage] Error splitting entry:', error);
+      
+      // Refresh the entries list to ensure UI is in sync
+      if (selectedDrillhole) {
+        console.log('[MainPage] Refreshing entries after error...');
+        const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+        console.log('[MainPage] Updated entries after error:', updatedEntries);
+        setEntries(updatedEntries);
+      }
+    }
+  };
+
+  const handleCancelSplit = async (originalEntryId: string) => {
+    try {
+      if (!selectedDrillhole) return;
+
       const dbService = DatabaseService.getInstance();
       
-      // Calculate three equal parts
-      const intervalLength = entry.to - entry.from;
-      const thirdLength = intervalLength / 3;
-      const firstBreak = entry.from + thirdLength;
-      const secondBreak = entry.from + (2 * thirdLength);
-      
-      // Create three new entries, all with the same values
-      const commonFields = {
-        drillhole_id: entry.drillhole_id,
-        lithology: entry.lithology,
-        color: entry.color || '',
-        texture: entry.texture || '',
-        minerals: entry.minerals || '',
-        mineralized: entry.mineralized || false,
-        structures: entry.structures || '',
-        notes: entry.notes || '',
-      };
+      // Get all entries with this originalEntryId
+      const splitEntries = entries.filter(e => e.originalEntryId === originalEntryId);
+      if (splitEntries.length === 0) return;
 
-      const beforeEntry: LogEntry = {
-        ...commonFields,
-        from: entry.from,
-        to: firstBreak,
-      };
-      
-      const middleEntry: LogEntry = {
-        ...commonFields,
-        from: firstBreak,
-        to: secondBreak,
-      };
-      
-      const afterEntry: LogEntry = {
-        ...commonFields,
-        from: secondBreak,
-        to: entry.to,
-      };
+      // Get the original entry from backup
+      const originalEntry = await dbService.getBackupEntry(originalEntryId);
+      if (!originalEntry) {
+        console.error('Original entry not found in backup');
+        return;
+      }
 
-      // Delete the original entry
-      await dbService.deleteEntry(entry.id!);
-      
-      // Add the new entries in order
-      await dbService.addEntry(beforeEntry);
-      const newMiddleEntry = await dbService.addEntry(middleEntry);
-      await dbService.addEntry(afterEntry);
+      // Delete all split entries
+      for (const entry of splitEntries) {
+        await dbService.deleteEntry(entry.id);
+      }
 
-      // Set up the middle entry for editing
-      setEditEntry(newMiddleEntry);
+      // Restore the original entry
+      await dbService.addEntry(originalEntry);
 
-      // Refresh entries to update the list
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
+      // Refresh the entries list
+      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      console.log('[MainPage] Updated entries after cancel split:', updatedEntries);
       setEntries(updatedEntries);
+
+      console.log('Successfully cancelled split');
     } catch (error) {
-      console.error('Error splitting entry:', error);
+      console.error('Error cancelling split:', error);
     }
   };
 
@@ -215,6 +370,20 @@ const MainPage: React.FC = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} mt={2}>
         <h2>Drillhole: {selectedDrillhole}</h2>
         <Box>
+          <IconButton 
+            onClick={handleUndo}
+            disabled={!canUndo}
+            title="Undo"
+          >
+            <UndoIcon />
+          </IconButton>
+          <IconButton 
+            onClick={handleRedo}
+            disabled={!canRedo}
+            title="Redo"
+          >
+            <RedoIcon />
+          </IconButton>
           <IconButton 
             onClick={() => setShowStriplog(!showStriplog)}
             color={showStriplog ? "primary" : "default"}
@@ -252,9 +421,28 @@ const MainPage: React.FC = () => {
             <LogEntryList
               entries={entries}
               onEdit={setEditEntry}
-              onDelete={setDeleteEntry}
-              onAddBetween={handleAddBetween}
+              onDelete={handleDeleteClick}
+              onAddBetween={(from, to) => {
+                setPrefillData({
+                  from: from,
+                  to: to,
+                  drillhole_id: selectedDrillhole || '',
+                  lithology: '',
+                  color: '',
+                  texture: '',
+                  minerals: '',
+                  mineralized: false,
+                  structures: '',
+                  notes: '',
+                  synced: false,
+                  fields: {},
+                  created: new Date(),
+                  modified: new Date()
+                });
+                setShowNewEntryDialog(true);
+              }}
               onSplit={handleSplit}
+              onCancelSplit={handleCancelSplit}
             />
           </Paper>
         </Grid>
@@ -280,7 +468,7 @@ const MainPage: React.FC = () => {
         <DialogTitle>New Log Entry</DialogTitle>
         <DialogContent>
           <QuickLogForm
-            onSubmit={handleSubmit}
+            onSubmit={handleNewEntrySubmit}
             editEntry={null}
             drillholeId={selectedDrillhole}
             prefillData={prefillData}
@@ -319,60 +507,44 @@ const MainPage: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deleteEntry} onClose={() => setDeleteEntry(null)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+      <Dialog
+        open={deleteEntry !== null}
+        onClose={() => setDeleteEntry(null)}
+      >
+        <DialogTitle>Delete Entry</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete this entry?
+          <Typography>Are you sure you want to delete this entry?</Typography>
+          {deleteEntry && (
+            <Box mt={2}>
+              <Typography variant="body2" color="textSecondary">
+                From: {deleteEntry.from.toFixed(2)}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                To: {deleteEntry.to.toFixed(2)}
+              </Typography>
+              {deleteEntry.lithology && (
+                <Typography variant="body2" color="textSecondary">
+                  Lithology: {deleteEntry.lithology}
+                </Typography>
+              )}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteEntry(null)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error">
+          <Button onClick={handleDelete} color="error" variant="contained">
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Configuration Dialog */}
-      <Dialog 
-        open={configOpen} 
+      <ConfigurationDialog
+        open={configOpen}
         onClose={() => setConfigOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            Configuration
-            <IconButton onClick={() => setConfigOpen(false)} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Appearance
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={darkMode}
-                    onChange={handleDarkModeChange}
-                    color="primary"
-                  />
-                }
-                label="Dark Mode"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Add more configuration sections here */}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfigOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+        darkMode={darkMode}
+        onDarkModeChange={handleDarkModeChange}
+      />
     </Container>
   );
 };
