@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import DatabaseService from '../services/DatabaseService';
 import { LogEntry } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 interface DrillholeSelectorProps {
   onDrillholeSelect: (drillholeId: string) => void;
@@ -52,12 +53,20 @@ const DrillholeSelector: React.FC<DrillholeSelectorProps> = ({ onDrillholeSelect
     
     try {
       const dbService = DatabaseService.getInstance();
-      // Create an initial entry for the new drillhole
+      // Create an initial entry for the new drillhole with a valid interval
       await dbService.addEntry({
-        id: crypto.randomUUID(),
+        id: uuidv4(),
         drillhole_id: newDrillholeId.trim(),
         from: 0,
-        to: 0,
+        to: 1,  
+        lithology: '',  
+        color: '',
+        texture: '',
+        minerals: '',
+        mineralized: false,
+        structures: '',
+        notes: '',
+        fields: {},
         created: new Date(),
         modified: new Date(),
         synced: false

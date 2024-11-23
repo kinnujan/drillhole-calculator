@@ -16,9 +16,23 @@ import {
   Box,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Stack,
+  Tooltip,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { 
+  Edit as EditIcon, 
+  Delete as DeleteIcon, 
+  Save as SaveIcon, 
+  Cancel as CancelIcon,
+  Settings as SettingsIcon,
+} from '@mui/icons-material';
 import CSVService from '../services/CSVService';
+import DomainValueEditor from './DomainValueEditor';
 
 interface Field {
   name: string;
@@ -45,6 +59,8 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
   const [editingField, setEditingField] = useState<Field | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [domainEditorOpen, setDomainEditorOpen] = useState(false);
+  const [editingDomainField, setEditingDomainField] = useState<Field | null>(null);
 
   useEffect(() => {
     loadConfiguration();
@@ -117,7 +133,43 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
       return;
     }
 
+    // Validate domain fields have values
+    const invalidDomainField = fields.find(field => 
+      field.type === 'domain' && (!field.domain_values || field.domain_values.length === 0)
+    );
+    if (invalidDomainField) {
+      setError(`Domain field "${invalidDomainField.name}" must have at least one value`);
+      return;
+    }
+
     onSave(fields);
+  };
+
+  const handleEditDomainValues = (field: Field) => {
+    setEditingDomainField(field);
+    setDomainEditorOpen(true);
+  };
+
+  const handleDomainValuesSave = (values: string[], styleConfig: any) => {
+    if (!editingDomainField) return;
+
+    const updatedField = {
+      ...editingDomainField,
+      domain_values: values,
+      style_config: styleConfig,
+    };
+
+    // Update the field in both the fields array and editingField if it's being edited
+    setFields(fields.map(f => 
+      f.name === updatedField.name ? updatedField : f
+    ));
+    
+    if (editingField?.name === updatedField.name) {
+      setEditingField(updatedField);
+    }
+
+    setDomainEditorOpen(false);
+    setEditingDomainField(null);
   };
 
   if (loading) {
@@ -146,6 +198,7 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
               <TableCell>Page Order</TableCell>
               <TableCell>Visibility Style</TableCell>
               <TableCell>Required</TableCell>
+              <TableCell>Domain Values</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -218,10 +271,36 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
                       </FormControl>
                     </TableCell>
                     <TableCell>
-                      <IconButton onClick={() => handleSave(editingField)} color="primary">
+                      {editingField.type === 'domain' && (
+                        <Box>
+                          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                            {editingField.domain_values?.map((value) => (
+                              <Chip
+                                key={value}
+                                label={value}
+                                size="small"
+                                sx={{
+                                  bgcolor: editingField.style_config?.colors?.[value],
+                                  color: editingField.style_config?.colors?.[value] ? 'white' : 'inherit',
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                          <Button
+                            size="small"
+                            onClick={() => handleEditDomainValues(editingField)}
+                            startIcon={<SettingsIcon />}
+                          >
+                            Edit Values
+                          </Button>
+                        </Box>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleSave(editingField)} size="small">
                         <SaveIcon />
                       </IconButton>
-                      <IconButton onClick={handleCancel} color="error">
+                      <IconButton onClick={handleCancel} size="small">
                         <CancelIcon />
                       </IconButton>
                     </TableCell>
@@ -235,10 +314,36 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
                     <TableCell>{field.visibility_style}</TableCell>
                     <TableCell>{field.required ? 'Yes' : 'No'}</TableCell>
                     <TableCell>
-                      <IconButton onClick={() => handleEdit(field)} color="primary">
+                      {field.type === 'domain' && (
+                        <Box>
+                          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                            {field.domain_values?.map((value) => (
+                              <Chip
+                                key={value}
+                                label={value}
+                                size="small"
+                                sx={{
+                                  bgcolor: field.style_config?.colors?.[value],
+                                  color: field.style_config?.colors?.[value] ? 'white' : 'inherit',
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                          <Button
+                            size="small"
+                            onClick={() => handleEditDomainValues(field)}
+                            startIcon={<SettingsIcon />}
+                          >
+                            Edit Values
+                          </Button>
+                        </Box>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleEdit(field)} size="small">
                         <EditIcon />
                       </IconButton>
-                      <IconButton onClick={() => handleDelete(field)} color="error">
+                      <IconButton onClick={() => handleDelete(field)} size="small">
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
@@ -250,14 +355,26 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
         </Table>
       </TableContainer>
 
-      <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
-        <Button variant="outlined" onClick={handleAddField}>
+      <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+        <Button variant="contained" onClick={handleAddField}>
           Add Field
         </Button>
-        <Button variant="contained" onClick={handleSaveAll} color="primary">
-          Save All Changes
+        <Button variant="contained" color="primary" onClick={handleSaveAll}>
+          Save All
         </Button>
       </Box>
+
+      {editingDomainField && (
+        <DomainValueEditor
+          open={domainEditorOpen}
+          onClose={() => {
+            setDomainEditorOpen(false);
+            setEditingDomainField(null);
+          }}
+          field={editingDomainField}
+          onSave={handleDomainValuesSave}
+        />
+      )}
     </Box>
   );
 }

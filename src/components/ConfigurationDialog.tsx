@@ -75,20 +75,21 @@ export default function ConfigurationDialog({
     try {
       const csvService = CSVService.getInstance();
       await csvService.saveConfiguration(fields);
+      // Reload configuration to ensure all components are updated
+      await csvService.loadConfiguration();
       setSnackbar({
         open: true,
-        message: 'Configuration saved successfully! Reloading page...',
+        message: 'Configuration saved successfully!',
         severity: 'success',
       });
-      // Wait for snackbar to be visible before reloading
       setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+        onClose();
+      }, 1000);
     } catch (error) {
       console.error('Error saving configuration:', error);
       setSnackbar({
         open: true,
-        message: 'Error saving configuration. Please try again.',
+        message: 'Failed to save configuration',
         severity: 'error',
       });
     } finally {

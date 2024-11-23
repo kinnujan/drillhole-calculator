@@ -1,11 +1,11 @@
-field_name,field_type,required,domain_values,default_value,description,style_config,page_name,page_order,visibility_style
-drillhole_id,text,true,,,"Drillhole identifier",{},System,0,hidden
-from,number,true,,,Starting depth of the interval,{},System,0,visible
-to,number,true,,,Ending depth of the interval,{},System,0,visible
-lithology,domain,true,"sandstone,siltstone,shale,limestone,coal",,"Primary rock type","{""colors"":{""sandstone"":""#FFD700"",""siltstone"":""#8B4513"",""shale"":""#696969"",""limestone"":""#B8B8B8"",""coal"":""#000000""}}",Geology,1,buttons
-color,domain,false,"grey,black,brown,red,green",,"Rock color",{},Geology,1,dropdown
-texture,domain,false,"massive,laminated,cross-bedded,bioturbated",,"Sedimentary texture","{""icons"":{""massive"":""▅"",""laminated"":""≡"",""cross-bedded"":""⋰"",""bioturbated"":""◊""}}",Geology,1,buttons
-minerals,text,false,,,"Notable minerals",{},Mineralization,2,visible
-mineralized,boolean,false,,false,"Presence of mineralization","{""colors"":{""true"":""#FFD700"",""false"":""transparent""}}",Mineralization,2,switch
-structures,domain,false,"normal fault,reverse fault,fold,joint",,"Geological structures","{""icons"":{""normal fault"":""╱"",""reverse fault"":""╲"",""fold"":""∿"",""joint"":""│""}}",Structures,3,buttons
-notes,text,false,,,"Additional notes",{},Notes,4,textarea
+field_name,field_type,page_name,page_order,visibility_style,required,domain_values,default_value,description,style_config
+drillhole_id,text,System,0,hidden,true,,,Drillhole identifier,{}
+from,number,System,0,visible,true,,,Starting depth of the interval,{}
+to,number,System,0,visible,true,,,Ending depth of the interval,{}
+lithology,domain,Geology,1,buttons,true,"sandstone,siltstone,shale,limestone,coal,ovb",,Primary rock type,"{""colors"":{""sandstone"":""#FFD700"",""siltstone"":""#8B4513"",""shale"":""#696969"",""limestone"":""#B8B8B8"",""coal"":""#000000""},""icons"":{}}"
+color,domain,Geology,1,dropdown,false,"grey,black,brown,red,green",,Rock color,{}
+texture,domain,Geology,1,buttons,false,"massive,laminated,cross-bedded,bioturbated",,Sedimentary texture,"{""icons"":{""massive"":""▅"",""laminated"":""≡"",""cross-bedded"":""⋰"",""bioturbated"":""◊""}}"
+minerals,text,Mineralization,2,visible,false,,,Notable minerals,{}
+mineralized,boolean,Mineralization,2,switch,false,,false,Presence of mineralization,"{""colors"":{""true"":""#FFD700"",""false"":""transparent""}}"
+structures,domain,Structures,3,buttons,false,"normal fault,reverse fault,fold,joint",,Geological structures,"{""icons"":{""normal fault"":""╱"",""reverse fault"":""╲"",""fold"":""∿"",""joint"":""│""}}"
+notes,text,Notes,4,textarea,false,,,Additional notes,{}

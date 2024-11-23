@@ -40,6 +40,7 @@ export interface FieldConfig {
 class CSVService {
   private static instance: CSVService;
   private fields: FieldConfig[] = [];
+  private configurationChangeListeners: (() => void)[] = [];
 
   private constructor() {}
 
@@ -48,6 +49,18 @@ class CSVService {
       CSVService.instance = new CSVService();
     }
     return CSVService.instance;
+  }
+
+  public addConfigurationChangeListener(listener: () => void) {
+    this.configurationChangeListeners.push(listener);
+  }
+
+  public removeConfigurationChangeListener(listener: () => void) {
+    this.configurationChangeListeners = this.configurationChangeListeners.filter(l => l !== listener);
+  }
+
+  private notifyConfigurationChange() {
+    this.configurationChangeListeners.forEach(listener => listener());
   }
 
   async loadConfiguration(): Promise<Field[]> {
@@ -76,7 +89,7 @@ class CSVService {
         style_config: row.style_config ? JSON.parse(row.style_config) : {},
       }));
 
-      return this.fields.map(f => ({
+      const fields = this.fields.map(f => ({
         name: f.field_name,
         type: f.field_type,
         page_name: f.page_name,
@@ -88,6 +101,9 @@ class CSVService {
         description: f.description,
         style_config: f.style_config,
       }));
+
+      this.notifyConfigurationChange();
+      return fields;
     } catch (error) {
       console.error('Error loading configuration:', error);
       throw error;
@@ -214,7 +230,24 @@ class CSVService {
       }));
 
       const csv = Papa.unparse(csvData);
-      console.log('Configuration saved:', csv);
+      
+      // Save to file using fetch
+      const response = await fetch('/api/save-configuration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: csv,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save configuration: ${response.statusText}`);
+      }
+
+      // Update the imported configuration
+      (window as any).configurationCsv = csv;
+      
+      this.notifyConfigurationChange();
     } catch (error) {
       console.error('Error saving configuration:', error);
       throw error;

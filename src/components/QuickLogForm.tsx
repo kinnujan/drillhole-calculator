@@ -93,6 +93,16 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
       setPages(csvService.getPages());
     };
     loadPages();
+
+    // Subscribe to configuration changes
+    const handleConfigChange = async () => {
+      await loadPages();
+    };
+    csvService.addConfigurationChangeListener(handleConfigChange);
+
+    return () => {
+      csvService.removeConfigurationChangeListener(handleConfigChange);
+    };
   }, []);
 
   const handleChange = (field: string) => (
