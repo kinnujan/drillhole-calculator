@@ -73,68 +73,82 @@ class DatabaseService {
   }
 
   public async initialize(): Promise<void> {
+    console.log('[DB] Starting initialization...');
+    
     // Return existing initialization if in progress
     if (this.initPromise) {
+      console.log('[DB] Initialization already in progress, waiting...');
       return this.initPromise;
     }
 
     // Return if already initialized
     if (this.initialized) {
+      console.log('[DB] Already initialized, skipping...');
       return;
     }
     
     this.initPromise = (async () => {
       try {
-        // Reset database to ensure clean state
-        await this.resetDatabase();
-        
+        console.log('[DB] Loading configuration...');
         // Load configuration first
         await this.csvService.loadConfiguration();
         
-        // Load and validate CSV data
-        const entries = await this.csvService.loadQuicklog();
-        if (!entries || entries.length === 0) {
-          this.initialized = true;
-          return;
-        }
-
-        // Transform entries to match schema
-        const validEntries = entries.map(entry => ({
-          id: entry.id || uuidv4(),
-          drillhole_id: entry.drillhole_id || '',
-          from: Number(entry.from) || 0,
-          to: Number(entry.to) || 0,
-          lithology: entry.lithology || '',
-          color: entry.color,
-          texture: entry.texture,
-          minerals: entry.minerals,
-          mineralized: Boolean(entry.mineralized),
-          structures: entry.structures,
-          notes: entry.notes,
-          fields: {},
-          created: new Date(entry.created || Date.now()),
-          modified: new Date(entry.modified || Date.now()),
-          synced: Boolean(entry.synced),
-          originalEntryId: entry.originalEntryId || null
-        }));
-
-        // Add entries in smaller batches
-        const batchSize = 1;  // Process one at a time to identify problem entries
-        for (let i = 0; i < validEntries.length; i += batchSize) {
-          const batch = validEntries.slice(i, i + batchSize);
-          try {
-            await this.db.logEntries.bulkAdd(batch);
-          } catch (error) {
-            console.error(`Error adding batch starting at index ${i}:`, error);
-            console.error('Problematic entries:', batch);
-            throw error;
+        // Check if database is empty
+        const entryCount = await this.db.logEntries.count();
+        console.log(`[DB] Current entry count: ${entryCount}`);
+        
+        if (entryCount === 0) {
+          console.log('[DB] Database empty, loading initial data...');
+          // Load and validate CSV data only if database is empty
+          const entries = await this.csvService.loadQuicklog();
+          if (!entries || entries.length === 0) {
+            console.log('[DB] No initial data to load');
+            this.initialized = true;
+            return;
           }
+
+          console.log(`[DB] Transforming ${entries.length} entries...`);
+          // Transform entries to match schema
+          const validEntries = entries.map(entry => ({
+            id: entry.id || uuidv4(),
+            drillhole_id: entry.drillhole_id || '',
+            from: Number(entry.from) || 0,
+            to: Number(entry.to) || 0,
+            lithology: entry.lithology || '',
+            color: entry.color,
+            texture: entry.texture,
+            minerals: entry.minerals,
+            mineralized: Boolean(entry.mineralized),
+            structures: entry.structures,
+            notes: entry.notes,
+            fields: {},
+            created: new Date(entry.created || Date.now()),
+            modified: new Date(entry.modified || Date.now()),
+            synced: Boolean(entry.synced),
+            originalEntryId: entry.originalEntryId || null
+          }));
+
+          // Add entries in smaller batches
+          const batchSize = 1;  // Process one at a time to identify problem entries
+          for (let i = 0; i < validEntries.length; i += batchSize) {
+            const batch = validEntries.slice(i, i + batchSize);
+            try {
+              await this.db.logEntries.bulkAdd(batch);
+              console.log(`[DB] Added batch ${i + 1}/${Math.ceil(validEntries.length/batchSize)}`);
+            } catch (error) {
+              console.error(`[DB] Error adding batch starting at index ${i}:`, error);
+              console.error('[DB] Problematic entries:', batch);
+              throw error;
+            }
+          }
+        } else {
+          console.log('[DB] Database already contains data, skipping initial load');
         }
         
         this.initialized = true;
+        console.log('[DB] Initialization completed successfully');
       } catch (error) {
-        console.error('Error initializing database:', error);
-        await this.resetDatabase();
+        console.error('[DB] Error during initialization:', error);
         throw error;
       } finally {
         this.initPromise = null;
