@@ -66,9 +66,30 @@ const MainPage: React.FC = () => {
 
   useEffect(() => {
     // Update undo/redo state
-    setCanUndo(historyService.canUndo());
-    setCanRedo(historyService.canRedo());
+    const newCanUndo = historyService.canUndo();
+    const newCanRedo = historyService.canRedo();
+    console.log('[MainPage] History state changed - Can undo:', newCanUndo, 'Can redo:', newCanRedo);
+    setCanUndo(newCanUndo);
+    setCanRedo(newCanRedo);
   }, [entries]);
+
+  useEffect(() => {
+    // Listen for history changes
+    const handleHistoryChange = () => {
+      const newCanUndo = historyService.canUndo();
+      const newCanRedo = historyService.canRedo();
+      console.log('[MainPage] History state changed - Can undo:', newCanUndo, 'Can redo:', newCanRedo);
+      setCanUndo(newCanUndo);
+      setCanRedo(newCanRedo);
+    };
+
+    console.log('[MainPage] Setting up history change listener');
+    historyService.addChangeListener(handleHistoryChange);
+    return () => {
+      console.log('[MainPage] Cleaning up history change listener');
+      historyService.removeChangeListener(handleHistoryChange);
+    };
+  }, []);
 
   useEffect(() => {
     const handleDatabaseEvent = (type: string, data: any) => {
@@ -95,18 +116,32 @@ const MainPage: React.FC = () => {
   };
 
   const handleUndo = async () => {
-    await historyService.undo();
-    if (selectedDrillhole) {
-      const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
-      setEntries(updatedEntries);
+    console.log('[MainPage] Attempting undo operation');
+    try {
+      await historyService.undo();
+      if (selectedDrillhole) {
+        console.log('[MainPage] Refreshing entries after undo');
+        const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
+        setEntries(updatedEntries);
+      }
+    } catch (error) {
+      console.error('[MainPage] Undo operation failed:', error);
+      alert(error instanceof Error ? error.message : 'Undo failed');
     }
   };
 
   const handleRedo = async () => {
-    await historyService.redo();
-    if (selectedDrillhole) {
-      const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
-      setEntries(updatedEntries);
+    console.log('[MainPage] Attempting redo operation');
+    try {
+      await historyService.redo();
+      if (selectedDrillhole) {
+        console.log('[MainPage] Refreshing entries after redo');
+        const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
+        setEntries(updatedEntries);
+      }
+    } catch (error) {
+      console.error('[MainPage] Redo operation failed:', error);
+      alert(error instanceof Error ? error.message : 'Redo failed');
     }
   };
 

@@ -7,13 +7,43 @@ export interface Command {
   description: string;
 }
 
+type HistoryChangeListener = () => void;
+
 export class HistoryService {
   #undoStack: Command[] = [];
   #redoStack: Command[] = [];
   #executingCommand = false;
+  #changeListeners: HistoryChangeListener[] = [];
 
   constructor() {
     console.log('[History] HistoryService initialized');
+  }
+
+  public addChangeListener(listener: HistoryChangeListener) {
+    console.log('[History] Adding change listener, total listeners:', this.#changeListeners.length + 1);
+    this.#changeListeners.push(listener);
+  }
+
+  public removeChangeListener(listener: HistoryChangeListener) {
+    this.#changeListeners = this.#changeListeners.filter(l => l !== listener);
+    console.log('[History] Removing change listener, remaining listeners:', this.#changeListeners.length);
+  }
+
+  private notifyListeners() {
+    console.log('[History] Notifying listeners of stack changes. Undo stack:', this.#undoStack.length, 'Redo stack:', this.#redoStack.length);
+    this.#changeListeners.forEach(listener => listener());
+  }
+
+  public canUndo(): boolean {
+    const canUndo = this.#undoStack.length > 0;
+    console.log('[History] Can undo:', canUndo, 'Stack size:', this.#undoStack.length);
+    return canUndo;
+  }
+
+  public canRedo(): boolean {
+    const canRedo = this.#redoStack.length > 0;
+    console.log('[History] Can redo:', canRedo, 'Stack size:', this.#redoStack.length);
+    return canRedo;
   }
 
   // Deep clone an entry to ensure we preserve all fields
@@ -29,14 +59,6 @@ export class HistoryService {
     return clonedEntry;
   }
 
-  public canUndo(): boolean {
-    return this.#undoStack.length > 0;
-  }
-
-  public canRedo(): boolean {
-    return this.#redoStack.length > 0;
-  }
-
   public async executeCommand(command: Command): Promise<void> {
     if (this.#executingCommand) {
       console.log('[History] Command execution already in progress, skipping');
@@ -49,6 +71,7 @@ export class HistoryService {
       await command.execute();
       this.#undoStack.push(command);
       this.#redoStack = [];
+      this.notifyListeners();
       console.log('[History] Command executed successfully');
     } catch (error) {
       console.error('[History] Command execution failed:', error);
@@ -77,6 +100,7 @@ export class HistoryService {
         console.log('[History] Undoing command:', command.description);
         await command.undo();
         this.#redoStack.push(command);
+        this.notifyListeners();
       }
     } catch (error) {
       console.error('[History] Undo failed:', error);
@@ -98,6 +122,7 @@ export class HistoryService {
         console.log('[History] Redoing command:', command.description);
         await command.execute();
         this.#undoStack.push(command);
+        this.notifyListeners();
       }
     } catch (error) {
       console.error('[History] Redo failed:', error);

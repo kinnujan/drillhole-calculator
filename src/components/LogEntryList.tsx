@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Paper,
   Table,
@@ -27,6 +27,8 @@ import AddIcon from '@mui/icons-material/Add';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
 import { LogEntry } from '../types';
 import databaseService from '../services/DatabaseService';
 import csvService from '../services/CSVService';
@@ -306,6 +308,53 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
     }
   };
 
+  // Handle undo/redo
+  const drillholeId = entries[0]?.drillhole_id;
+  const handleUndo = useCallback(async () => {
+    try {
+      await historyService.undo();
+      const updatedEntries = await databaseService.getEntries(drillholeId);
+      setSortedEntries(updatedEntries);
+    } catch (error) {
+      console.error('[LogEntryList] Undo failed:', error);
+      alert(error instanceof Error ? error.message : 'Undo failed');
+    }
+  }, [drillholeId]);
+
+  const handleRedo = useCallback(async () => {
+    try {
+      await historyService.redo();
+      const updatedEntries = await databaseService.getEntries(drillholeId);
+      setSortedEntries(updatedEntries);
+    } catch (error) {
+      console.error('[LogEntryList] Redo failed:', error);
+      alert(error instanceof Error ? error.message : 'Redo failed');
+    }
+  }, [drillholeId]);
+
+  // Register keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!drillholeId) return;
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+        } else {
+          e.preventDefault();
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [drillholeId, handleUndo, handleRedo]);
+
   // Filter out system fields that should be hidden and get unique visible fields
   const visibleFields = fields
     .filter(field => field.visibility_style !== 'hidden')
@@ -372,7 +421,9 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
               {visibleFields
                 .filter(field => !['from', 'to'].includes(field.field_name))
                 .map((field) => (
-                  <TableCell key={`header-${field.field_name}`}>{field.description || field.field_name}</TableCell>
+                  <TableCell key={`header-${field.field_name}`}>
+                    {field.display_name || field.field_name}
+                  </TableCell>
                 ))}
               <TableCell key="header-actions">Actions</TableCell>
             </TableRow>
