@@ -28,14 +28,14 @@ import ContentCutIcon from '@mui/icons-material/ContentCut';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
 import { LogEntry } from '../types';
-import DatabaseService from '../services/DatabaseService';
-import CSVService from '../services/CSVService';
+import databaseService from '../services/DatabaseService';
+import csvService from '../services/CSVService';
 import { v4 as uuidv4 } from 'uuid';
 import { validateIntervals, getIntervalColor, IntervalValidation } from '../utils/intervalUtils';
 
 interface Field {
-  name: string;
-  type: string;
+  field_name: string;
+  field_type: string;
   page_name: string;
   page_order: number;
   visibility_style: string;
@@ -76,21 +76,31 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
     console.log('[LogEntryList] Interval validations:', validations);
 
     const loadData = async () => {
-      const csvService = CSVService.getInstance();
-      const config = await csvService.loadConfiguration();
-      setFields(config);
-
-      // Pre-compute styles for each field value
-      const styleMap: Record<string, any> = {};
-      config.forEach(field => {
-        if (field.style_config) {
-          const config = JSON.parse(typeof field.style_config === 'string' ? field.style_config : JSON.stringify(field.style_config));
-          if (config.colors || config.icons) {
-            styleMap[field.name] = config;
-          }
+      try {
+        console.log('[LogEntryList] Loading configuration data...');
+        const config = await csvService.loadConfiguration();
+        if (!config) {
+          console.error('[LogEntryList] No configuration loaded');
+          return;
         }
-      });
-      setStyles(styleMap);
+        console.log('[LogEntryList] Configuration loaded:', config);
+        setFields(config);
+
+        // Pre-compute styles for each field value
+        const styleMap: Record<string, any> = {};
+        config.forEach(field => {
+          if (field.style_config) {
+            const config = JSON.parse(typeof field.style_config === 'string' ? field.style_config : JSON.stringify(field.style_config));
+            if (config.colors || config.icons) {
+              styleMap[field.field_name] = config;
+            }
+          }
+        });
+        console.log('[LogEntryList] Style map computed:', styleMap);
+        setStyles(styleMap);
+      } catch (error) {
+        console.error('[LogEntryList] Error loading configuration:', error);
+      }
     };
 
     loadData();
@@ -101,15 +111,21 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
   console.log('[LogEntryList] Sorted entries:', sortedEntries);
 
   const getDisplayValue = (entry: LogEntry, field: Field) => {
-    const value = entry[field.name as keyof LogEntry];
+    if (!field.field_name) {
+      console.warn('[LogEntryList] Field missing name:', field);
+      return '';
+    }
+    
+    console.log(`[LogEntryList] Getting display value for field ${field.field_name}:`, entry[field.field_name as keyof LogEntry]);
+    const value = entry[field.field_name as keyof LogEntry];
     if (value === undefined || value === null) return '';
 
-    if (field.type === 'boolean') {
+    if (field.field_type === 'boolean') {
       return value === true ? 'Yes' : 'No';
     }
 
-    if (field.type === 'domain') {
-      const style = styles[field.name];
+    if (field.field_type === 'domain') {
+      const style = styles[field.field_name];
       return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {style?.icons?.[value] && (
@@ -134,41 +150,66 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
   };
 
   const getCellStyle = (field: Field, value: any) => {
-    if (!styles[field.name] || !value) return {};
+    if (!styles[field.field_name] || !value) return {};
 
-    const style = styles[field.name];
-    return {
+    const style = styles[field.field_name];
+    const cellStyle = {
       color: style.colors?.[value] || 'inherit',
       backgroundColor: style.background?.[value],
       ...(style.cellStyle?.[value] || {})
     };
+    console.log(`[LogEntryList] Cell style for ${field.field_name}:`, cellStyle);
+    return cellStyle;
   };
 
   const handleSplitClick = async (entry: LogEntry) => {
-    console.log(`[UI] Split button clicked for entry:`, entry);
+    console.log(`[LogEntryList] Split button clicked for entry:`, entry);
     try {
       await onSplit(entry);
     } catch (error) {
-      console.error('[UI] Error in split handler:', error);
+      console.error('[LogEntryList] Error in split handler:', error);
     }
   };
 
   const handleCancelSplit = async (entryId: string) => {
+    console.log(`[LogEntryList] Cancel split clicked for entry:`, entryId);
     if (onCancelSplit) {
       await onCancelSplit(entryId);
     }
+  };
+
+  const handleAddBetween = (from: number, to: number) => {
+    console.log(`[LogEntryList] Add between clicked:`, { from, to });
+    onAddBetween && onAddBetween(from, to);
+  };
+
+  const handleEdit = (entry: LogEntry) => {
+    console.log(`[LogEntryList] Edit clicked for entry:`, entry);
+    onEdit && onEdit(entry);
+  };
+
+  const handleDelete = (id: string) => {
+    console.log(`[LogEntryList] Delete clicked for entry:`, id);
+    onDelete && onDelete(id);
   };
 
   // Filter out system fields that should be hidden and get unique visible fields
   const visibleFields = fields
     .filter(field => field.visibility_style !== 'hidden')
     .filter((field, index, self) => 
-      index === self.findIndex(f => f.name === field.name)
-    );
+      index === self.findIndex(f => f.field_name === field.field_name)
+    )
+    .filter(field => field.field_name && field.field_type); // Ensure fields have name and type
+
+  console.log('[LogEntryList] Visible fields:', visibleFields.map(f => ({ 
+    name: f.field_name, 
+    type: f.field_type,
+    visibility: f.visibility_style 
+  })));
 
   // Function to render gap indicator row
-  const renderGapIndicator = (gapStart: number, gapEnd: number) => (
-    <TableRow sx={{ 
+  const renderGapIndicator = (gapStart: number, gapEnd: number, index: number) => (
+    <TableRow key={`gap-${index}`} sx={{ 
       backgroundColor: theme.palette.mode === 'dark' 
         ? getIntervalColor({ hasGap: true, hasOverlap: false }).dark
         : getIntervalColor({ hasGap: true, hasOverlap: false }).light 
@@ -204,26 +245,26 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>From</TableCell>
-              <TableCell>To</TableCell>
+              <TableCell key="header-from">From</TableCell>
+              <TableCell key="header-to">To</TableCell>
               {visibleFields
-                .filter(field => !['from', 'to'].includes(field.name))
+                .filter(field => !['from', 'to'].includes(field.field_name))
                 .map((field) => (
-                  <TableCell key={field.name}>{field.name}</TableCell>
+                  <TableCell key={`header-${field.field_name}`}>{field.description || field.field_name}</TableCell>
                 ))}
-              <TableCell>Actions</TableCell>
+              <TableCell key="header-actions">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {/* Add button at the start */}
             {sortedEntries.length > 0 && (
-              <TableRow>
+              <TableRow key="add-start">
                 <TableCell colSpan={visibleFields.length + 3} align="center" sx={{ py: 0 }}>
                   <Tooltip title="Add Entry at Start">
                     <IconButton
                       size="small"
                       sx={{ my: 0.5 }}
-                      onClick={() => onAddBetween && onAddBetween(0, sortedEntries[0].from)}
+                      onClick={() => handleAddBetween(0, sortedEntries[0].from)}
                     >
                       <AddIcon />
                     </IconButton>
@@ -235,10 +276,12 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
             {/* Existing entries with between buttons and gap indicators */}
             {sortedEntries.map((entry, index) => {
               const validation = intervalValidations[index];
+              const nextEntry = sortedEntries[index + 1];
+              
               return (
-                <React.Fragment key={entry.id}>
+                <React.Fragment key={`entry-group-${entry.id}`}>
                   <TableRow sx={validation ? getRowStyle(validation) : undefined}>
-                    <TableCell>
+                    <TableCell key={`${entry.id}-from`}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {entry.from}
                         {validation?.prevStatus.hasOverlap && (
@@ -248,7 +291,7 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
                         )}
                       </Box>
                     </TableCell>
-                    <TableCell>
+                    <TableCell key={`${entry.id}-to`}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {entry.to}
                         {validation?.nextStatus.hasOverlap && (
@@ -259,61 +302,61 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
                       </Box>
                     </TableCell>
                     {visibleFields
-                      .filter(field => !['from', 'to'].includes(field.name))
+                      .filter(field => !['from', 'to'].includes(field.field_name))
                       .map((field) => (
-                        <TableCell key={field.name} style={getCellStyle(field, entry[field.name as keyof LogEntry])}>
+                        <TableCell 
+                          key={`${entry.id}-${field.field_name}`} 
+                          style={getCellStyle(field, entry[field.field_name as keyof LogEntry])}
+                        >
                           {getDisplayValue(entry, field)}
                         </TableCell>
                       ))}
-                    <TableCell>
+                    <TableCell key={`${entry.id}-actions`}>
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <IconButton
                           size="small"
-                          onClick={() => onEdit && onEdit(entry)}
+                          onClick={() => handleEdit(entry)}
                         >
                           <EditIcon />
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => onSplit && onSplit(entry)}
+                          onClick={() => handleSplitClick(entry)}
                         >
                           <CallSplitIcon />
                         </IconButton>
                         {entry.originalEntryId && onCancelSplit && (
                           <IconButton
                             size="small"
-                            onClick={() => onCancelSplit(entry.originalEntryId!)}
+                            onClick={() => handleCancelSplit(entry.originalEntryId!)}
                           >
                             <CancelIcon />
                           </IconButton>
                         )}
                         <IconButton
                           size="small"
-                          onClick={() => onDelete && onDelete(entry.id)}
+                          onClick={() => handleDelete(entry.id)}
                         >
                           <DeleteIcon />
                         </IconButton>
                       </Box>
                     </TableCell>
                   </TableRow>
-
-                  {/* Show gap indicator if there's a gap */}
-                  {validation?.nextStatus.hasGap && renderGapIndicator(
-                    validation.nextStatus.gapStart!,
-                    validation.nextStatus.gapEnd!
+                  
+                  {/* Add gap indicator if there's a gap between this entry and the next */}
+                  {nextEntry && nextEntry.from > entry.to && (
+                    renderGapIndicator(entry.to, nextEntry.from, index)
                   )}
-
+                  
                   {/* Add button between entries */}
-                  {onAddBetween && index < sortedEntries.length - 1 && (
-                    <TableRow>
+                  {nextEntry && (
+                    <TableRow key={`add-between-${entry.id}`}>
                       <TableCell colSpan={visibleFields.length + 3} align="center" sx={{ py: 0 }}>
                         <Tooltip title="Add Entry Between">
                           <IconButton
                             size="small"
                             sx={{ my: 0.5 }}
-                            onClick={() =>
-                              onAddBetween(entry.to, sortedEntries[index + 1].from)
-                            }
+                            onClick={() => handleAddBetween(entry.to, nextEntry.from)}
                           >
                             <AddIcon />
                           </IconButton>
@@ -324,44 +367,6 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
                 </React.Fragment>
               );
             })}
-
-            {/* Add button at the end */}
-            {sortedEntries.length > 0 && (
-              <TableRow>
-                <TableCell colSpan={visibleFields.length + 3} align="center" sx={{ py: 0 }}>
-                  <Tooltip title="Add Entry at End">
-                    <IconButton
-                      size="small"
-                      sx={{ my: 0.5 }}
-                      onClick={() => onAddBetween && onAddBetween(sortedEntries[sortedEntries.length - 1].to, sortedEntries[sortedEntries.length - 1].to + 5)}
-                    >
-                      <AddIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            )}
-
-            {/* Show message when no entries exist */}
-            {sortedEntries.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={visibleFields.length + 3} align="center">
-                  <Box sx={{ py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body1">No entries yet</Typography>
-                    {onAddBetween && (
-                      <Tooltip title="Add First Entry">
-                        <IconButton
-                          size="small"
-                          onClick={() => onAddBetween(0, 5)}
-                        >
-                          <AddIcon />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-                </TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </TableContainer>

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Paper, Typography, useTheme } from '@mui/material';
 import { LogEntry } from '../types';
-import CSVService from '../services/CSVService';
+import csvService from '../services/CSVService';
 
 interface StripLogProps {
   entries: LogEntry[];
@@ -11,8 +11,19 @@ interface StripLogProps {
 
 const StripLog: React.FC<StripLogProps> = ({ entries, height = 600, width = 120 }) => {
   const theme = useTheme();
-  const csvService = CSVService.getInstance();
   
+  useEffect(() => {
+    // Load configuration on mount
+    const loadConfig = async () => {
+      try {
+        await csvService.loadConfiguration();
+      } catch (error) {
+        console.error('Error loading configuration:', error);
+      }
+    };
+    loadConfig();
+  }, []);
+
   // Sort entries by depth
   const sortedEntries = [...entries].sort((a, b) => a.from - b.from);
   

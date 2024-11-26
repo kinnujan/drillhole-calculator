@@ -14,9 +14,11 @@ import {
   Paper,
   ToggleButton,
   ToggleButtonGroup,
+  FormHelperText
 } from '@mui/material';
 import { LogEntry } from '../types';
-import CSVService, { FieldConfig, PageInfo, VisibilityStyle } from '../services/CSVService';
+import { FieldConfig, PageInfo, VisibilityStyle } from '../types/Field';
+import csvService from '../services/CSVService';
 import { v4 as uuidv4 } from 'uuid';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -59,51 +61,77 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
   const [formData, setFormData] = useState<Partial<LogEntry>>({});
   const [pages, setPages] = useState<PageInfo[]>([]);
   const [currentTab, setCurrentTab] = useState(0);
-  const csvService = CSVService.getInstance();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   useEffect(() => {
-    console.log('[QuickLogForm] Initializing form data with:', { editEntry, prefillData });
-    if (editEntry) {
-      setFormData(editEntry);
-    } else if (prefillData) {
-      setFormData(prefillData);
-    } else {
-      setFormData({
-        drillhole_id: drillholeId || '',
-        from: 0,
-        to: 0,
-        lithology: '',
-        color: '',
-        texture: '',
-        minerals: '',
-        mineralized: false,
-        structures: '',
-        notes: '',
-        synced: false,
-        fields: {},
-        created: new Date(),
-        modified: new Date()
-      });
-    }
-  }, [editEntry, prefillData, drillholeId]);
-
-  useEffect(() => {
-    const loadPages = async () => {
-      await csvService.loadConfiguration();
-      setPages(csvService.getPages());
+    const initialize = async () => {
+      console.log('[QuickLogForm] Starting initialization');
+      
+      try {
+        // Load configuration once
+        await csvService.loadConfiguration();
+        
+        // Set pages
+        setPages(csvService.getPages());
+        
+        // Set form data
+        console.log('[QuickLogForm] Setting form data with:', { editEntry, prefillData, previousEntry });
+        
+        let newFormData: Partial<LogEntry>;
+        
+        if (editEntry) {
+          newFormData = { ...editEntry };
+        } else if (prefillData) {
+          newFormData = {
+            ...prefillData,
+            drillhole_id: drillholeId || '',
+            from: Number(prefillData.from ?? (previousEntry ? previousEntry.to : 0)),
+            to: Number(prefillData.to ?? (previousEntry ? previousEntry.to + 1 : 1)),
+            created: new Date(),
+            modified: new Date()
+          };
+        } else {
+          const defaultFrom = Number(previousEntry ? previousEntry.to : 0);
+          const defaultTo = Number(previousEntry ? previousEntry.to + 1 : 1);
+          newFormData = {
+            drillhole_id: drillholeId || '',
+            from: defaultFrom,
+            to: defaultTo,
+            lithology: '',
+            color: '',
+            texture: '',
+            minerals: '',
+            mineralized: false,
+            structures: '',
+            notes: '',
+            synced: false,
+            fields: {},
+            created: new Date(),
+            modified: new Date()
+          };
+        }
+        
+        console.log('[QuickLogForm] Setting new form data:', newFormData);
+        setFormData(newFormData);
+        
+      } catch (error) {
+        console.error('[QuickLogForm] Initialization error:', error);
+      }
     };
-    loadPages();
+
+    initialize();
 
     // Subscribe to configuration changes
-    const handleConfigChange = async () => {
-      await loadPages();
+    const handleConfigChange = () => {
+      setPages(csvService.getPages());
     };
+    
     csvService.addConfigurationChangeListener(handleConfigChange);
-
     return () => {
       csvService.removeConfigurationChangeListener(handleConfigChange);
     };
-  }, []);
+  }, [editEntry, prefillData, drillholeId, previousEntry]);
 
   const handleChange = (field: string) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.MouseEvent<HTMLElement> | null,
@@ -129,31 +157,109 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    console.log('[QuickLogForm] Submitting form data:', formData);
-    onSubmit({
-      ...formData,
-      drillhole_id: drillholeId || '',
-      modified: new Date(),
-      synced: false,
-    } as LogEntry);
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    const fields = csvService.getFields();
+    
+    // Check required fields
+    fields.forEach(field => {
+      if (field.required && !formData[field.field_name as keyof LogEntry]) {
+        errors[field.field_name] = `${field.description} is required`;
+      }
+    });
+
+    // Validate from/to values
+    const fromValue = Number(formData.from);
+    const toValue = Number(formData.to);
+    
+    if (isNaN(fromValue)) {
+      errors['from'] = 'From depth is required and must be a number';
+    }
+    if (isNaN(toValue)) {
+      errors['to'] = 'To depth is required and must be a number';
+    }
+    if (!isNaN(fromValue) && !isNaN(toValue) && fromValue >= toValue) {
+      errors['to'] = 'To depth must be greater than From depth';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitAttempted(true);
+    
+    console.log('[QuickLogForm] Attempting to submit form data:', formData);
+    
+    if (!validateForm()) {
+      console.warn('[QuickLogForm] Form validation failed:', fieldErrors);
+      // Find the first page with an error and switch to it
+      const fields = csvService.getFields();
+      const errorFields = Object.keys(fieldErrors);
+      const firstErrorField = fields.find(f => errorFields.includes(f.field_name));
+      if (firstErrorField) {
+        const errorPage = pages.findIndex(p => p.name === firstErrorField.page);
+        if (errorPage !== -1) {
+          setCurrentTab(errorPage);
+        }
+      }
+      return;
+    }
+
+    console.log('[QuickLogForm] Form validation passed, submitting entry');
+    onSubmit(formData as Omit<LogEntry, 'id'>);
+  };
+
+  const handleFieldChange = (fieldName: string, value: any) => {
+    console.log(`[QuickLogForm] Field change: ${fieldName} =`, value);
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value,
+      modified: new Date()
+    }));
+    
+    // Clear error for this field if it exists
+    if (fieldErrors[fieldName]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    console.log(`[QuickLogForm] Tab changed to: ${newValue}`);
+    setCurrentTab(newValue);
+  };
+
+  const handleQuickFill = () => {
+    console.log('[QuickLogForm] Quick fill triggered');
+    if (previousEntry && onQuickFill) {
+      console.log('[QuickLogForm] Quick filling from previous entry:', previousEntry);
+      onQuickFill();
+    }
   };
 
   const renderField = (field: FieldConfig) => {
+    console.log(`[QuickLogForm] Rendering field: ${field.field_name}, type: ${field.field_type}`);
     if (field.visibility_style === 'hidden') {
       return null;
     }
+
+    const hasError = submitAttempted && !!fieldErrors[field.field_name];
+    const errorMessage = fieldErrors[field.field_name];
 
     switch (field.visibility_style) {
       case 'buttons':
         return (
           <Box key={field.field_name} sx={{ mb: 2 }}>
-            <InputLabel>{field.description}</InputLabel>
+            <InputLabel error={hasError}>{field.description}</InputLabel>
             <ToggleButtonGroup
               value={formData[field.field_name] || ''}
               exclusive
-              onChange={(e, value) => handleChange(field.field_name)(e, value)}
+              onChange={(e, value) => handleFieldChange(field.field_name, value)}
               aria-label={field.description}
               sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}
             >
@@ -182,16 +288,17 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
                 );
               })}
             </ToggleButtonGroup>
+            {hasError && <FormHelperText error>{errorMessage}</FormHelperText>}
           </Box>
         );
 
       case 'dropdown':
         return (
-          <FormControl fullWidth key={field.field_name} margin="normal">
+          <FormControl fullWidth key={field.field_name} margin="normal" error={hasError}>
             <InputLabel>{field.description}</InputLabel>
             <Select
               value={formData[field.field_name] || ''}
-              onChange={e => handleChange(field.field_name)(e as any, e.target.value)}
+              onChange={e => handleFieldChange(field.field_name, e.target.value)}
               label={field.description}
               required={field.required}
             >
@@ -199,6 +306,7 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
                 <MenuItem key={value} value={value}>{value}</MenuItem>
               ))}
             </Select>
+            {hasError && <FormHelperText>{errorMessage}</FormHelperText>}
           </FormControl>
         );
 
@@ -209,7 +317,7 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
             control={
               <Switch
                 checked={formData[field.field_name] || false}
-                onChange={e => handleChange(field.field_name)(e, e.target.checked)}
+                onChange={e => handleFieldChange(field.field_name, e.target.checked)}
               />
             }
             label={field.description}
@@ -225,9 +333,11 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
             rows={4}
             label={field.description}
             value={formData[field.field_name] || ''}
-            onChange={e => handleChange(field.field_name)(e, e.target.value)}
+            onChange={e => handleFieldChange(field.field_name, e.target.value)}
             required={field.required}
             margin="normal"
+            error={hasError}
+            helperText={errorMessage}
           />
         );
 
@@ -240,17 +350,15 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
             label={field.description}
             type={field.field_type === 'number' ? 'number' : 'text'}
             value={formData[field.field_name] || ''}
-            onChange={e => handleChange(field.field_name)(e, e.target.value)}
+            onChange={e => handleFieldChange(field.field_name, e.target.value)}
             required={field.required}
             margin="normal"
+            error={hasError}
+            helperText={errorMessage}
             inputProps={{ step: 'any' }}
           />
         );
     }
-  };
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
   };
 
   return (
@@ -274,6 +382,26 @@ export default function QuickLogForm({ onSubmit, editEntry, drillholeId, prefill
           {csvService.getFieldsForPage(page.name).map(renderField)}
         </TabPanel>
       ))}
+
+      {/* Action Buttons */}
+      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+        {previousEntry && onQuickFill && (
+          <Button
+            variant="outlined"
+            onClick={handleQuickFill}
+            startIcon={<ContentCopyIcon />}
+          >
+            Quick Fill
+          </Button>
+        )}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+        >
+          Save Entry
+        </Button>
+      </Box>
     </Box>
   );
 }

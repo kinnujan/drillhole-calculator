@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { CircularProgress, Box, ThemeProvider, CssBaseline, Alert } from '@mui/material';
 import MainPage from './pages/MainPage';
-import ConfigurationService from './services/ConfigurationService';
-import DatabaseService from './services/DatabaseService';
+import configurationService from './services/ConfigurationService';
+import databaseService from './services/DatabaseService';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [theme, setTheme] = useState(ConfigurationService.getInstance().getTheme());
+  const [theme, setTheme] = useState(configurationService.getTheme());
 
   useEffect(() => {
-    const configService = ConfigurationService.getInstance();
-    const savedConfig = configService.getConfig();
-    setTheme(configService.getTheme());
+    const savedConfig = configurationService.getConfig();
+    setTheme(configurationService.getTheme());
 
     const initializeApp = async () => {
       try {
-        const dbService = DatabaseService.getInstance();
-        await dbService.initialize();
+        await databaseService.initialize();
         setIsLoading(false);
       } catch (error) {
         console.error('Error initializing app:', error);

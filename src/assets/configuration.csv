@@ -6,6 +6,6 @@ lithology,domain,Geology,1,buttons,true,"sandstone,siltstone,shale,limestone,coa
 color,domain,Geology,1,dropdown,false,"grey,black,brown,red,green",,Rock color,{}
 texture,domain,Geology,1,buttons,false,"massive,laminated,cross-bedded,bioturbated",,Sedimentary texture,"{""icons"":{""massive"":""▅"",""laminated"":""≡"",""cross-bedded"":""⋰"",""bioturbated"":""◊""}}"
 minerals,text,Mineralization,2,visible,false,,,Notable minerals,{}
-mineralized,boolean,Mineralization,2,switch,false,,false,Presence of mineralization,"{""colors"":{""true"":""#FFD700"",""false"":""transparent""}}"
+mineralized,boolean,Mineralization,2,switch,false,,false,Indicates whether the interval contains mineralization of economic interest,{}
 structures,domain,Structures,3,buttons,false,"normal fault,reverse fault,fold,joint",,Geological structures,"{""icons"":{""normal fault"":""╱"",""reverse fault"":""╲"",""fold"":""∿"",""joint"":""│""}}"
 notes,text,Notes,4,textarea,false,,,Additional notes,{}

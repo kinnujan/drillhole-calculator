@@ -1,5 +1,5 @@
-import { LogEntry } from '../models/LogEntry';
-import DatabaseService from './DatabaseService';
+import { LogEntry } from '../types/LogEntry';
+import databaseService from './DatabaseService';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ErrorLog {
@@ -16,101 +16,78 @@ interface BackupEntry {
   entries: LogEntry[];
 }
 
-export class ErrorRecoveryService {
-  private static instance: ErrorRecoveryService;
+class ErrorRecoveryService {
   private readonly MAX_ERROR_LOGS = 1000;
-  private readonly MAX_BACKUPS = 10;
-  private readonly BACKUP_INTERVAL = 1000 * 60 * 60; // 1 hour
+  private readonly MAX_BACKUPS = 100;
+  private dbService = databaseService;
 
-  private errorLogs: ErrorLog[] = [];
-  private backups: BackupEntry[] = [];
-  private lastBackupTime: Date | null = null;
-  private backupTimeout: NodeJS.Timeout | null = null;
-  private dbService: DatabaseService;
-
-  private constructor() {
-    this.dbService = DatabaseService.getInstance();
-    this.initializeBackupSchedule();
+  constructor() {
+    console.log('ErrorRecoveryService initialized');
   }
 
-  static getInstance(): ErrorRecoveryService {
-    if (!ErrorRecoveryService.instance) {
-      ErrorRecoveryService.instance = new ErrorRecoveryService();
-    }
-    return ErrorRecoveryService.instance;
-  }
-
-  private async initializeBackupSchedule() {
-    // Load existing backups from IndexedDB
-    await this.loadBackups();
-    
-    // Schedule regular backups
-    this.scheduleNextBackup();
-  }
-
-  private scheduleNextBackup() {
-    if (this.backupTimeout) {
-      clearTimeout(this.backupTimeout);
-    }
-
-    const now = new Date();
-    const nextBackupTime = this.lastBackupTime
-      ? new Date(this.lastBackupTime.getTime() + this.BACKUP_INTERVAL)
-      : now;
-
-    const delay = Math.max(0, nextBackupTime.getTime() - now.getTime());
-
-    this.backupTimeout = setTimeout(() => this.createBackup(), delay);
-  }
-
-  async logError(type: string, message: string, data?: any): Promise<string> {
-    const errorLog: ErrorLog = {
-      id: uuidv4(),
-      timestamp: new Date().toISOString(),
-      type,
-      message,
-      data,
-    };
-
-    this.errorLogs.push(errorLog);
-
-    // Keep only the most recent logs
-    if (this.errorLogs.length > this.MAX_ERROR_LOGS) {
-      this.errorLogs = this.errorLogs.slice(-this.MAX_ERROR_LOGS);
-    }
-
-    // Store error log in IndexedDB
+  async createBackup(): Promise<void> {
     try {
-      return await this.dbService.createErrorLog(errorLog);
+      const entries = await this.dbService.getLatestEntries();
+      const backup: BackupEntry = {
+        id: uuidv4(),
+        timestamp: new Date().toISOString(),
+        entries
+      };
+      await this.dbService.saveBackup(backup);
+
+      // Cleanup old backups
+      const backups = await this.dbService.getBackups();
+      if (backups.length > this.MAX_BACKUPS) {
+        const toDelete = backups
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(this.MAX_BACKUPS);
+        for (const backup of toDelete) {
+          await this.dbService.deleteBackup(backup.id);
+        }
+      }
     } catch (error) {
-      console.error('Failed to store error log:', error);
+      console.error('Error creating backup:', error);
       throw error;
     }
   }
 
-  async createBackup(): Promise<string> {
+  async logError(type: string, message: string, data?: any): Promise<void> {
     try {
-      const entries = await this.dbService.getAllEntries();
-      const backup: BackupEntry = {
+      const errorLog: ErrorLog = {
         id: uuidv4(),
         timestamp: new Date().toISOString(),
-        entries,
+        type,
+        message,
+        data
       };
+      await this.dbService.saveErrorLog(errorLog);
 
-      this.backups.push(backup);
-
-      // Keep only the most recent backups
-      if (this.backups.length > this.MAX_BACKUPS) {
-        this.backups = this.backups.slice(-this.MAX_BACKUPS);
+      // Cleanup old error logs
+      const errorLogs = await this.dbService.getErrorLogs();
+      if (errorLogs.length > this.MAX_ERROR_LOGS) {
+        const toDelete = errorLogs
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(this.MAX_ERROR_LOGS);
+        for (const log of toDelete) {
+          await this.dbService.deleteErrorLog(log.id);
+        }
       }
-
-      this.lastBackupTime = new Date(backup.timestamp);
-
-      // Store backup in IndexedDB
-      return await this.dbService.createBackup(backup);
     } catch (error) {
-      console.error('Failed to create backup:', error);
-      this.logError('BACKUP_FAILED', 'Failed to create backup', error);
+      console.error('Error logging error:', error);
+      // Don't throw here to avoid recursive error logging
+    }
+  }
+
+  async getLatestBackup(): Promise<BackupEntry | null> {
+    try {
+      const backups = await this.dbService.getBackups();
+      if (backups.length === 0) return null;
+
+      return backups.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )[0];
+    } catch (error) {
+      console.error('Error getting latest backup:', error);
       throw error;
     }
   }
@@ -118,57 +95,31 @@ export class ErrorRecoveryService {
   async restoreFromBackup(backupId: string): Promise<void> {
     try {
       const backup = await this.dbService.getBackup(backupId);
-      if (!backup) {
-        throw new Error('Backup not found');
-      }
+      if (!backup) throw new Error('Backup not found');
 
-      // Create a backup before restoration
+      // Create a new backup before restoration
       await this.createBackup();
-
-      // Clear current entries
-      await this.dbService.clearEntries();
 
       // Restore entries from backup
       for (const entry of backup.entries) {
-        await this.dbService.addEntry(entry);
+        await this.dbService.saveEntry(entry);
       }
-
-      this.logError('BACKUP_RESTORED', `Restored from backup: ${backupId}`);
     } catch (error) {
-      this.logError('RESTORE_FAILED', 'Failed to restore from backup', error);
+      console.error('Error restoring from backup:', error);
       throw error;
     }
   }
 
-  async getErrorLogs(startTime?: Date, endTime?: Date): Promise<ErrorLog[]> {
-    let logs = this.errorLogs;
-
-    if (startTime) {
-      logs = logs.filter(log => new Date(log.timestamp) >= startTime);
-    }
-
-    if (endTime) {
-      logs = logs.filter(log => new Date(log.timestamp) <= endTime);
-    }
-
-    return logs;
-  }
-
-  async getBackups(): Promise<BackupEntry[]> {
-    return this.backups;
-  }
-
-  private async loadBackups() {
+  async getErrorLogs(): Promise<ErrorLog[]> {
     try {
-      const backups = await this.dbService.getBackups();
-      this.backups = backups;
-      
-      if (this.backups.length > 0) {
-        this.lastBackupTime = new Date(this.backups[this.backups.length - 1].timestamp);
-      }
+      return await this.dbService.getErrorLogs();
     } catch (error) {
-      console.error('Failed to load backups:', error);
-      this.logError('LOAD_BACKUPS_FAILED', 'Failed to load backups', error);
+      console.error('Error getting error logs:', error);
+      throw error;
     }
   }
 }
+
+// Create and export singleton instance
+const errorRecoveryService = new ErrorRecoveryService();
+export default errorRecoveryService;

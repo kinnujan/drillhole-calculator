@@ -24,8 +24,8 @@ import StripLog from '../components/StripLog';
 import DrillholeSelector from '../components/DrillholeSelector';
 import ConfigurationDialog from '../components/ConfigurationDialog';
 import { LogEntry } from '../types';
-import DatabaseService from '../services/DatabaseService';
-import ConfigurationService from '../services/ConfigurationService';
+import databaseService from '../services/DatabaseService';
+import configurationService from '../services/ConfigurationService';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -33,7 +33,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CloseIcon from '@mui/icons-material/Close';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
-import HistoryService, { DeleteEntryCommand, AddEntryCommand, UpdateEntryCommand, SplitEntryCommand } from '../services/HistoryService';
+import historyService from '../services/HistoryService';
+import { DeleteEntryCommand, AddEntryCommand, UpdateEntryCommand, SplitEntryCommand } from '../services/HistoryService';
 import { v4 as uuidv4 } from 'uuid';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -52,9 +53,8 @@ const MainPage: React.FC = () => {
   const [configOpen, setConfigOpen] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  const [darkMode, setDarkMode] = useState(ConfigurationService.getInstance().getConfig().darkMode);
-
-  const historyService = HistoryService.getInstance();
+  const [darkMode, setDarkMode] = useState(configurationService.getConfig().darkMode);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     // Update undo/redo state
@@ -64,16 +64,14 @@ const MainPage: React.FC = () => {
 
   const handleDarkModeChange = (newDarkMode: boolean) => {
     setDarkMode(newDarkMode);
-    const configService = ConfigurationService.getInstance();
-    configService.updateConfig({ darkMode: newDarkMode });
+    configurationService.updateConfig({ darkMode: newDarkMode });
     window.location.reload();
   };
 
   const handleUndo = async () => {
     await historyService.undo();
     if (selectedDrillhole) {
-      const dbService = DatabaseService.getInstance();
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
       setEntries(updatedEntries);
     }
   };
@@ -81,8 +79,7 @@ const MainPage: React.FC = () => {
   const handleRedo = async () => {
     await historyService.redo();
     if (selectedDrillhole) {
-      const dbService = DatabaseService.getInstance();
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
       setEntries(updatedEntries);
     }
   };
@@ -93,8 +90,7 @@ const MainPage: React.FC = () => {
       if (!selectedDrillhole) return;
       
       try {
-        const dbService = DatabaseService.getInstance();
-        const loadedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+        const loadedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
         setEntries(loadedEntries);
       } catch (error) {
         console.error('Error loading entries:', error);
@@ -103,42 +99,31 @@ const MainPage: React.FC = () => {
     loadEntries();
   }, [selectedDrillhole]);
 
-  const handleSubmit = async (entry: LogEntry) => {
+  const handleSubmit = async (entry: Omit<LogEntry, 'id'>) => {
     try {
-      const dbService = DatabaseService.getInstance();
+      console.log('[MainPage] Submitting entry:', { entry, isEdit: !!editEntry });
       
       if (editEntry) {
-        // If this was a split entry, adjust surrounding entries
-        const allEntries = await dbService.getEntriesByHole(selectedDrillhole!);
-        const currentIndex = allEntries.findIndex(e => e.id === editEntry.id);
-        
-        if (currentIndex > -1) {
-          const beforeEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
-          const afterEntry = currentIndex < allEntries.length - 1 ? allEntries[currentIndex + 1] : null;
-          
-          // Adjust the entry before this one
-          if (beforeEntry && beforeEntry.to !== entry.from) {
-            await dbService.updateEntry({
-              ...beforeEntry,
-              to: entry.from
-            });
-          }
-          
-          // Adjust the entry after this one
-          if (afterEntry && afterEntry.from !== entry.to) {
-            await dbService.updateEntry({
-              ...afterEntry,
-              from: entry.to
-            });
-          }
-        }
-        
-        // Update the current entry
-        const command = new UpdateEntryCommand(editEntry, entry);
+        // Create and execute update command
+        const command = new UpdateEntryCommand(editEntry, { ...entry, id: editEntry.id });
+        console.log('[MainPage] Executing update command:', command);
         await historyService.executeCommand(command);
         setEditEntry(null);
+        setEditDialogOpen(false);
       } else {
-        const command = new AddEntryCommand(entry);
+        // Add ID and other required fields to the new entry
+        const newEntry: LogEntry = {
+          ...entry,
+          id: uuidv4(),
+          drillhole_id: selectedDrillhole || '',
+          synced: false,
+          fields: entry.fields || {},
+          created: new Date(),
+          modified: new Date()
+        };
+        
+        console.log('[MainPage] Creating new entry command:', newEntry);
+        const command = new AddEntryCommand(newEntry);
         await historyService.executeCommand(command);
       }
       
@@ -147,11 +132,47 @@ const MainPage: React.FC = () => {
       setPrefillData(null);
       
       // Refresh entries after submit
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
-      console.log('[MainPage] Updated entries:', updatedEntries);
-      setEntries(updatedEntries);
+      if (selectedDrillhole) {
+        console.log('[MainPage] Refreshing entries for drillhole:', selectedDrillhole);
+        const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
+        console.log('[MainPage] Updated entries:', updatedEntries);
+        setEntries(updatedEntries);
+      }
     } catch (error) {
-      console.error('Error submitting entry:', error);
+      console.error('[MainPage] Error submitting entry:', error);
+    }
+  };
+
+  const handleNewEntrySubmit = async (entry: Omit<LogEntry, 'id'>) => {
+    try {
+      console.log('[MainPage] Submitting new entry:', entry);
+      
+      // Add ID and other required fields to the entry
+      const newEntry: LogEntry = {
+        ...entry,
+        id: uuidv4(),
+        drillhole_id: selectedDrillhole || '',
+        synced: false,
+        fields: entry.fields || {},
+        created: new Date(),
+        modified: new Date()
+      };
+
+      // Create and execute command
+      const command = new AddEntryCommand(newEntry);
+      await historyService.executeCommand(command);
+      
+      // Clear dialog state
+      setShowNewEntryDialog(false);
+      setPrefillData(null);
+      
+      // Refresh entries
+      if (selectedDrillhole) {
+        const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
+        setEntries(updatedEntries);
+      }
+    } catch (error) {
+      console.error('[MainPage] Error submitting new entry:', error);
     }
   };
 
@@ -174,8 +195,7 @@ const MainPage: React.FC = () => {
       setDeleteEntry(null);
       
       // Refresh the entries list
-      const dbService = DatabaseService.getInstance();
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
       console.log('[MainPage] Updated entries after delete:', updatedEntries);
       setEntries(updatedEntries);
     } catch (error) {
@@ -208,34 +228,6 @@ const MainPage: React.FC = () => {
     setShowNewEntryDialog(true);
   };
 
-  const handleNewEntrySubmit = async (entry: Omit<LogEntry, 'id'>) => {
-    try {
-      console.log('[MainPage] Submitting new entry:', entry);
-      const dbService = DatabaseService.getInstance();
-      
-      // Add ID to the entry
-      const newEntry: LogEntry = {
-        ...entry,
-        id: uuidv4()
-      };
-
-      // Create and execute command
-      const command = new AddEntryCommand(newEntry);
-      await historyService.executeCommand(command);
-      
-      // Clear dialog state
-      setShowNewEntryDialog(false);
-      setPrefillData(null);
-      
-      // Refresh entries after submit
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole!);
-      console.log('[MainPage] Updated entries:', updatedEntries);
-      setEntries(updatedEntries);
-    } catch (error) {
-      console.error('[MainPage] Error submitting entry:', error);
-    }
-  };
-
   const handleSplit = async (entry: LogEntry) => {
     try {
       if (!entry || !selectedDrillhole) {
@@ -243,11 +235,10 @@ const MainPage: React.FC = () => {
         return;
       }
 
-      const dbService = DatabaseService.getInstance();
       console.log('[MainPage] Starting split operation for entry:', entry);
       
       // First verify the entry still exists and get fresh data
-      const currentEntry = await dbService.getEntry(entry.id);
+      const currentEntry = await databaseService.getEntry(entry.id);
       if (!currentEntry) {
         console.error(`[MainPage] Entry ${entry.id} no longer exists`);
         return;
@@ -304,7 +295,7 @@ const MainPage: React.FC = () => {
 
       // Refresh the entries list
       console.log('[MainPage] Refreshing entries list...');
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
       console.log('[MainPage] Updated entries:', updatedEntries);
       setEntries(updatedEntries);
       console.log('[MainPage] Split operation completed successfully');
@@ -314,7 +305,7 @@ const MainPage: React.FC = () => {
       // Refresh the entries list to ensure UI is in sync
       if (selectedDrillhole) {
         console.log('[MainPage] Refreshing entries after error...');
-        const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+        const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
         console.log('[MainPage] Updated entries after error:', updatedEntries);
         setEntries(updatedEntries);
       }
@@ -325,14 +316,12 @@ const MainPage: React.FC = () => {
     try {
       if (!selectedDrillhole) return;
 
-      const dbService = DatabaseService.getInstance();
-      
       // Get all entries with this originalEntryId
       const splitEntries = entries.filter(e => e.originalEntryId === originalEntryId);
       if (splitEntries.length === 0) return;
 
       // Get the original entry from backup
-      const originalEntry = await dbService.getBackupEntry(originalEntryId);
+      const originalEntry = await databaseService.getBackupEntry(originalEntryId);
       if (!originalEntry) {
         console.error('Original entry not found in backup');
         return;
@@ -340,14 +329,14 @@ const MainPage: React.FC = () => {
 
       // Delete all split entries
       for (const entry of splitEntries) {
-        await dbService.deleteEntry(entry.id);
+        await databaseService.deleteEntry(entry.id);
       }
 
       // Restore the original entry
-      await dbService.addEntry(originalEntry);
+      await databaseService.addEntry(originalEntry);
 
       // Refresh the entries list
-      const updatedEntries = await dbService.getEntriesByHole(selectedDrillhole);
+      const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
       console.log('[MainPage] Updated entries after cancel split:', updatedEntries);
       setEntries(updatedEntries);
 
@@ -355,6 +344,17 @@ const MainPage: React.FC = () => {
     } catch (error) {
       console.error('Error cancelling split:', error);
     }
+  };
+
+  const handleEdit = (entry: LogEntry) => {
+    console.log('[MainPage] Editing entry:', entry);
+    setEditEntry(entry);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setEditDialogOpen(false);
+    setEditEntry(null);
   };
 
   if (!selectedDrillhole) {
@@ -421,7 +421,7 @@ const MainPage: React.FC = () => {
           <Paper sx={{ p: 2, height: '80vh', overflow: 'auto' }}>
             <LogEntryList
               entries={entries}
-              onEdit={setEditEntry}
+              onEdit={handleEdit}
               onDelete={handleDeleteClick}
               onAddBetween={(from, to) => {
                 setPrefillData({
@@ -490,68 +490,39 @@ const MainPage: React.FC = () => {
             drillholeId={selectedDrillhole || ''}
             prefillData={prefillData}
             previousEntry={entries.length > 0 ? entries[entries.length - 1] : null}
+            onQuickFill={() => {
+              const previousEntry = entries[entries.length - 1];
+              if (!previousEntry) return;
+              
+              const newFrom = Number(previousEntry.to);
+              const newTo = Number(previousEntry.to) + (Number(previousEntry.to) - Number(previousEntry.from));
+              
+              setPrefillData({
+                ...previousEntry,
+                drillhole_id: selectedDrillhole || '',
+                from: newFrom,
+                to: newTo,
+                id: undefined,
+                created: new Date(),
+                modified: new Date()
+              });
+            }}
           />
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-          <Box>
-            {entries.length > 0 && (
-              <Button
-                onClick={() => {
-                  const previousEntry = entries[entries.length - 1];
-                  // Calculate new depths
-                  const depthDiff = previousEntry.to - previousEntry.from;
-                  const newFrom = previousEntry.to;
-                  const newTo = Number((newFrom + depthDiff).toFixed(2));
-
-                  // Set prefill data with values from previous entry
-                  setPrefillData({
-                    from: newFrom,
-                    to: newTo,
-                    lithology: previousEntry.lithology,
-                    color: previousEntry.color,
-                    texture: previousEntry.texture,
-                    minerals: previousEntry.minerals,
-                    mineralized: previousEntry.mineralized,
-                    structures: previousEntry.structures,
-                    fields: { ...previousEntry.fields },
-                    drillhole_id: selectedDrillhole || '',
-                    created: new Date(),
-                    modified: new Date(),
-                    synced: false
-                  });
-                }}
-                startIcon={<ContentCopyIcon />}
-                variant="outlined"
-              >
-                Quick Fill
-              </Button>
-            )}
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button 
-              onClick={() => {
-                setShowNewEntryDialog(false);
-                setPrefillData(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="contained" 
-              color="primary"
-              type="submit"
-              form="entry-form"
-            >
-              Save Entry
-            </Button>
-          </Box>
+        <DialogActions sx={{ justifyContent: 'flex-end', px: 3, pb: 2 }}>
+          <Button onClick={() => {
+            setShowNewEntryDialog(false);
+            setPrefillData(null);
+          }}>
+            Cancel
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Entry Dialog */}
       <Dialog 
-        open={!!editEntry} 
-        onClose={() => setEditEntry(null)}
+        open={editDialogOpen} 
+        onClose={handleEditClose}
         maxWidth="md"
         fullWidth
       >
@@ -559,7 +530,7 @@ const MainPage: React.FC = () => {
           Edit Log Entry
           <IconButton
             aria-label="close"
-            onClick={() => setEditEntry(null)}
+            onClick={handleEditClose}
             sx={{
               position: 'absolute',
               right: 8,
@@ -575,13 +546,11 @@ const MainPage: React.FC = () => {
               onSubmit={handleSubmit}
               editEntry={editEntry}
               drillholeId={selectedDrillhole || ''}
-              prefillData={null}
-              previousEntry={null}
             />
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditEntry(null)}>Cancel</Button>
+          <Button onClick={handleEditClose}>Cancel</Button>
         </DialogActions>
       </Dialog>
 

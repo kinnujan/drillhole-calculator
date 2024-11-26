@@ -13,7 +13,7 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-import DatabaseService from '../services/DatabaseService';
+import databaseService from '../services/DatabaseService';
 import { LogEntry } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,8 +36,7 @@ const DrillholeSelector: React.FC<DrillholeSelectorProps> = ({ onDrillholeSelect
     try {
       setLoading(true);
       setError(null);
-      const dbService = DatabaseService.getInstance();
-      const entries = await dbService.getAllEntries();
+      const entries = await databaseService.getAllEntries();
       const uniqueDrillholes = [...new Set(entries.map(entry => entry.drillhole_id))];
       setDrillholes(uniqueDrillholes);
     } catch (error) {
@@ -52,9 +51,8 @@ const DrillholeSelector: React.FC<DrillholeSelectorProps> = ({ onDrillholeSelect
     if (!newDrillholeId.trim()) return;
     
     try {
-      const dbService = DatabaseService.getInstance();
       // Create an initial entry for the new drillhole with a valid interval
-      await dbService.addEntry({
+      await databaseService.addEntry({
         id: uuidv4(),
         drillhole_id: newDrillholeId.trim(),
         from: 0,

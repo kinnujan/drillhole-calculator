@@ -31,12 +31,12 @@ import {
   Cancel as CancelIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material';
-import CSVService from '../services/CSVService';
+import csvService from '../services/CSVService';
 import DomainValueEditor from './DomainValueEditor';
 
 interface Field {
-  name: string;
-  type: string;
+  field_name: string;
+  field_type: string;
   page_name: string;
   page_order: number;
   visibility_style: string;
@@ -70,7 +70,6 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
     try {
       setLoading(true);
       setError(null);
-      const csvService = CSVService.getInstance();
       const loadedFields = await csvService.loadConfiguration();
       setFields(loadedFields);
     } catch (error) {
@@ -86,17 +85,17 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
   };
 
   const handleDelete = (fieldToDelete: Field) => {
-    setFields(fields.filter(field => field.name !== fieldToDelete.name));
+    setFields(fields.filter(field => field.field_name !== fieldToDelete.field_name));
   };
 
   const handleSave = (field: Field) => {
-    if (!field.name) {
+    if (!field.field_name) {
       setError('Field name is required');
       return;
     }
 
     const updatedFields = fields.map(f => 
-      f.name === field.name ? field : f
+      f.field_name === field.field_name ? field : f
     );
     setFields(updatedFields);
     setEditingField(null);
@@ -110,8 +109,8 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
 
   const handleAddField = () => {
     const newField: Field = {
-      name: '',
-      type: 'text',
+      field_name: '',
+      field_type: 'text',
       page_name: '',
       page_order: 0,
       visibility_style: 'visible',
@@ -125,24 +124,38 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
     setFields([...fields, newField]);
   };
 
-  const handleSaveAll = () => {
-    // Validate all fields
-    const invalidField = fields.find(field => !field.name);
-    if (invalidField) {
-      setError('All fields must have a name');
-      return;
-    }
+  const handleSaveAll = async () => {
+    try {
+      // Validate all fields
+      const invalidField = fields.find(field => !field.field_name);
+      if (invalidField) {
+        setError('All fields must have a name');
+        return;
+      }
 
-    // Validate domain fields have values
-    const invalidDomainField = fields.find(field => 
-      field.type === 'domain' && (!field.domain_values || field.domain_values.length === 0)
-    );
-    if (invalidDomainField) {
-      setError(`Domain field "${invalidDomainField.name}" must have at least one value`);
-      return;
-    }
+      // Validate domain fields have values
+      const invalidDomainField = fields.find(field => 
+        field.field_type === 'domain' && (!field.domain_values || field.domain_values.length === 0)
+      );
+      if (invalidDomainField) {
+        setError(`Domain field "${invalidDomainField.field_name}" must have at least one value`);
+        return;
+      }
 
-    onSave(fields);
+      setLoading(true);
+      setError(null);
+
+      // Save to CSVService first
+      await csvService.saveConfiguration(fields);
+
+      // Then notify parent component
+      onSave(fields);
+    } catch (error) {
+      console.error('Failed to save configuration:', error);
+      setError('Failed to save configuration. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditDomainValues = (field: Field) => {
@@ -161,10 +174,10 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
 
     // Update the field in both the fields array and editingField if it's being edited
     setFields(fields.map(f => 
-      f.name === updatedField.name ? updatedField : f
+      f.field_name === updatedField.field_name ? updatedField : f
     ));
     
-    if (editingField?.name === updatedField.name) {
+    if (editingField?.field_name === updatedField.field_name) {
       setEditingField(updatedField);
     }
 
@@ -193,7 +206,7 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
           <TableHead>
             <TableRow>
               <TableCell>Field Name*</TableCell>
-              <TableCell>Type</TableCell>
+              <TableCell>Field Type</TableCell>
               <TableCell>Page Name</TableCell>
               <TableCell>Page Order</TableCell>
               <TableCell>Visibility Style</TableCell>
@@ -204,25 +217,25 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
           </TableHead>
           <TableBody>
             {fields.map((field) => (
-              <TableRow key={field.name || 'new'}>
-                {editingField && editingField.name === field.name ? (
+              <TableRow key={field.field_name || 'new'}>
+                {editingField && editingField.field_name === field.field_name ? (
                   <>
                     <TableCell>
                       <TextField
-                        value={editingField.name}
-                        onChange={(e) => setEditingField({ ...editingField, name: e.target.value })}
+                        value={editingField.field_name}
+                        onChange={(e) => setEditingField({ ...editingField, field_name: e.target.value })}
                         size="small"
                         fullWidth
                         required
-                        error={!editingField.name}
-                        helperText={!editingField.name ? 'Required' : ''}
+                        error={!editingField.field_name}
+                        helperText={!editingField.field_name ? 'Required' : ''}
                       />
                     </TableCell>
                     <TableCell>
                       <FormControl fullWidth size="small">
                         <Select
-                          value={editingField.type}
-                          onChange={(e) => setEditingField({ ...editingField, type: e.target.value })}
+                          value={editingField.field_type}
+                          onChange={(e) => setEditingField({ ...editingField, field_type: e.target.value })}
                         >
                           {FIELD_TYPES.map((type) => (
                             <MenuItem key={type} value={type}>{type}</MenuItem>
@@ -271,7 +284,7 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
                       </FormControl>
                     </TableCell>
                     <TableCell>
-                      {editingField.type === 'domain' && (
+                      {editingField.field_type === 'domain' && (
                         <Box>
                           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }}>
                             {editingField.domain_values?.map((value) => (
@@ -307,14 +320,14 @@ export default function ConfigurationEditor({ onSave }: ConfigurationEditorProps
                   </>
                 ) : (
                   <>
-                    <TableCell>{field.name}</TableCell>
-                    <TableCell>{field.type}</TableCell>
+                    <TableCell>{field.field_name}</TableCell>
+                    <TableCell>{field.field_type}</TableCell>
                     <TableCell>{field.page_name}</TableCell>
                     <TableCell>{field.page_order}</TableCell>
                     <TableCell>{field.visibility_style}</TableCell>
                     <TableCell>{field.required ? 'Yes' : 'No'}</TableCell>
                     <TableCell>
-                      {field.type === 'domain' && (
+                      {field.field_type === 'domain' && (
                         <Box>
                           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }}>
                             {field.domain_values?.map((value) => (

@@ -1,20 +1,21 @@
 import Dexie from 'dexie';
-import { LogEntry, BackupEntry, ErrorLog } from '../types';
-import CSVService from './CSVService';
+import { LogEntry, BackupEntry, ErrorLog, EditLogEntry } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 class QuickLoggerDB extends Dexie {
   logEntries!: Dexie.Table<LogEntry, string>;
   backupEntries!: Dexie.Table<BackupEntry, string>;
   errorLogs!: Dexie.Table<ErrorLog, string>;
+  editLog!: Dexie.Table<EditLogEntry, string>;
 
   constructor() {
     super('QuickLoggerDB');
     
-    this.version(3).stores({
+    this.version(4).stores({
       logEntries: 'id,drillhole_id,from,to,synced,originalEntryId',
       backupEntries: 'id,timestamp,entryId',
-      errorLogs: 'id,timestamp,type'
+      errorLogs: 'id,timestamp,type',
+      editLog: 'id,userId,timestamp,operation,originalEntryId,entryData'
     });
 
     // Add hooks for data validation
@@ -39,123 +40,129 @@ class QuickLoggerDB extends Dexie {
   }
 }
 
-class DatabaseService {
-  private static instance: DatabaseService;
+interface DatabaseState {
+  initialized: boolean;
+  initializationState: {
+    promise: Promise<void> | null;
+    resolve: ((value: void | PromiseLike<void>) => void) | null;
+    reject: ((reason?: any) => void) | null;
+  };
+  changeListeners: ((type: string, data: any) => void)[];
+}
+
+export class DatabaseService {
   private db: QuickLoggerDB;
-  private csvService: CSVService;
-  private initialized: boolean = false;
-  private initPromise: Promise<void> | null = null;
+  private state: DatabaseState;
 
-  private constructor() {
+  constructor() {
+    console.log('[DB] Creating DatabaseService instance');
     this.db = new QuickLoggerDB();
-    this.csvService = CSVService.getInstance();
+    this.state = {
+      initialized: false,
+      initializationState: {
+        promise: null,
+        resolve: null,
+        reject: null
+      },
+      changeListeners: []
+    };
   }
 
-  public static getInstance(): DatabaseService {
-    if (!DatabaseService.instance) {
-      DatabaseService.instance = new DatabaseService();
-    }
-    return DatabaseService.instance;
+  public addChangeListener(listener: (type: string, data: any) => void) {
+    console.log('[DB] Adding new change listener');
+    this.state.changeListeners.push(listener);
+    console.log(`[DB] Current listener count: ${this.state.changeListeners.length}`);
   }
 
-  private async resetDatabase(): Promise<void> {
-    try {
-      if (this.db) {
-        await this.db.close();
+  public removeChangeListener(listener: (type: string, data: any) => void) {
+    console.log('[DB] Removing change listener');
+    const initialCount = this.state.changeListeners.length;
+    this.state.changeListeners = this.state.changeListeners.filter(l => l !== listener);
+    console.log(`[DB] Listeners removed: ${initialCount - this.state.changeListeners.length}`);
+  }
+
+  private notifyListeners(type: string, data: any) {
+    console.log(`[DB] Notifying listeners of event: ${type}`, data);
+    this.state.changeListeners.forEach(listener => {
+      try {
+        listener(type, data);
+      } catch (error) {
+        console.error(`[DB] Error in listener for event ${type}:`, error);
       }
-      await Dexie.delete('QuickLoggerDB');
-      this.db = new QuickLoggerDB();
-      this.initialized = false;
-    } catch (error) {
-      console.error('Error resetting database:', error);
-      throw error;
-    }
+    });
+    console.log(`[DB] Finished notifying listeners for event: ${type}`);
   }
 
   public async initialize(): Promise<void> {
-    console.log('[DB] Starting initialization...');
-    
-    // Return existing initialization if in progress
-    if (this.initPromise) {
-      console.log('[DB] Initialization already in progress, waiting...');
-      return this.initPromise;
-    }
+    console.log('[DB] Initialize called');
+    console.debug('[DB] Current state:', {
+      initialized: this.state.initialized,
+      hasInitPromise: !!this.state.initializationState.promise,
+      listenerCount: this.state.changeListeners.length
+    });
 
-    // Return if already initialized
-    if (this.initialized) {
-      console.log('[DB] Already initialized, skipping...');
+    // If already initialized, return immediately
+    if (this.state.initialized) {
+      console.log('[DB] Already initialized, returning...');
       return;
     }
-    
-    this.initPromise = (async () => {
-      try {
-        console.log('[DB] Loading configuration...');
-        // Load configuration first
-        await this.csvService.loadConfiguration();
-        
-        // Check if database is empty
-        const entryCount = await this.db.logEntries.count();
-        console.log(`[DB] Current entry count: ${entryCount}`);
-        
-        if (entryCount === 0) {
-          console.log('[DB] Database empty, loading initial data...');
-          // Load and validate CSV data only if database is empty
-          const entries = await this.csvService.loadQuicklog();
-          if (!entries || entries.length === 0) {
-            console.log('[DB] No initial data to load');
-            this.initialized = true;
-            return;
-          }
 
-          console.log(`[DB] Transforming ${entries.length} entries...`);
-          // Transform entries to match schema
-          const validEntries = entries.map(entry => ({
-            id: entry.id || uuidv4(),
-            drillhole_id: entry.drillhole_id || '',
-            from: Number(entry.from) || 0,
-            to: Number(entry.to) || 0,
-            lithology: entry.lithology || '',
-            color: entry.color,
-            texture: entry.texture,
-            minerals: entry.minerals,
-            mineralized: Boolean(entry.mineralized),
-            structures: entry.structures,
-            notes: entry.notes,
-            fields: {},
-            created: new Date(entry.created || Date.now()),
-            modified: new Date(entry.modified || Date.now()),
-            synced: Boolean(entry.synced),
-            originalEntryId: entry.originalEntryId || null
-          }));
+    // If initialization is in progress, wait for it
+    if (this.state.initializationState.promise) {
+      console.log('[DB] Initialization in progress, waiting...');
+      return this.state.initializationState.promise;
+    }
 
-          // Add entries in smaller batches
-          const batchSize = 1;  // Process one at a time to identify problem entries
-          for (let i = 0; i < validEntries.length; i += batchSize) {
-            const batch = validEntries.slice(i, i + batchSize);
-            try {
-              await this.db.logEntries.bulkAdd(batch);
-              console.log(`[DB] Added batch ${i + 1}/${Math.ceil(validEntries.length/batchSize)}`);
-            } catch (error) {
-              console.error(`[DB] Error adding batch starting at index ${i}:`, error);
-              console.error('[DB] Problematic entries:', batch);
-              throw error;
-            }
-          }
-        } else {
-          console.log('[DB] Database already contains data, skipping initial load');
-        }
-        
-        this.initialized = true;
-        console.log('[DB] Initialization completed successfully');
-      } catch (error) {
-        console.error('[DB] Error during initialization:', error);
-        throw error;
-      } finally {
-        this.initPromise = null;
+    console.log('[DB] Starting new initialization...');
+    this.state.initializationState.promise = new Promise((resolve, reject) => {
+      this.state.initializationState.resolve = resolve;
+      this.state.initializationState.reject = reject;
+    });
+
+    try {
+      // Open the database first
+      await this.db.open();
+      
+      // Then run internal initialization
+      await this.initializeInternal();
+      
+      // Mark as initialized only after successful initialization
+      this.state.initialized = true;
+      console.log('[DB] Initialization completed successfully');
+      this.state.initializationState.resolve?.();
+    } catch (error) {
+      console.error('[DB] Initialization failed:', error);
+      this.state.initialized = false;  // Ensure we can retry initialization
+      this.state.initializationState.reject?.(error);
+      throw error;
+    } finally {
+      // Clean up initialization state
+      this.state.initializationState.promise = null;
+      this.state.initializationState.resolve = null;
+      this.state.initializationState.reject = null;
+    }
+  }
+
+  private async initializeInternal(): Promise<void> {
+    console.log('[DB] Starting internal initialization');
+    try {
+      // Check if we already have data
+      const count = await this.db.logEntries.count();
+      console.log('[DB] Current entry count:', count);
+
+      if (count === 0) {
+        console.log('[DB] Empty database, notifying listeners to load initial data...');
+        this.notifyListeners('init', { isEmpty: true });
+      } else {
+        console.log('[DB] Database already contains data, skipping initial load');
+        this.notifyListeners('init', { isEmpty: false });
       }
-    })();
-
-    return this.initPromise;
+    } catch (error) {
+      console.error('[DB] Initialization failed:', error);
+      throw error;
+    } finally {
+      console.log('[DB] Internal initialization completed');
+    }
   }
 
   public async addEntry(entry: LogEntry): Promise<LogEntry> {
@@ -178,9 +185,11 @@ class DatabaseService {
       entry.fields = {};
     }
 
-    // Create a deep copy to avoid mutations
+    // Create a deep copy and ensure numeric fields are numbers
     const entryToAdd = {
       ...entry,
+      from: Number(entry.from),
+      to: Number(entry.to),
       fields: { ...entry.fields },
       created: new Date(entry.created),
       modified: new Date()
@@ -189,6 +198,7 @@ class DatabaseService {
     try {
       await this.db.logEntries.add(entryToAdd);
       console.log(`[DB] Successfully added entry with ID: ${entryToAdd.id}`);
+      this.notifyListeners('add', entryToAdd);
       return entryToAdd;
     } catch (error) {
       console.error(`[DB] Error adding entry:`, error);
@@ -198,24 +208,58 @@ class DatabaseService {
 
   public async updateEntry(entry: LogEntry): Promise<LogEntry> {
     await this.initialize();
+    console.log(`[DB] Updating entry:`, entry);
 
-    // Get the existing entry
-    const existingEntry = await this.db.logEntries.get(entry.id);
-    if (!existingEntry) {
-      throw new Error(`Entry with ID ${entry.id} not found`);
+    if (!entry.id) {
+      console.error('[DB] Cannot update entry without ID');
+      throw new Error('Entry ID is required for update');
     }
 
-    // Create a deep copy with preserved fields
-    const updatedEntry = {
-      ...existingEntry,
-      ...entry,
-      fields: { ...existingEntry.fields, ...entry.fields },
-      created: existingEntry.created,
-      modified: new Date()
-    };
+    try {
+      // Get the existing entry
+      const existingEntry = await this.db.logEntries.get(entry.id);
+      if (!existingEntry) {
+        console.error(`[DB] Entry with ID ${entry.id} not found`);
+        throw new Error(`Entry with ID ${entry.id} not found`);
+      }
 
-    await this.db.logEntries.put(updatedEntry);
-    return updatedEntry;
+      // Validate numeric fields
+      if (typeof entry.from !== 'number' || typeof entry.to !== 'number') {
+        console.error('[DB] Invalid from/to values:', { from: entry.from, to: entry.to });
+        throw new Error('From and To must be numbers');
+      }
+
+      // Validate interval
+      if (entry.from >= entry.to) {
+        console.error('[DB] Invalid interval:', { from: entry.from, to: entry.to });
+        throw new Error('From must be less than To');
+      }
+
+      // Create a deep copy with preserved fields and metadata
+      const updatedEntry = {
+        ...existingEntry,
+        ...entry,
+        fields: { ...existingEntry.fields, ...entry.fields },
+        created: existingEntry.created,
+        modified: new Date(),
+        synced: false // Mark as unsynced when updated
+      };
+
+      // Backup the existing entry before update
+      await this.backupEntry(existingEntry);
+
+      // Perform the update
+      await this.db.logEntries.put(updatedEntry);
+      console.log(`[DB] Successfully updated entry:`, updatedEntry);
+      
+      // Notify listeners after successful update
+      this.notifyListeners('update', updatedEntry);
+      
+      return updatedEntry;
+    } catch (error) {
+      console.error(`[DB] Error updating entry:`, error);
+      throw error;
+    }
   }
 
   public async deleteEntry(id: string): Promise<void> {
@@ -242,6 +286,7 @@ class DatabaseService {
       await this.db.logEntries.delete(id);
       
       console.log(`[DB] Successfully deleted entry ${id}`);
+      this.notifyListeners('delete', id);
     } catch (error) {
       console.error(`[DB] Error deleting entry ${id}:`, error);
       throw error;
@@ -268,6 +313,7 @@ class DatabaseService {
           await this.deleteBackup(entry.id);
         }
       }
+      this.notifyListeners('delete', originalId);
     } catch (error) {
       console.error('Error deleting entries:', error);
       throw new Error('Failed to delete split entries');
@@ -290,13 +336,28 @@ class DatabaseService {
   public async getEntriesByHole(drillholeId: string): Promise<LogEntry[]> {
     await this.initialize();
     console.log(`[DB] Getting entries for drillhole: ${drillholeId}`);
-    const entries = await this.db.logEntries
-      .where('drillhole_id')
-      .equals(drillholeId)
-      .sortBy('from'); 
-    console.log(`[DB] Found ${entries.length} entries, sorted by depth`);
-    console.log('[DB] Entries:', entries);
-    return entries;
+    
+    try {
+      const entries = await this.db.logEntries
+        .where('drillhole_id')
+        .equals(drillholeId)
+        .sortBy('from');
+
+      console.log(`[DB] Found ${entries.length} entries for drillhole ${drillholeId}`);
+      entries.forEach((entry, index) => {
+        console.log(`[DB] Entry ${index + 1}:`, {
+          id: entry.id,
+          from: entry.from,
+          to: entry.to,
+          lithology: entry.lithology
+        });
+      });
+
+      return entries;
+    } catch (error) {
+      console.error(`[DB] Error getting entries for drillhole ${drillholeId}:`, error);
+      throw error;
+    }
   }
 
   public async getUnsyncedEntries(): Promise<LogEntry[]> {
@@ -310,6 +371,7 @@ class DatabaseService {
   public async markAsSynced(id: string): Promise<void> {
     await this.initialize();
     await this.db.logEntries.update(id, { synced: true });
+    this.notifyListeners('sync', id);
   }
 
   public async backupEntry(entry: LogEntry): Promise<void> {
@@ -323,6 +385,7 @@ class DatabaseService {
     };
     
     await this.db.backupEntries.add(backupEntry);
+    this.notifyListeners('backup', backupEntry);
   }
 
   public async getBackupEntry(id: string): Promise<LogEntry | undefined> {
@@ -355,6 +418,7 @@ class DatabaseService {
   public async deleteBackup(id: string): Promise<void> {
     await this.initialize();
     await this.db.backupEntries.where('id').equals(id).delete();
+    this.notifyListeners('deleteBackup', id);
   }
 
   public async addBackup(backup: BackupEntry): Promise<string> {
@@ -365,11 +429,6 @@ class DatabaseService {
   public async logError(error: ErrorLog): Promise<string> {
     await this.initialize();
     return await this.db.errorLogs.add(error);
-  }
-
-  public async getFieldStyle(fieldName: string, value: any): Promise<any> {
-    await this.initialize();
-    return this.csvService.getFieldStyle(fieldName, value);
   }
 
   public async splitEntry(originalEntry: LogEntry, firstHalf: LogEntry, secondHalf: LogEntry): Promise<void> {
@@ -404,7 +463,7 @@ class DatabaseService {
         await this.db.logEntries.add(secondHalf);
       });
       console.log('[DB] Split transaction completed successfully');
-
+      this.notifyListeners('split', { originalId: originalEntry.id, firstHalfId: firstHalf.id, secondHalfId: secondHalf.id });
     } catch (error) {
       console.error('[DB] Error during split operation:', error);
       throw error;
@@ -445,12 +504,68 @@ class DatabaseService {
         await this.db.logEntries.add(originalEntry);
       });
       console.log('[DB] Unsplit transaction completed successfully');
-
+      this.notifyListeners('unsplit', { originalId: originalEntry.id, firstHalfId, secondHalfId });
     } catch (error) {
       console.error('[DB] Error during unsplit operation:', error);
       throw error;
     }
   }
+
+  public async saveEntry(entry: LogEntry): Promise<void> {
+    try {
+      await this.db.transaction('rw', this.db.logEntries, async () => {
+        entry.modified = new Date();
+        entry.synced = false;
+        await this.db.logEntries.put(entry);
+      });
+      this.notifyListeners('save', entry);
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      throw error;
+    }
+  }
+
+  public async saveEditLogEntry(edit: EditLogEntry): Promise<void> {
+    try {
+      await this.db.transaction('rw', this.db.editLog, this.db.logEntries, async () => {
+        // Save the edit log entry
+        await this.db.editLog.put(edit);
+        
+        // Update the actual entry
+        if (edit.operation !== 'delete') {
+          await this.saveEntry(edit.entryData);
+        } else if (edit.originalEntryId) {
+          await this.db.logEntries.delete(edit.originalEntryId);
+        }
+      });
+      this.notifyListeners('saveEdit', edit);
+    } catch (error) {
+      console.error('Error saving edit log entry:', error);
+      throw error;
+    }
+  }
+
+  public async getUnsynedEdits(): Promise<EditLogEntry[]> {
+    return await this.db.editLog
+      .where('synced')
+      .equals(false)
+      .toArray();
+  }
+
+  public async getLatestEntries(): Promise<LogEntry[]> {
+    return await this.db.logEntries.toArray();
+  }
+
+  public async markEditsSynced(editIds: string[]): Promise<void> {
+    await this.db.editLog
+      .where('id')
+      .anyOf(editIds)
+      .modify({ synced: true });
+    this.notifyListeners('syncEdits', editIds);
+  }
 }
 
-export default DatabaseService;
+// Create and export singleton instance
+const databaseService = new DatabaseService();
+Object.freeze(databaseService);
+export default databaseService;

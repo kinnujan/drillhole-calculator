@@ -14,7 +14,7 @@ import {
   Alert,
 } from '@mui/material';
 import ConfigurationEditor from './ConfigurationEditor';
-import CSVService from '../services/CSVService';
+import csvService from '../services/CSVService';
 
 interface ConfigurationDialogProps {
   open: boolean;
@@ -73,7 +73,6 @@ export default function ConfigurationDialog({
   const handleSaveConfiguration = async (fields: any[]) => {
     setIsSaving(true);
     try {
-      const csvService = CSVService.getInstance();
       await csvService.saveConfiguration(fields);
       // Reload configuration to ensure all components are updated
       await csvService.loadConfiguration();
