@@ -358,6 +358,33 @@ export class OverlapResolutionCommand implements Command {
   }
 }
 
+export class DepthAdjustmentCommand implements Command {
+  private originalEntries: LogEntry[];
+  private updatedEntries: LogEntry[];
+  private drillholeId: string;
+
+  constructor(drillholeId: string, originalEntries: LogEntry[], updatedEntries: LogEntry[]) {
+    console.log('[History] Creating DepthAdjustmentCommand:', { originalEntries, updatedEntries });
+    this.drillholeId = drillholeId;
+    this.originalEntries = originalEntries.map(e => HistoryService.cloneEntry(e));
+    this.updatedEntries = updatedEntries.map(e => HistoryService.cloneEntry(e));
+  }
+
+  public get description(): string {
+    return `Adjust depth for entries in drillhole ${this.drillholeId}`;
+  }
+
+  public async execute(): Promise<void> {
+    console.log('[History] Executing depth adjustment command');
+    await databaseService.updateEntries(this.updatedEntries);
+  }
+
+  public async undo(): Promise<void> {
+    console.log('[History] Undoing depth adjustment command');
+    await databaseService.updateEntries(this.originalEntries);
+  }
+}
+
 // Create and export singleton instance
 const historyService = new HistoryService();
 Object.freeze(historyService);

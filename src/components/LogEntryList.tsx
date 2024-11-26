@@ -32,6 +32,8 @@ import databaseService from '../services/DatabaseService';
 import csvService from '../services/CSVService';
 import { v4 as uuidv4 } from 'uuid';
 import { validateIntervals, getIntervalColor, IntervalValidation } from '../utils/intervalUtils';
+import DepthEditDialog from './DepthEditDialog';
+import historyService, { DepthAdjustmentCommand } from '../services/HistoryService';
 
 interface Field {
   field_name: string;
@@ -67,6 +69,20 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
   const [fields, setFields] = useState<Field[]>([]);
   const [styles, setStyles] = useState<Record<string, any>>({});
   const [intervalValidations, setIntervalValidations] = useState<IntervalValidation[]>([]);
+  const [sortedEntries, setSortedEntries] = useState<LogEntry[]>([]);
+  const [depthEditDialog, setDepthEditDialog] = useState<{
+    open: boolean;
+    type: 'from' | 'to';
+    entryId: string;
+    currentDepth: number;
+    minDepth?: number;
+    maxDepth?: number;
+  }>({
+    open: false,
+    type: 'from',
+    entryId: '',
+    currentDepth: 0
+  });
 
   useEffect(() => {
     console.log('[LogEntryList] Entries updated:', entries);
@@ -106,9 +122,12 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
     loadData();
   }, [entries]);
 
-  // Sort entries by depth
-  const sortedEntries = [...entries].sort((a, b) => a.from - b.from);
-  console.log('[LogEntryList] Sorted entries:', sortedEntries);
+  useEffect(() => {
+    // Sort entries by depth
+    const sorted = [...entries].sort((a, b) => a.from - b.from);
+    console.log('[LogEntryList] Sorted entries:', sorted);
+    setSortedEntries(sorted);
+  }, [entries]);
 
   const getDisplayValue = (entry: LogEntry, field: Field) => {
     if (!field.field_name) {
@@ -193,6 +212,100 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
     onDelete && onDelete(id);
   };
 
+  const handleDepthClick = (entry: LogEntry, type: 'from' | 'to') => {
+    const entryIndex = sortedEntries.findIndex(e => e.id === entry.id);
+    let minDepth: number | undefined;
+    let maxDepth: number | undefined;
+
+    if (type === 'from') {
+      // For 'from', min is previous entry's 'to' (if exists)
+      if (entryIndex > 0) {
+        minDepth = sortedEntries[entryIndex - 1].to;
+      }
+      // Max is current entry's 'to'
+      maxDepth = entry.to;
+    } else {
+      // For 'to', min is current entry's 'from'
+      minDepth = entry.from;
+      // Max is next entry's 'from' (if exists)
+      if (entryIndex < sortedEntries.length - 1) {
+        maxDepth = sortedEntries[entryIndex + 1].from;
+      }
+    }
+
+    setDepthEditDialog({
+      open: true,
+      type,
+      entryId: entry.id,
+      currentDepth: type === 'from' ? entry.from : entry.to,
+      minDepth,
+      maxDepth
+    });
+  };
+
+  const handleDepthConfirm = async (newDepth: number) => {
+    const entry = entries.find(e => e.id === depthEditDialog.entryId);
+    if (!entry) return;
+
+    const entryIndex = sortedEntries.findIndex(e => e.id === entry.id);
+    const updatedEntries: LogEntry[] = [];
+    const originalEntries: LogEntry[] = [];
+
+    // Add current entry to both lists
+    originalEntries.push({ ...entry });
+    const updatedEntry = {
+      ...entry,
+      [depthEditDialog.type]: newDepth
+    };
+    updatedEntries.push(updatedEntry);
+
+    // If adjusting 'to', update next entry's 'from' if they were connected
+    if (depthEditDialog.type === 'to' && entryIndex < sortedEntries.length - 1) {
+      const nextEntry = sortedEntries[entryIndex + 1];
+      if (Math.abs(entry.to - nextEntry.from) < 0.0001) {
+        originalEntries.push({ ...nextEntry });
+        updatedEntries.push({
+          ...nextEntry,
+          from: newDepth
+        });
+      }
+    }
+    // If adjusting 'from', update previous entry's 'to' if they were connected
+    else if (depthEditDialog.type === 'from' && entryIndex > 0) {
+      const prevEntry = sortedEntries[entryIndex - 1];
+      if (Math.abs(entry.from - prevEntry.to) < 0.0001) {
+        originalEntries.push({ ...prevEntry });
+        updatedEntries.push({
+          ...prevEntry,
+          to: newDepth
+        });
+      }
+    }
+
+    try {
+      // Create and execute the depth adjustment command
+      const command = new DepthAdjustmentCommand(
+        entry.drillhole_id,
+        originalEntries,
+        updatedEntries
+      );
+      await historyService.executeCommand(command);
+      
+      // Update local state
+      const newEntries = entries.map(e => {
+        const updated = updatedEntries.find(u => u.id === e.id);
+        return updated || e;
+      });
+      setSortedEntries(newEntries);
+
+      // Close the dialog
+      setDepthEditDialog(prev => ({ ...prev, open: false }));
+    } catch (error) {
+      console.error('[LogEntryList] Error updating depths:', error);
+      alert(error instanceof Error ? error.message : 'Failed to update depth');
+    }
+  };
+
   // Filter out system fields that should be hidden and get unique visible fields
   const visibleFields = fields
     .filter(field => field.visibility_style !== 'hidden')
@@ -240,7 +353,16 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
   };
 
   return (
-    <>
+    <Box>
+      <DepthEditDialog
+        open={depthEditDialog.open}
+        onClose={() => setDepthEditDialog(prev => ({ ...prev, open: false }))}
+        onConfirm={handleDepthConfirm}
+        currentDepth={depthEditDialog.currentDepth}
+        type={depthEditDialog.type}
+        minDepth={depthEditDialog.minDepth}
+        maxDepth={depthEditDialog.maxDepth}
+      />
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -282,24 +404,26 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
                 <React.Fragment key={`entry-group-${entry.id}`}>
                   <TableRow sx={validation ? getRowStyle(validation) : undefined}>
                     <TableCell key={`${entry.id}-from`}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Button
+                        onClick={() => handleDepthClick(entry, 'from')}
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        sx={{ minWidth: 0, p: 0.5 }}
+                      >
                         {entry.from}
-                        {validation?.prevStatus.hasOverlap && (
-                          <Tooltip title={`Overlap with previous: ${validation.prevStatus.overlapStart} - ${validation.prevStatus.overlapEnd}`}>
-                            <Box component="span" sx={{ ml: 1, color: 'error.main' }}>⚠️</Box>
-                          </Tooltip>
-                        )}
-                      </Box>
+                      </Button>
                     </TableCell>
                     <TableCell key={`${entry.id}-to`}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Button
+                        onClick={() => handleDepthClick(entry, 'to')}
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        sx={{ minWidth: 0, p: 0.5 }}
+                      >
                         {entry.to}
-                        {validation?.nextStatus.hasOverlap && (
-                          <Tooltip title={`Overlap with next: ${validation.nextStatus.overlapStart} - ${validation.nextStatus.overlapEnd}`}>
-                            <Box component="span" sx={{ ml: 1, color: 'error.main' }}>⚠️</Box>
-                          </Tooltip>
-                        )}
-                      </Box>
+                      </Button>
                     </TableCell>
                     {visibleFields
                       .filter(field => !['from', 'to'].includes(field.field_name))
@@ -370,7 +494,7 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
-    </>
+    </Box>
   );
 };
 

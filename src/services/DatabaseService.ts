@@ -205,7 +205,7 @@ export class DatabaseService {
     }
   }
 
-  private async addEntryWithoutCheck(entry: LogEntry): Promise<LogEntry> {
+  public async addEntryWithoutCheck(entry: LogEntry): Promise<LogEntry> {
     await this.initialize();
     console.log(`[DB] Adding entry without overlap check:`, entry);
 
@@ -303,6 +303,71 @@ export class DatabaseService {
     }
   }
 
+  public async updateEntries(entries: LogEntry[]): Promise<LogEntry[]> {
+    await this.initialize();
+    console.log(`[DB] Updating multiple entries:`, entries);
+
+    try {
+      const updatedEntries: LogEntry[] = [];
+      
+      // Use a transaction to ensure all updates succeed or none do
+      await this.db.transaction('rw', [this.db.logEntries, this.db.backupEntries], async () => {
+        for (const entry of entries) {
+          if (!entry.id) {
+            throw new Error('Entry ID is required for update');
+          }
+
+          // Get the existing entry
+          const existingEntry = await this.db.logEntries.get(entry.id);
+          if (!existingEntry) {
+            throw new Error(`Entry with ID ${entry.id} not found`);
+          }
+
+          // Create updated entry
+          const updatedEntry = {
+            ...existingEntry,
+            ...entry,
+            from: this.roundToDecimalPlaces(entry.from),
+            to: this.roundToDecimalPlaces(entry.to),
+            fields: { ...existingEntry.fields, ...entry.fields },
+            created: existingEntry.created,
+            modified: new Date(),
+            synced: false
+          };
+
+          // Only validate that from < to to prevent interval deletion
+          const epsilon = 1e-10;
+          if (updatedEntry.from >= (updatedEntry.to - epsilon)) {
+            throw new Error('Cannot collapse interval - From must be less than To');
+          }
+
+          // Create backup entry
+          const backup = {
+            id: uuidv4(),
+            entryId: existingEntry.id,
+            entry: existingEntry,
+            timestamp: new Date()
+          };
+
+          // Save backup and update entry
+          await this.db.backupEntries.add(backup);
+          await this.db.logEntries.put(updatedEntry);
+          updatedEntries.push(updatedEntry);
+        }
+      });
+
+      // Notify listeners after all updates are complete
+      updatedEntries.forEach(entry => {
+        this.notifyListeners('update', entry);
+      });
+
+      return updatedEntries;
+    } catch (error) {
+      console.error(`[DB] Error updating entries:`, error);
+      throw error;
+    }
+  }
+
   private roundToDecimalPlaces(num: number, places: number = 6): number {
     return Number(Math.round(Number(num + 'e' + places)) + 'e-' + places);
   }
@@ -321,7 +386,7 @@ export class DatabaseService {
     const epsilon = 1e-10;
     if (fromNum >= (toNum - epsilon)) {
       console.error('[DB] Invalid interval:', { from: fromNum, to: toNum });
-      throw new Error('From must be less than To');
+      throw new Error('Cannot collapse interval - From must be less than To');
     }
   }
 
@@ -628,7 +693,7 @@ export class DatabaseService {
 
   public async saveEditLogEntry(edit: EditLogEntry): Promise<void> {
     try {
-      await this.db.transaction('rw', this.db.editLog, this.db.logEntries, async () => {
+      await this.db.transaction('rw', [this.db.editLog, this.db.logEntries], async () => {
         // Save the edit log entry
         await this.db.editLog.put(edit);
         
