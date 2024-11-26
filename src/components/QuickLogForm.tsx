@@ -61,6 +61,134 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+const commonStyles = {
+  fieldContainer: {
+    mb: 3,
+    '& .MuiFormLabel-root': {
+      fontSize: '0.95rem',
+      fontWeight: 500,
+      color: 'text.primary',
+      mb: 1
+    },
+    '& .MuiFormHelperText-root': {
+      mt: 1,
+      fontSize: '0.8rem'
+    }
+  },
+  buttonGroup: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 1,
+    mt: 1
+  },
+  optionButton: {
+    minWidth: 120,
+    height: 40,
+    borderRadius: 1,
+    textTransform: 'none',
+    fontSize: '0.9rem',
+    fontWeight: 500
+  },
+  hintBadge: {
+    position: 'absolute',
+    left: -8,
+    top: -8,
+    bgcolor: 'primary.main',
+    color: 'white',
+    px: 1,
+    py: 0.5,
+    borderRadius: 1,
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    minWidth: '1.5em',
+    textAlign: 'center',
+    zIndex: 1,
+    boxShadow: 1
+  },
+  select: {
+    '& .MuiSelect-select': {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      py: 1.5
+    }
+  },
+  menuItem: {
+    py: 1.5,
+    px: 2,
+    minHeight: 'auto',
+    '&:hover': {
+      backgroundColor: 'action.hover'
+    }
+  },
+  icon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    mr: 1,
+    fontSize: '1.1rem'
+  },
+  pageContainer: {
+    p: 3,
+    '& .MuiFormControl-root': {
+      width: '100%'
+    }
+  },
+  depthContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 1,
+    mb: 2,
+    '& .MuiFormControl-root': {
+      width: 140,
+      minWidth: 140
+    },
+    '& .MuiInputBase-root': {
+      height: 40
+    },
+    '& .MuiInputBase-input': {
+      textAlign: 'center',
+      py: 1
+    }
+  },
+  depthButtonGroup: {
+    height: 40,
+    '& .MuiButtonGroup-grouped': {
+      minWidth: 48,
+      width: 48,
+      height: 40,
+      fontSize: '0.9rem',
+      fontWeight: 500,
+      borderColor: 'divider',
+      color: 'text.primary',
+      backgroundColor: 'background.paper',
+      '&:hover': {
+        backgroundColor: 'action.hover',
+        borderColor: 'divider'
+      },
+      '&.Mui-disabled': {
+        borderColor: 'divider'
+      }
+    }
+  },
+  depthHintBadge: {
+    position: 'absolute',
+    left: '50%',
+    top: -16,
+    transform: 'translateX(-50%)',
+    bgcolor: 'primary.main',
+    color: 'white',
+    px: 1,
+    py: 0.25,
+    borderRadius: 1,
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    minWidth: '1.5em',
+    textAlign: 'center',
+    zIndex: 1,
+    boxShadow: 1
+  }
+};
+
 const QuickLogForm: React.FC<QuickLogFormProps> = ({
   onSubmit,
   onCancel,
@@ -174,7 +302,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
       
       // Add depth adjustment buttons for from/to fields
       if (field.field_name === 'from' || field.field_name === 'to') {
-        const adjustments = [-10, -1, -0.1, 0.1, 1, 10];
+        const adjustments = [-100, -10, -1, -0.1, 0.1, 1, 10, 100];
         adjustments.forEach(amount => {
           targets.push({
             type: 'depth_adjust',
@@ -623,14 +751,10 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
       // Render as buttons if specified
       if (field.visibility_style === 'buttons') {
         return (
-          <Box key={field.field_name}>
-            <FormControl 
-              component="fieldset"
-              error={!!fieldErrors[field.field_name]}
-              sx={{ width: '100%' }}
-            >
+          <Box key={field.field_name} sx={commonStyles.fieldContainer}>
+            <FormControl error={!!fieldErrors[field.field_name]}>
               <FormLabel component="legend">{field.description}</FormLabel>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              <Box sx={commonStyles.buttonGroup}>
                 {options.map((option) => {
                   const trimmedOption = option.trim();
                   if (!trimmedOption) return null;
@@ -666,48 +790,31 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
                       variant={currentValue === trimmedOption ? "contained" : "outlined"}
                       onClick={(e) => handleDirectClick(e, field, trimmedOption)}
                       sx={{ 
-                        position: 'relative',
-                        minWidth: 100,
-                        height: 36,
+                        ...commonStyles.optionButton,
                         ...(color && {
                           backgroundColor: currentValue === trimmedOption ? color : 'transparent',
                           borderColor: color,
                           color: currentValue === trimmedOption ? getContrastColor(color) : color,
                           '&:hover': {
                             backgroundColor: currentValue === trimmedOption ? color : `${color}22`,
+                            borderColor: color
                           }
                         })
                       }}
                     >
                       {hintMode && hint && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            left: -10,
-                            top: -10,
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            minWidth: '1.5em',
-                            textAlign: 'center',
-                            zIndex: 1
-                          }}
-                        >
+                        <Box sx={commonStyles.hintBadge}>
                           {hint}
                         </Box>
                       )}
-                      {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                      {icon && <Box component="span" sx={commonStyles.icon}>{icon}</Box>}
                       {trimmedOption}
                     </Button>
                   );
                 })}
               </Box>
               {fieldErrors[field.field_name] && (
-                <FormHelperText>{fieldErrors[field.field_name]}</FormHelperText>
+                <FormHelperText error>{fieldErrors[field.field_name]}</FormHelperText>
               )}
             </FormControl>
           </Box>
@@ -718,7 +825,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
         const isOpen = dropdownsOpen[field.field_name] || false;
 
         return (
-          <Box key={field.field_name}>
+          <Box key={field.field_name} sx={commonStyles.fieldContainer}>
             <FormControl fullWidth error={!!fieldErrors[field.field_name]}>
               <InputLabel>{field.description}</InputLabel>
               <Select
@@ -729,6 +836,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
                 open={isOpen}
                 onOpen={() => setDropdownsOpen(prev => ({ ...prev, [field.field_name]: true }))}
                 onClose={() => !hintMode && setDropdownsOpen(prev => ({ ...prev, [field.field_name]: false }))}
+                sx={commonStyles.select}
               >
                 {options.map((option) => {
                   const trimmedOption = option.trim();
@@ -763,42 +871,21 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
                     <MenuItem 
                       key={trimmedOption} 
                       value={trimmedOption}
-                      sx={{ 
-                        position: 'relative', 
-                        pl: hint ? 4 : 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1
-                      }}
+                      sx={commonStyles.menuItem}
                     >
                       {hintMode && hint && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            left: 8,
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            minWidth: '1.5em',
-                            textAlign: 'center',
-                            zIndex: 1
-                          }}
-                        >
+                        <Box sx={commonStyles.hintBadge}>
                           {hint}
                         </Box>
                       )}
-                      {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                      {icon && <Box component="span" sx={commonStyles.icon}>{icon}</Box>}
                       {trimmedOption}
                     </MenuItem>
                   );
                 })}
               </Select>
               {fieldErrors[field.field_name] && (
-                <FormHelperText>{fieldErrors[field.field_name]}</FormHelperText>
+                <FormHelperText error>{fieldErrors[field.field_name]}</FormHelperText>
               )}
             </FormControl>
           </Box>
@@ -828,30 +915,13 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
             onClick={() => adjustDepth(amount)}
             sx={{ 
               position: 'relative',
-              minWidth: '60px', 
-              height: '36px'    
+              minWidth: 48,
+              width: 48,
+              height: 40
             }}
           >
             {hintMode && hint && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: -20,
-                  transform: 'translateX(-50%)',
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 1,
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  minWidth: '2em',
-                  textAlign: 'center',
-                  zIndex: 1,
-                  boxShadow: 1
-                }}
-              >
+              <Box sx={commonStyles.depthHintBadge}>
                 {hint}
               </Box>
             )}
@@ -861,33 +931,49 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
       };
 
       return (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <ButtonGroup size="small" variant="outlined">
+        <Box sx={commonStyles.depthContainer}>
+          <ButtonGroup 
+            size="small" 
+            variant="outlined"
+            sx={commonStyles.depthButtonGroup}
+          >
+            {renderDepthButton(-100)}
             {renderDepthButton(-10)}
             {renderDepthButton(-1)}
             {renderDepthButton(-0.1)}
           </ButtonGroup>
-          
-          <TextField
-            fullWidth
-            type="number"
-            name={field.field_name}
-            label={field.description}
-            value={formData[field.field_name] || ''}
-            onChange={e => handleFieldChange(field.field_name, e.target.value)}
-            error={!!fieldErrors[field.field_name]}
-            helperText={fieldErrors[field.field_name]}
-            inputProps={{ 
-              step: 0.1,
-              style: { textAlign: 'center' }
-            }}
-            sx={{ mx: 1 }}
-          />
 
-          <ButtonGroup size="small" variant="outlined">
+          <FormControl error={!!fieldErrors[field.field_name]}>
+            <TextField
+              name={field.field_name}
+              type="number"
+              label={field.field_name === 'from' ? 'From' : 'To'}
+              value={formData[field.field_name as keyof LogEntry] || ''}
+              onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
+              error={!!fieldErrors[field.field_name]}
+              helperText={fieldErrors[field.field_name]}
+              inputProps={{
+                step: 0.1,
+                min: 0,
+                style: { textAlign: 'center' }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1
+                }
+              }}
+            />
+          </FormControl>
+
+          <ButtonGroup 
+            size="small" 
+            variant="outlined"
+            sx={commonStyles.depthButtonGroup}
+          >
             {renderDepthButton(0.1)}
             {renderDepthButton(1)}
             {renderDepthButton(10)}
+            {renderDepthButton(100)}
           </ButtonGroup>
         </Box>
       );
@@ -1171,10 +1257,10 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
       // Render as buttons if visibility_style is 'buttons'
       if (field.visibility_style === 'buttons') {
         return (
-          <Box key={field.field_name} sx={{ position: 'relative' }}>
+          <Box key={field.field_name} sx={commonStyles.fieldContainer}>
             <FormControl fullWidth error={!!fieldErrors[field.field_name]} component="fieldset">
               <FormLabel component="legend">{field.description}</FormLabel>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, position: 'relative' }}>
+              <Box sx={commonStyles.buttonGroup}>
                 {options.map((option, optionIndex) => {
                   const trimmedOption = option.trim();
                   if (!trimmedOption) return null;
@@ -1216,27 +1302,11 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
                       }}
                     >
                       {hintMode && hint && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            left: -10,
-                            top: -10,
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            minWidth: '1.5em',
-                            textAlign: 'center',
-                            zIndex: 1
-                          }}
-                        >
+                        <Box sx={commonStyles.hintBadge}>
                           {hint}
                         </Box>
                       )}
-                      {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                      {icon && <Box component="span" sx={commonStyles.icon}>{icon}</Box>}
                       {trimmedOption}
                     </Button>
                   );
@@ -1255,7 +1325,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
       const isOpen = dropdownsOpen[field.field_name] || false;
 
       return (
-        <Box key={field.field_name} sx={{ position: 'relative' }}>
+        <Box key={field.field_name} sx={commonStyles.fieldContainer}>
           <FormControl fullWidth error={!!fieldErrors[field.field_name]}>
             <InputLabel>{field.description}</InputLabel>
             <Select
@@ -1266,6 +1336,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
               open={isOpen}
               onOpen={() => setDropdownsOpen(prev => ({ ...prev, [field.field_name]: true }))}
               onClose={() => !hintMode && setDropdownsOpen(prev => ({ ...prev, [field.field_name]: false }))}
+              sx={commonStyles.select}
             >
               {options.map((option, optionIndex) => {
                 const trimmedOption = option.trim();
@@ -1300,42 +1371,21 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
                   <MenuItem 
                     key={trimmedOption} 
                     value={trimmedOption}
-                    sx={{ 
-                      position: 'relative', 
-                      pl: hint ? 4 : 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1
-                    }}
+                    sx={commonStyles.menuItem}
                   >
                     {hintMode && hint && (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          left: 8,
-                          bgcolor: 'primary.main',
-                          color: 'white',
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1,
-                          fontSize: '0.8rem',
-                          fontWeight: 'bold',
-                          minWidth: '1.5em',
-                          textAlign: 'center',
-                          zIndex: 1
-                        }}
-                      >
+                      <Box sx={commonStyles.hintBadge}>
                         {hint}
                       </Box>
                     )}
-                    {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                    {icon && <Box component="span" sx={commonStyles.icon}>{icon}</Box>}
                     {trimmedOption}
                   </MenuItem>
                 );
               })}
             </Select>
             {fieldErrors[field.field_name] && (
-              <FormHelperText>{fieldErrors[field.field_name]}</FormHelperText>
+              <FormHelperText error>{fieldErrors[field.field_name]}</FormHelperText>
             )}
           </FormControl>
         </Box>
@@ -1398,7 +1448,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
       );
 
     return (
-      <Box sx={{ p: 2 }}>
+      <Box sx={commonStyles.pageContainer}>
         {fields.map(field => renderField(field))}
       </Box>
     );
