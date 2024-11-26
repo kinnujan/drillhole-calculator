@@ -14,10 +14,12 @@ import {
   Paper,
   ToggleButton,
   ToggleButtonGroup,
-  FormHelperText
+  FormHelperText,
+  FormLabel,
+  ButtonGroup
 } from '@mui/material';
 import { LogEntry } from '../types';
-import { FieldConfig, PageInfo, VisibilityStyle } from '../types/Field';
+import { FieldConfig, type VisibilityStyle, type PageInfo } from '../types/Field';
 import csvService from '../services/CSVService';
 import { v4 as uuidv4 } from 'uuid';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -69,7 +71,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
   onQuickFill
 }) => {
   const [formData, setFormData] = useState<Partial<LogEntry>>({});
-  const [pages, setPages] = useState<PageInfo[]>([]);
+  const [pages, setPages] = useState<Array<{ name: string }>>([]);
   const [currentTab, setCurrentTab] = useState(0);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -82,6 +84,167 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
     newEntry: null,
     overlapResult: null
   });
+  const [hintMode, setHintMode] = useState(false);
+  const [hintBuffer, setHintBuffer] = useState('');
+  const [hintTargets, setHintTargets] = useState<HintTarget[]>([]);
+  const [dropdownsOpen, setDropdownsOpen] = useState<Record<string, boolean>>({});
+
+  interface HintTarget {
+    type: 'option' | 'depth_adjust';
+    fieldName: string;
+    value: string;
+    amount?: number;
+    element?: HTMLElement;
+  }
+
+  // Helper function to determine text color based on background color
+  const getContrastColor = (hexColor: string) => {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    return luminance > 0.5 ? '#000000' : '#FFFFFF';
+  };
+
+  // Generate hints for fields (a-z, then aa-zz if needed)
+  const generateHint = (index: number): string => {
+    // Skip 'f' as it's reserved for toggling hint mode
+    if (index < 5) {  // a-e
+      return String.fromCharCode(97 + index);
+    } else if (index < 25) { // g-z
+      return String.fromCharCode(97 + index + 1);
+    }
+    
+    // For indices >= 25, generate two-letter combinations
+    // Adjust the index to account for skipping 'f'
+    const adjustedIndex = index - 25;
+    const first = Math.floor(adjustedIndex / 25);
+    const second = adjustedIndex % 25;
+    let firstChar = String.fromCharCode(97 + first);
+    let secondChar = String.fromCharCode(97 + second);
+    
+    // Skip combinations with 'f'
+    if (firstChar >= 'f') firstChar = String.fromCharCode(firstChar.charCodeAt(0) + 1);
+    if (secondChar >= 'f') secondChar = String.fromCharCode(secondChar.charCodeAt(0) + 1);
+    
+    return firstChar + secondChar;
+  };
+
+  // Get fields for current page
+  const getCurrentPageFields = () => {
+    if (currentTab < 0 || currentTab >= pages.length) {
+      console.warn('[QuickLogForm] Invalid currentTab:', currentTab);
+      return [];
+    }
+
+    const currentPage = pages[currentTab];
+    if (!currentPage) {
+      console.warn('[QuickLogForm] No page found for currentTab:', currentTab);
+      return [];
+    }
+
+    console.log('[QuickLogForm] Getting fields for page:', currentPage.name);
+    return csvService.getFields()
+      .filter(field => field.page_name === currentPage.name)
+      .sort((a, b) => a.page_order - b.page_order);
+  };
+
+  // Collect all selectable options when entering hint mode
+  const collectHintTargets = () => {
+    const targets: HintTarget[] = [];
+    
+    // Get all fields from the current page
+    const currentFields = getCurrentPageFields();
+    console.log('[QuickLogForm] Current fields:', currentFields);
+    
+    if (currentFields.length === 0) {
+      console.warn('[QuickLogForm] No fields found for current page');
+      return targets;
+    }
+    
+    // Open all dropdowns that need to be open
+    const newDropdownsOpen: Record<string, boolean> = {};
+    
+    currentFields.forEach(field => {
+      console.log('[QuickLogForm] Processing field:', field.field_name, field.field_type, field.domain_values);
+      
+      // Add depth adjustment buttons for from/to fields
+      if (field.field_name === 'from' || field.field_name === 'to') {
+        const adjustments = [-10, -1, -0.1, 0.1, 1, 10];
+        adjustments.forEach(amount => {
+          targets.push({
+            type: 'depth_adjust',
+            fieldName: field.field_name,
+            value: `${amount > 0 ? '+' : ''}${amount}`,
+            amount: amount
+          });
+        });
+      }
+      
+      if (field.field_type === 'domain') {
+        // Get options for this field
+        let options: string[] = [];
+        if (field.domain_values) {
+          if (typeof field.domain_values === 'string') {
+            options = field.domain_values.split(',');
+          } else if (Array.isArray(field.domain_values)) {
+            options = field.domain_values;
+          }
+        }
+        
+        console.log('[QuickLogForm] Field options:', field.field_name, options);
+        
+        options.forEach(option => {
+          const trimmedOption = option.trim();
+          if (trimmedOption) {
+            targets.push({
+              type: 'option',
+              fieldName: field.field_name,
+              value: trimmedOption
+            });
+          }
+        });
+        
+        // Only open dropdown if visibility style is dropdown
+        if (field.visibility_style === 'dropdown') {
+          newDropdownsOpen[field.field_name] = true;
+        }
+      }
+    });
+    
+    setDropdownsOpen(newDropdownsOpen);
+    console.log('[QuickLogForm] Collected hint targets:', targets);
+    console.log('[QuickLogForm] Opening dropdowns:', newDropdownsOpen);
+    return targets;
+  };
+
+  useEffect(() => {
+    const initialize = async () => {
+      console.log('[QuickLogForm] Starting initialization');
+      
+      try {
+        // Get unique page names from CSV service
+        const fields = csvService.getFields();
+        const uniquePages = Array.from(new Set(fields.map(f => f.page_name)))
+          .filter(name => name !== 'System')
+          .map(name => ({ name }));
+
+        console.log('[QuickLogForm] Found pages:', uniquePages);
+        setPages(uniquePages);
+
+        // Reset to first tab
+        setCurrentTab(0);
+      } catch (error) {
+        console.error('[QuickLogForm] Error during initialization:', error);
+      }
+    };
+
+    initialize();
+  }, []);
 
   useEffect(() => {
     const initialize = async () => {
@@ -90,9 +253,6 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
       try {
         // Load configuration once
         await csvService.loadConfiguration();
-        
-        // Set pages
-        setPages(csvService.getPages());
         
         // Set form data
         console.log('[QuickLogForm] Setting form data with:', { editEntry, prefillData, previousEntry });
@@ -152,57 +312,67 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
     };
   }, [editEntry, prefillData, drillholeId, previousEntry]);
 
-  const handleChange = (field: string) => (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.MouseEvent<HTMLElement> | null,
-    newValue?: string | boolean | null
-  ) => {
-    console.log('[QuickLogForm] Field change:', { field, event, newValue });
-    let value = newValue;
-    
-    // Handle different event types
-    if (event?.target instanceof HTMLInputElement || event?.target instanceof HTMLTextAreaElement) {
-      value = event.target.type === 'checkbox' ? 
-        (event.target as HTMLInputElement).checked : 
-        event.target.value;
-    }
-    
-    if (value !== null && value !== undefined) {
-      // Convert numeric fields to numbers
-      if (field === 'from' || field === 'to') {
-        value = Number(value);
-      }
-      
-      setFormData(prev => ({ ...prev, [field]: value }));
+  const handleFieldChange = (fieldName: string, value: string | boolean) => {
+    console.log('[QuickLogForm] Field change:', {
+      field: fieldName,
+      newValue: value
+    });
+
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value
+    }));
+
+    // Clear any errors for this field
+    if (fieldErrors[fieldName]) {
+      setFieldErrors(prev => {
+        const { [fieldName]: _, ...rest } = prev;
+        return rest;
+      });
     }
   };
 
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-    const fields = csvService.getFields();
-    
-    // Check required fields
-    fields.forEach(field => {
-      if (field.required && !formData[field.field_name as keyof LogEntry]) {
-        errors[field.field_name] = `${field.description} is required`;
+  const handleDirectClick = (event: React.MouseEvent | React.ChangeEvent, field: FieldConfig, value?: string) => {
+    if (hintMode) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // Find the matching hint target
+      const target = hintTargets.find(t => 
+        t.fieldName === field.field_name && 
+        (t.type === 'depth_adjust' ? t.amount === Number(value) : t.value === value)
+      );
+
+      if (target) {
+        // First apply the value change
+        if (target.type === 'depth_adjust' && target.amount !== undefined) {
+          const currentDepth = Number(formData[target.fieldName]) || 0;
+          const newDepth = Number((currentDepth + target.amount).toFixed(2));
+          handleFieldChange(target.fieldName, newDepth.toString());
+        } else {
+          handleFieldChange(target.fieldName, target.value);
+        }
+        
+        // Exit hint mode and close any open dropdowns
+        setHintMode(false);
+        setHintBuffer('');
+        setDropdownsOpen({});
       }
-    });
-
-    // Validate from/to values
-    const fromValue = Number(formData.from);
-    const toValue = Number(formData.to);
-    
-    if (isNaN(fromValue)) {
-      errors['from'] = 'From depth is required and must be a number';
+    } else {
+      // Normal click handling when not in hint mode
+      if (field.field_type === 'depth' && value !== undefined) {
+        const currentDepth = Number(formData[field.field_name]) || 0;
+        const amount = Number(value);
+        const newDepth = Number((currentDepth + amount).toFixed(2));
+        handleFieldChange(field.field_name, newDepth.toString());
+      } else {
+        handleFieldChange(field.field_name, value || '');
+        // Close dropdown after selection in normal mode too
+        if (field.field_type === 'domain') {
+          setDropdownsOpen(prev => ({ ...prev, [field.field_name]: false }));
+        }
+      }
     }
-    if (isNaN(toValue)) {
-      errors['to'] = 'To depth is required and must be a number';
-    }
-    if (!isNaN(fromValue) && !isNaN(toValue) && fromValue >= toValue) {
-      errors['to'] = 'To depth must be greater than From depth';
-    }
-
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -261,6 +431,92 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle Escape key
+      if (e.key === 'Escape') {
+        if (hintMode) {
+          e.preventDefault();
+          exitHintMode();
+        } else if (onCancel) {
+          e.preventDefault();
+          onCancel();
+        }
+        return;
+      }
+
+      // Enter f-mode
+      if (e.key === 'f' && !e.ctrlKey && !e.altKey && !e.metaKey && !hintMode) {
+        e.preventDefault();
+        setHintMode(true);
+        setHintBuffer('');
+        const targets = collectHintTargets();
+        setHintTargets(targets);
+        return;
+      }
+
+      // Handle hint selection in hint mode
+      if (hintMode) {
+        e.preventDefault();
+        const newBuffer = hintBuffer + e.key.toLowerCase();
+        setHintBuffer(newBuffer);
+
+        // Find matching hint
+        const matchingTarget = hintTargets.find((target, index) => {
+          const hint = generateHint(index);
+          return hint === newBuffer;
+        });
+
+        if (matchingTarget) {
+          selectOption(matchingTarget);
+          exitHintMode();
+        } else {
+          // Check if this could still match any hints
+          const couldMatch = hintTargets.some((target, index) => {
+            const hint = generateHint(index);
+            return hint.startsWith(newBuffer);
+          });
+
+          if (!couldMatch) {
+            exitHintMode();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hintMode, hintBuffer, hintTargets, onCancel]);
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    const fields = csvService.getFields();
+    
+    // Check required fields
+    fields.forEach(field => {
+      if (field.required && !formData[field.field_name as keyof LogEntry]) {
+        errors[field.field_name] = `${field.description} is required`;
+      }
+    });
+
+    // Validate from/to values
+    const fromValue = Number(formData.from);
+    const toValue = Number(formData.to);
+    
+    if (isNaN(fromValue)) {
+      errors['from'] = 'From depth is required and must be a number';
+    }
+    if (isNaN(toValue)) {
+      errors['to'] = 'To depth is required and must be a number';
+    }
+    if (!isNaN(fromValue) && !isNaN(toValue) && fromValue >= toValue) {
+      errors['to'] = 'To depth must be greater than From depth';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleOverlapDetection = (type: string, data: any) => {
     if (type === 'overlap' && data.newEntry && data.overlapResult) {
       setOverlapDialogState({
@@ -303,27 +559,22 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
     }
   };
 
-  const handleFieldChange = (fieldName: string, value: any) => {
-    console.log(`[QuickLogForm] Field change: ${fieldName} =`, value);
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value,
-      modified: new Date()
-    }));
-    
-    // Clear error for this field if it exists
-    if (fieldErrors[fieldName]) {
-      setFieldErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[fieldName];
-        return newErrors;
-      });
-    }
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const field = event.target.name;
+    const value = event.target.type === 'checkbox' ? 
+      (event.target as HTMLInputElement).checked : 
+      event.target.value;
+
+    handleFieldChange(field, value);
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    console.log(`[QuickLogForm] Tab changed to: ${newValue}`);
-    setCurrentTab(newValue);
+    console.log('[QuickLogForm] Tab changed to:', newValue);
+    if (newValue >= 0 && newValue < pages.length) {
+      setCurrentTab(newValue);
+    } else {
+      console.warn('[QuickLogForm] Invalid tab index:', newValue);
+    }
   };
 
   const handleQuickFill = () => {
@@ -334,8 +585,335 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
     }
   };
 
+  const handleChange = (field: string) => (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.MouseEvent<HTMLElement> | null,
+    newValue?: string | boolean | null
+  ) => {
+    console.log('[QuickLogForm] Field change:', { field, event, newValue });
+    let value = newValue;
+    
+    // Handle different event types
+    if (event?.target instanceof HTMLInputElement || event?.target instanceof HTMLTextAreaElement) {
+      value = event.target.type === 'checkbox' ? 
+        (event.target as HTMLInputElement).checked : 
+        event.target.value;
+    }
+    
+    if (value !== null && value !== undefined) {
+      // Convert numeric fields to numbers
+      if (field === 'from' || field === 'to') {
+        value = Number(value);
+      }
+      
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
   const renderField = (field: FieldConfig) => {
-    console.log(`[QuickLogForm] Rendering field: ${field.field_name}, type: ${field.field_type}`);
+    // Skip hidden fields and drillhole_id
+    if (field.visibility_style === 'hidden' || field.field_name === 'drillhole_id') {
+      return null;
+    }
+
+    // Handle domain fields with button or dropdown style
+    if (field.field_type === 'domain') {
+      const options = field.domain_values || [];
+      const currentValue = formData[field.field_name as keyof LogEntry];
+
+      // Render as buttons if specified
+      if (field.visibility_style === 'buttons') {
+        return (
+          <Box key={field.field_name}>
+            <FormControl 
+              component="fieldset"
+              error={!!fieldErrors[field.field_name]}
+              sx={{ width: '100%' }}
+            >
+              <FormLabel component="legend">{field.description}</FormLabel>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                {options.map((option) => {
+                  const trimmedOption = option.trim();
+                  if (!trimmedOption) return null;
+
+                  const hint = hintMode ? generateHint(
+                    hintTargets.findIndex(t => 
+                      t.fieldName === field.field_name && t.value === trimmedOption
+                    )
+                  ) : null;
+
+                  let styleConfig = {};
+                  try {
+                    if (typeof field.style_config === 'string') {
+                      // Handle string input from CSV
+                      const rawConfig = field.style_config || '{}';
+                      const cleanConfig = rawConfig.replace(/^"(.*)"$/, '$1').replace(/\\/g, '');
+                      styleConfig = JSON.parse(cleanConfig);
+                    } else if (field.style_config && typeof field.style_config === 'object') {
+                      // Already an object, use directly
+                      styleConfig = field.style_config;
+                    }
+                  } catch (error) {
+                    console.error('Failed to parse style config:', error);
+                    console.debug('Raw style_config:', field.style_config);
+                  }
+                  
+                  const color = styleConfig?.colors?.[trimmedOption];
+                  const icon = styleConfig?.icons?.[trimmedOption];
+
+                  return (
+                    <Button
+                      key={trimmedOption}
+                      variant={currentValue === trimmedOption ? "contained" : "outlined"}
+                      onClick={(e) => handleDirectClick(e, field, trimmedOption)}
+                      sx={{ 
+                        position: 'relative',
+                        minWidth: 100,
+                        height: 36,
+                        ...(color && {
+                          backgroundColor: currentValue === trimmedOption ? color : 'transparent',
+                          borderColor: color,
+                          color: currentValue === trimmedOption ? getContrastColor(color) : color,
+                          '&:hover': {
+                            backgroundColor: currentValue === trimmedOption ? color : `${color}22`,
+                          }
+                        })
+                      }}
+                    >
+                      {hintMode && hint && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: -10,
+                            top: -10,
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            fontSize: '0.8rem',
+                            fontWeight: 'bold',
+                            minWidth: '1.5em',
+                            textAlign: 'center',
+                            zIndex: 1
+                          }}
+                        >
+                          {hint}
+                        </Box>
+                      )}
+                      {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                      {trimmedOption}
+                    </Button>
+                  );
+                })}
+              </Box>
+              {fieldErrors[field.field_name] && (
+                <FormHelperText>{fieldErrors[field.field_name]}</FormHelperText>
+              )}
+            </FormControl>
+          </Box>
+        );
+      } else {
+        // Render as dropdown for other visibility styles
+        const currentValue = formData[field.field_name as keyof LogEntry];
+        const isOpen = dropdownsOpen[field.field_name] || false;
+
+        return (
+          <Box key={field.field_name}>
+            <FormControl fullWidth error={!!fieldErrors[field.field_name]}>
+              <InputLabel>{field.description}</InputLabel>
+              <Select
+                name={field.field_name}
+                value={currentValue || ''}
+                onChange={e => handleDirectClick(e as any, field, e.target.value)}
+                label={field.description}
+                open={isOpen}
+                onOpen={() => setDropdownsOpen(prev => ({ ...prev, [field.field_name]: true }))}
+                onClose={() => !hintMode && setDropdownsOpen(prev => ({ ...prev, [field.field_name]: false }))}
+              >
+                {options.map((option) => {
+                  const trimmedOption = option.trim();
+                  if (!trimmedOption) return null;
+
+                  const hint = hintMode ? generateHint(
+                    hintTargets.findIndex(t => 
+                      t.fieldName === field.field_name && t.value === trimmedOption
+                    )
+                  ) : null;
+
+                  let styleConfig = {};
+                  try {
+                    if (typeof field.style_config === 'string') {
+                      // Handle string input from CSV
+                      const rawConfig = field.style_config || '{}';
+                      const cleanConfig = rawConfig.replace(/^"(.*)"$/, '$1').replace(/\\/g, '');
+                      styleConfig = JSON.parse(cleanConfig);
+                    } else if (field.style_config && typeof field.style_config === 'object') {
+                      // Already an object, use directly
+                      styleConfig = field.style_config;
+                    }
+                  } catch (error) {
+                    console.error('Failed to parse style config:', error);
+                    console.debug('Raw style_config:', field.style_config);
+                  }
+                  
+                  const color = styleConfig?.colors?.[trimmedOption];
+                  const icon = styleConfig?.icons?.[trimmedOption];
+
+                  return (
+                    <MenuItem 
+                      key={trimmedOption} 
+                      value={trimmedOption}
+                      sx={{ 
+                        position: 'relative', 
+                        pl: hint ? 4 : 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                      }}
+                    >
+                      {hintMode && hint && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: 8,
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            fontSize: '0.8rem',
+                            fontWeight: 'bold',
+                            minWidth: '1.5em',
+                            textAlign: 'center',
+                            zIndex: 1
+                          }}
+                        >
+                          {hint}
+                        </Box>
+                      )}
+                      {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                      {trimmedOption}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+              {fieldErrors[field.field_name] && (
+                <FormHelperText>{fieldErrors[field.field_name]}</FormHelperText>
+              )}
+            </FormControl>
+          </Box>
+        );
+      }
+    }
+
+    // Special handling for depth fields (from/to)
+    if (field.field_name === 'from' || field.field_name === 'to') {
+      const currentDepth = Number(formData[field.field_name]) || 0;
+      const adjustDepth = (amount: number) => {
+        const newDepth = Number((currentDepth + amount).toFixed(2));
+        handleFieldChange(field.field_name, newDepth.toString());
+      };
+
+      const renderDepthButton = (amount: number) => {
+        const hint = hintMode ? generateHint(
+          hintTargets.findIndex(t => 
+            t.type === 'depth_adjust' && 
+            t.fieldName === field.field_name && 
+            t.amount === amount
+          )
+        ) : null;
+
+        return (
+          <Button 
+            onClick={() => adjustDepth(amount)}
+            sx={{ 
+              position: 'relative',
+              minWidth: '60px', 
+              height: '36px'    
+            }}
+          >
+            {hintMode && hint && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: -20,
+                  transform: 'translateX(-50%)',
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  minWidth: '2em',
+                  textAlign: 'center',
+                  zIndex: 1,
+                  boxShadow: 1
+                }}
+              >
+                {hint}
+              </Box>
+            )}
+            {amount > 0 ? `+${amount}` : amount}
+          </Button>
+        );
+      };
+
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <ButtonGroup size="small" variant="outlined">
+            {renderDepthButton(-10)}
+            {renderDepthButton(-1)}
+            {renderDepthButton(-0.1)}
+          </ButtonGroup>
+          
+          <TextField
+            fullWidth
+            type="number"
+            name={field.field_name}
+            label={field.description}
+            value={formData[field.field_name] || ''}
+            onChange={e => handleFieldChange(field.field_name, e.target.value)}
+            error={!!fieldErrors[field.field_name]}
+            helperText={fieldErrors[field.field_name]}
+            inputProps={{ 
+              step: 0.1,
+              style: { textAlign: 'center' }
+            }}
+            sx={{ mx: 1 }}
+          />
+
+          <ButtonGroup size="small" variant="outlined">
+            {renderDepthButton(0.1)}
+            {renderDepthButton(1)}
+            {renderDepthButton(10)}
+          </ButtonGroup>
+        </Box>
+      );
+    }
+
+    // For regular text and number fields
+    if (field.field_type === 'text' || field.field_type === 'number') {
+      return (
+        <Box key={field.field_name} sx={{ mb: 2 }}>
+          <FormControl fullWidth error={!!fieldErrors[field.field_name]}>
+            <TextField
+              label={field.description}
+              name={field.field_name}
+              type={field.field_type === 'number' ? 'number' : 'text'}
+              value={formData[field.field_name as keyof LogEntry] || ''}
+              onChange={handleInputChange}
+              required={field.required}
+              error={!!fieldErrors[field.field_name]}
+              helperText={fieldErrors[field.field_name]}
+            />
+          </FormControl>
+        </Box>
+      );
+    }
+
+    // Handle other field types
     if (field.visibility_style === 'hidden') {
       return null;
     }
@@ -435,7 +1013,7 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
             <InputLabel>{field.description}</InputLabel>
             <Select
               value={formData[field.field_name] || ''}
-              onChange={e => handleFieldChange(field.field_name, e.target.value)}
+              onChange={e => handleDirectClick(e as any, field, e.target.value)}
               label={field.description}
               required={field.required}
               sx={{
@@ -577,11 +1155,263 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
     }
   };
 
+  const renderFieldWithHints = (field: FieldConfig) => {
+    if (field.field_type === 'domain') {
+      let options: string[] = [];
+      if (field.domain_values) {
+        if (typeof field.domain_values === 'string') {
+          options = field.domain_values.split(',');
+        } else if (Array.isArray(field.domain_values)) {
+          options = field.domain_values;
+        }
+      }
+
+      console.log('[QuickLogForm] Rendering field with options:', field.field_name, options);
+      
+      // Render as buttons if visibility_style is 'buttons'
+      if (field.visibility_style === 'buttons') {
+        return (
+          <Box key={field.field_name} sx={{ position: 'relative' }}>
+            <FormControl fullWidth error={!!fieldErrors[field.field_name]} component="fieldset">
+              <FormLabel component="legend">{field.description}</FormLabel>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, position: 'relative' }}>
+                {options.map((option, optionIndex) => {
+                  const trimmedOption = option.trim();
+                  if (!trimmedOption) return null;
+
+                  const hint = hintMode ? generateHint(
+                    hintTargets.findIndex(t => 
+                      t.fieldName === field.field_name && t.value === trimmedOption
+                    )
+                  ) : null;
+
+                  let styleConfig = {};
+                  try {
+                    if (typeof field.style_config === 'string') {
+                      // Handle string input from CSV
+                      const rawConfig = field.style_config || '{}';
+                      const cleanConfig = rawConfig.replace(/^"(.*)"$/, '$1').replace(/\\/g, '');
+                      styleConfig = JSON.parse(cleanConfig);
+                    } else if (field.style_config && typeof field.style_config === 'object') {
+                      // Already an object, use directly
+                      styleConfig = field.style_config;
+                    }
+                  } catch (error) {
+                    console.error('Failed to parse style config:', error);
+                    console.debug('Raw style_config:', field.style_config);
+                  }
+                  
+                  const color = styleConfig?.colors?.[trimmedOption];
+                  const icon = styleConfig?.icons?.[trimmedOption];
+
+                  return (
+                    <Button
+                      key={trimmedOption}
+                      variant={formData[field.field_name as keyof LogEntry] === trimmedOption ? "contained" : "outlined"}
+                      onClick={(e) => handleDirectClick(e, field, trimmedOption)}
+                      sx={{ 
+                        position: 'relative',
+                        minWidth: 100,
+                        height: 36
+                      }}
+                    >
+                      {hintMode && hint && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: -10,
+                            top: -10,
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            fontSize: '0.8rem',
+                            fontWeight: 'bold',
+                            minWidth: '1.5em',
+                            textAlign: 'center',
+                            zIndex: 1
+                          }}
+                        >
+                          {hint}
+                        </Box>
+                      )}
+                      {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                      {trimmedOption}
+                    </Button>
+                  );
+                })}
+              </Box>
+              {fieldErrors[field.field_name] && (
+                <FormHelperText>{fieldErrors[field.field_name]}</FormHelperText>
+              )}
+            </FormControl>
+          </Box>
+        );
+      }
+
+      // Render as dropdown for other visibility styles
+      const currentValue = formData[field.field_name as keyof LogEntry];
+      const isOpen = dropdownsOpen[field.field_name] || false;
+
+      return (
+        <Box key={field.field_name} sx={{ position: 'relative' }}>
+          <FormControl fullWidth error={!!fieldErrors[field.field_name]}>
+            <InputLabel>{field.description}</InputLabel>
+            <Select
+              name={field.field_name}
+              value={currentValue || ''}
+              onChange={e => handleDirectClick(e as any, field, e.target.value)}
+              label={field.description}
+              open={isOpen}
+              onOpen={() => setDropdownsOpen(prev => ({ ...prev, [field.field_name]: true }))}
+              onClose={() => !hintMode && setDropdownsOpen(prev => ({ ...prev, [field.field_name]: false }))}
+            >
+              {options.map((option, optionIndex) => {
+                const trimmedOption = option.trim();
+                if (!trimmedOption) return null;
+
+                const hint = hintMode ? generateHint(
+                  hintTargets.findIndex(t => 
+                    t.fieldName === field.field_name && t.value === trimmedOption
+                  )
+                ) : null;
+
+                let styleConfig = {};
+                try {
+                  if (typeof field.style_config === 'string') {
+                    // Handle string input from CSV
+                    const rawConfig = field.style_config || '{}';
+                    const cleanConfig = rawConfig.replace(/^"(.*)"$/, '$1').replace(/\\/g, '');
+                    styleConfig = JSON.parse(cleanConfig);
+                  } else if (field.style_config && typeof field.style_config === 'object') {
+                    // Already an object, use directly
+                    styleConfig = field.style_config;
+                  }
+                } catch (error) {
+                  console.error('Failed to parse style config:', error);
+                  console.debug('Raw style_config:', field.style_config);
+                }
+                
+                const color = styleConfig?.colors?.[trimmedOption];
+                const icon = styleConfig?.icons?.[trimmedOption];
+
+                return (
+                  <MenuItem 
+                    key={trimmedOption} 
+                    value={trimmedOption}
+                    sx={{ 
+                      position: 'relative', 
+                      pl: hint ? 4 : 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    {hintMode && hint && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          left: 8,
+                          bgcolor: 'primary.main',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontSize: '0.8rem',
+                          fontWeight: 'bold',
+                          minWidth: '1.5em',
+                          textAlign: 'center',
+                          zIndex: 1
+                        }}
+                      >
+                        {hint}
+                      </Box>
+                    )}
+                    {icon && <span style={{ marginRight: '4px' }}>{icon}</span>}
+                    {trimmedOption}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+            {fieldErrors[field.field_name] && (
+              <FormHelperText>{fieldErrors[field.field_name]}</FormHelperText>
+            )}
+          </FormControl>
+        </Box>
+      );
+    }
+    
+    return renderField(field);
+  };
+
+  const selectOption = (target: HintTarget) => {
+    console.log('[QuickLogForm] Selecting option:', target);
+
+    if (target.type === 'depth_adjust' && target.amount !== undefined) {
+      const currentDepth = Number(formData[target.fieldName]) || 0;
+      const newDepth = Number((currentDepth + target.amount).toFixed(2));
+      handleFieldChange(target.fieldName, newDepth.toString());
+    } else {
+      // Update form data
+      setFormData(prev => ({
+        ...prev,
+        [target.fieldName]: target.value
+      }));
+    }
+
+    // Close all dropdowns
+    setDropdownsOpen({});
+
+    // Move focus to next field
+    const currentFields = getCurrentPageFields();
+    const currentFieldIndex = currentFields.findIndex(f => f.field_name === target.fieldName);
+    if (currentFieldIndex !== -1 && currentFieldIndex < currentFields.length - 1) {
+      const nextField = currentFields[currentFieldIndex + 1];
+      const nextElement = document.querySelector(`[name="${nextField.field_name}"]`) as HTMLElement;
+      if (nextElement) {
+        nextElement.focus();
+      }
+    }
+
+    // If this was the last field, move to next page
+    if (currentFieldIndex === currentFields.length - 1) {
+      const nextTab = currentTab + 1;
+      if (nextTab < pages.length) {
+        setCurrentTab(nextTab);
+      }
+    }
+  };
+
+  const exitHintMode = () => {
+    setHintMode(false);
+    setHintBuffer('');
+    setHintTargets([]);
+    setDropdownsOpen({});
+  };
+
+  const renderPage = (pageIndex: number) => {
+    const fields = csvService.getFields()
+      .filter(field => 
+        field.page_name === pages[pageIndex]?.name && 
+        field.field_name !== 'drillhole_id'  // Explicitly exclude drillhole_id
+      );
+
+    return (
+      <Box sx={{ p: 2 }}>
+        {fields.map(field => renderField(field))}
+      </Box>
+    );
+  };
+
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ p: 2 }}>
       {/* System fields (non-hidden) */}
       <Box sx={{ mb: 2 }}>
-        {csvService.getFieldsForPage('System').map(renderField)}
+        {csvService.getFieldsForPage('System')
+          .filter(field => field.field_name !== 'drillhole_id')
+          .map(field => renderField(field))
+        }
       </Box>
 
       {/* Tabs for other pages */}
@@ -595,35 +1425,42 @@ const QuickLogForm: React.FC<QuickLogFormProps> = ({
 
       {pages.filter(page => page.name !== 'System').map((page, index) => (
         <TabPanel key={page.name} value={currentTab} index={index}>
-          {csvService.getFieldsForPage(page.name).map(renderField)}
+          {renderPage(index)}
         </TabPanel>
       ))}
 
       {/* Action Buttons */}
-      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-        {previousEntry && onQuickFill && (
-          <Button
-            variant="outlined"
-            onClick={handleQuickFill}
-            startIcon={<ContentCopyIcon />}
-          >
-            Quick Fill
+      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
+        <Box>
+          {previousEntry && onQuickFill && (
+            <Button
+              variant="outlined"
+              onClick={handleQuickFill}
+              startIcon={<ContentCopyIcon />}
+            >
+              Quick Fill
+            </Button>
+          )}
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button onClick={onCancel} variant="outlined">
+            Cancel (Esc)
           </Button>
-        )}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-        >
-          Save Entry
-        </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+          >
+            Save Entry (Ctrl+Enter)
+          </Button>
+        </Box>
       </Box>
 
       <OverlapDialog
         open={overlapDialogState.open}
+        newEntry={overlapDialogState.newEntry}
+        overlapResult={overlapDialogState.overlapResult}
         onClose={() => setOverlapDialogState({ open: false, newEntry: null, overlapResult: null })}
-        newEntry={overlapDialogState.newEntry!}
-        overlapResult={overlapDialogState.overlapResult!}
         onConfirm={handleOverlapConfirm}
       />
     </Box>

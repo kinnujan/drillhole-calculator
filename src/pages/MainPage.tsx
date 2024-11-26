@@ -519,7 +519,7 @@ const MainPage: React.FC = () => {
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Redo (Ctrl+Y or Ctrl+Shift+Z)" arrow>
+          <Tooltip title="Redo (Ctrl+Shift+Z)" arrow>
             <span>
               <IconButton 
                 onClick={handleRedo}
@@ -640,16 +640,12 @@ const MainPage: React.FC = () => {
                 modified: new Date()
               });
             }}
+            onCancel={() => {
+              setShowNewEntryDialog(false);
+              setPrefillData(null);
+            }}
           />
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'flex-end', px: 3, pb: 2 }}>
-          <Button onClick={() => {
-            setShowNewEntryDialog(false);
-            setPrefillData(null);
-          }}>
-            Cancel
-          </Button>
-        </DialogActions>
       </Dialog>
 
       <Dialog 
@@ -678,12 +674,10 @@ const MainPage: React.FC = () => {
               onSubmit={handleSubmit}
               editEntry={editEntry}
               drillholeId={selectedDrillhole || ''}
+              onCancel={handleEditClose}
             />
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleEditClose}>Cancel</Button>
-        </DialogActions>
       </Dialog>
 
       <Dialog

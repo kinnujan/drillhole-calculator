@@ -313,8 +313,11 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
   const handleUndo = useCallback(async () => {
     try {
       await historyService.undo();
-      const updatedEntries = await databaseService.getEntries(drillholeId);
-      setSortedEntries(updatedEntries);
+      if (drillholeId) {
+        console.log('[LogEntryList] Refreshing entries after undo for drillhole:', drillholeId);
+        const updatedEntries = await databaseService.getEntriesByHole(drillholeId);
+        setSortedEntries(updatedEntries);
+      }
     } catch (error) {
       console.error('[LogEntryList] Undo failed:', error);
       alert(error instanceof Error ? error.message : 'Undo failed');
@@ -324,8 +327,11 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
   const handleRedo = useCallback(async () => {
     try {
       await historyService.redo();
-      const updatedEntries = await databaseService.getEntries(drillholeId);
-      setSortedEntries(updatedEntries);
+      if (drillholeId) {
+        console.log('[LogEntryList] Refreshing entries after redo for drillhole:', drillholeId);
+        const updatedEntries = await databaseService.getEntriesByHole(drillholeId);
+        setSortedEntries(updatedEntries);
+      }
     } catch (error) {
       console.error('[LogEntryList] Redo failed:', error);
       alert(error instanceof Error ? error.message : 'Redo failed');
@@ -337,22 +343,25 @@ const LogEntryList: React.FC<LogEntryListProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!drillholeId) return;
       
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      // Handle undo/redo
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault(); // Prevent default browser behavior
         if (e.shiftKey) {
-          e.preventDefault();
+          console.log('[LogEntryList] Detected Ctrl+Shift+Z shortcut for redo');
           handleRedo();
         } else {
-          e.preventDefault();
+          console.log('[LogEntryList] Detected Ctrl+Z shortcut for undo');
           handleUndo();
         }
-      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
-        e.preventDefault();
-        handleRedo();
       }
     };
 
+    console.log('[LogEntryList] Setting up keyboard shortcuts');
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      console.log('[LogEntryList] Cleaning up keyboard shortcuts');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [drillholeId, handleUndo, handleRedo]);
 
   // Filter out system fields that should be hidden and get unique visible fields
