@@ -23,6 +23,7 @@ import LogEntryList from '../components/LogEntryList';
 import StripLog from '../components/StripLog';
 import DrillholeSelector from '../components/DrillholeSelector';
 import ConfigurationDialog from '../components/ConfigurationDialog';
+import OverlapDialog from '../components/OverlapDialog';
 import { LogEntry } from '../types';
 import databaseService from '../services/DatabaseService';
 import configurationService from '../services/ConfigurationService';
@@ -55,12 +56,37 @@ const MainPage: React.FC = () => {
   const [canRedo, setCanRedo] = useState(false);
   const [darkMode, setDarkMode] = useState(configurationService.getConfig().darkMode);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [overlapState, setOverlapState] = useState<{
+    newEntry: LogEntry | null;
+    overlapResult: OverlapResult | null;
+  }>({
+    newEntry: null,
+    overlapResult: null
+  });
 
   useEffect(() => {
     // Update undo/redo state
     setCanUndo(historyService.canUndo());
     setCanRedo(historyService.canRedo());
   }, [entries]);
+
+  useEffect(() => {
+    const handleDatabaseEvent = (type: string, data: any) => {
+      console.log('[MainPage] Received database event:', type, data);
+      if (type === 'overlap') {
+        setOverlapState({
+          newEntry: data.newEntry,
+          overlapResult: data.overlapResult
+        });
+        setShowNewEntryDialog(false); // Close the new entry dialog
+      }
+    };
+
+    databaseService.addChangeListener(handleDatabaseEvent);
+    return () => {
+      databaseService.removeChangeListener(handleDatabaseEvent);
+    };
+  }, []);
 
   const handleDarkModeChange = (newDarkMode: boolean) => {
     setDarkMode(newDarkMode);
@@ -124,12 +150,19 @@ const MainPage: React.FC = () => {
         
         console.log('[MainPage] Creating new entry command:', newEntry);
         const command = new AddEntryCommand(newEntry);
-        await historyService.executeCommand(command);
+        try {
+          await historyService.executeCommand(command);
+          // Close dialogs and reset state on success
+          setShowNewEntryDialog(false);
+          setPrefillData(null);
+        } catch (error) {
+          if (error instanceof Error && error.message === 'OVERLAP_DETECTED') {
+            console.log('[MainPage] Overlap detected, letting overlap dialog handle it');
+            return;
+          }
+          throw error; // Re-throw other errors
+        }
       }
-      
-      // Close dialogs and reset state
-      setShowNewEntryDialog(false);
-      setPrefillData(null);
       
       // Refresh entries after submit
       if (selectedDrillhole) {
@@ -140,6 +173,8 @@ const MainPage: React.FC = () => {
       }
     } catch (error) {
       console.error('[MainPage] Error submitting entry:', error);
+      // Show error message to user
+      alert(`Error submitting entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -355,6 +390,37 @@ const MainPage: React.FC = () => {
   const handleEditClose = () => {
     setEditDialogOpen(false);
     setEditEntry(null);
+  };
+
+  const handleOverlapConfirm = async (action: 'split' | 'replace' | 'cancel') => {
+    try {
+      if (!overlapState.newEntry || !overlapState.overlapResult?.overlappingEntries.length) {
+        return;
+      }
+
+      if (action === 'cancel') {
+        setOverlapState({ newEntry: null, overlapResult: null });
+        return;
+      }
+
+      await databaseService.handleOverlap(
+        overlapState.newEntry,
+        overlapState.overlapResult.overlappingEntries[0],
+        action
+      );
+
+      // Refresh entries after handling overlap
+      if (selectedDrillhole) {
+        const updatedEntries = await databaseService.getEntriesByHole(selectedDrillhole);
+        setEntries(updatedEntries);
+      }
+
+      // Reset overlap state
+      setOverlapState({ newEntry: null, overlapResult: null });
+    } catch (error) {
+      console.error('[MainPage] Error handling overlap:', error);
+      alert(`Error handling overlap: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   if (!selectedDrillhole) {
@@ -585,6 +651,15 @@ const MainPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Overlap Dialog */}
+      <OverlapDialog
+        open={!!overlapState.newEntry && !!overlapState.overlapResult}
+        onClose={() => handleOverlapConfirm('cancel')}
+        newEntry={overlapState.newEntry}
+        overlapResult={overlapState.overlapResult}
+        onConfirm={handleOverlapConfirm}
+      />
 
       {/* Configuration Dialog */}
       <ConfigurationDialog

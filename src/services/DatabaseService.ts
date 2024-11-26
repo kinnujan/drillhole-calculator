@@ -1,12 +1,17 @@
 import Dexie from 'dexie';
-import { LogEntry, BackupEntry, ErrorLog, EditLogEntry } from '../types';
+import { LogEntry, BackupEntry, ErrorLog, EditLogEntry, OverlapResult } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import historyService, { OverlapResolutionCommand } from './HistoryService';
 
 class QuickLoggerDB extends Dexie {
   logEntries!: Dexie.Table<LogEntry, string>;
   backupEntries!: Dexie.Table<BackupEntry, string>;
   errorLogs!: Dexie.Table<ErrorLog, string>;
   editLog!: Dexie.Table<EditLogEntry, string>;
+
+  private roundToDecimalPlaces(num: number, places: number = 6): number {
+    return Number(Math.round(Number(num + 'e' + places)) + 'e-' + places);
+  }
 
   constructor() {
     super('QuickLoggerDB');
@@ -19,7 +24,7 @@ class QuickLoggerDB extends Dexie {
     });
 
     // Add hooks for data validation
-    this.logEntries.hook('creating', function(primKey, obj) {
+    this.logEntries.hook('creating', (primKey, obj) => {
       // Ensure required fields are present
       if (!obj.id || !obj.drillhole_id || obj.from === undefined || obj.to === undefined) {
         throw new Error('Missing required fields');
@@ -30,12 +35,47 @@ class QuickLoggerDB extends Dexie {
         throw new Error('From and To must be numbers');
       }
 
-      // Validate interval
-      if (obj.from >= obj.to) {
+      // Round the values
+      const fromRounded = this.roundToDecimalPlaces(obj.from);
+      const toRounded = this.roundToDecimalPlaces(obj.to);
+
+      // Use epsilon for comparison
+      const epsilon = 1e-10;
+      if (fromRounded >= (toRounded - epsilon)) {
         throw new Error('From must be less than To');
       }
 
+      // Update the object with rounded values
+      obj.from = fromRounded;
+      obj.to = toRounded;
+
       return obj;
+    });
+
+    this.logEntries.hook('updating', (modifications, primKey, obj) => {
+      if (modifications.hasOwnProperty('from') || modifications.hasOwnProperty('to')) {
+        const from = modifications.from ?? obj.from;
+        const to = modifications.to ?? obj.to;
+
+        // Validate numeric fields
+        if (typeof from !== 'number' || typeof to !== 'number') {
+          throw new Error('From and To must be numbers');
+        }
+
+        // Round the values
+        const fromRounded = this.roundToDecimalPlaces(from);
+        const toRounded = this.roundToDecimalPlaces(to);
+
+        // Use epsilon for comparison
+        const epsilon = 1e-10;
+        if (fromRounded >= (toRounded - epsilon)) {
+          throw new Error('From must be less than To');
+        }
+
+        // Update the modifications with rounded values
+        modifications.from = fromRounded;
+        modifications.to = toRounded;
+      }
     });
   }
 }
@@ -165,9 +205,9 @@ export class DatabaseService {
     }
   }
 
-  public async addEntry(entry: LogEntry): Promise<LogEntry> {
+  private async addEntryWithoutCheck(entry: LogEntry): Promise<LogEntry> {
     await this.initialize();
-    console.log(`[DB] Adding entry:`, entry);
+    console.log(`[DB] Adding entry without overlap check:`, entry);
 
     // Ensure entry has an ID
     if (!entry.id) {
@@ -185,25 +225,33 @@ export class DatabaseService {
       entry.fields = {};
     }
 
-    // Create a deep copy and ensure numeric fields are numbers
-    const entryToAdd = {
-      ...entry,
-      from: Number(entry.from),
-      to: Number(entry.to),
-      fields: { ...entry.fields },
-      created: new Date(entry.created),
-      modified: new Date()
-    };
+    // Add the entry
+    await this.db.logEntries.add(entry);
+    this.notifyListeners('entry-added', { entry });
+    return entry;
+  }
 
-    try {
-      await this.db.logEntries.add(entryToAdd);
-      console.log(`[DB] Successfully added entry with ID: ${entryToAdd.id}`);
-      this.notifyListeners('add', entryToAdd);
-      return entryToAdd;
-    } catch (error) {
-      console.error(`[DB] Error adding entry:`, error);
-      throw error;
+  public async addEntry(entry: LogEntry, skipOverlapCheck: boolean = false): Promise<LogEntry> {
+    if (skipOverlapCheck) {
+      return this.addEntryWithoutCheck(entry);
     }
+
+    await this.initialize();
+    console.log(`[DB] Adding entry:`, entry);
+
+    // Check for overlaps before adding
+    const overlapResult = await this.checkOverlap(entry);
+    if (overlapResult.hasOverlap) {
+      console.log(`[DB] Overlap detected:`, overlapResult);
+      // Notify listeners about overlap - UI will handle confirmation
+      this.notifyListeners('overlap', {
+        newEntry: entry,
+        overlapResult
+      });
+      throw new Error('OVERLAP_DETECTED');
+    }
+
+    return this.addEntryWithoutCheck(entry);
   }
 
   public async updateEntry(entry: LogEntry): Promise<LogEntry> {
@@ -223,22 +271,15 @@ export class DatabaseService {
         throw new Error(`Entry with ID ${entry.id} not found`);
       }
 
-      // Validate numeric fields
-      if (typeof entry.from !== 'number' || typeof entry.to !== 'number') {
-        console.error('[DB] Invalid from/to values:', { from: entry.from, to: entry.to });
-        throw new Error('From and To must be numbers');
-      }
-
-      // Validate interval
-      if (entry.from >= entry.to) {
-        console.error('[DB] Invalid interval:', { from: entry.from, to: entry.to });
-        throw new Error('From must be less than To');
-      }
+      // Validate the interval with proper decimal handling
+      this.validateInterval(entry.from, entry.to);
 
       // Create a deep copy with preserved fields and metadata
       const updatedEntry = {
         ...existingEntry,
         ...entry,
+        from: this.roundToDecimalPlaces(entry.from),
+        to: this.roundToDecimalPlaces(entry.to),
         fields: { ...existingEntry.fields, ...entry.fields },
         created: existingEntry.created,
         modified: new Date(),
@@ -262,6 +303,28 @@ export class DatabaseService {
     }
   }
 
+  private roundToDecimalPlaces(num: number, places: number = 6): number {
+    return Number(Math.round(Number(num + 'e' + places)) + 'e-' + places);
+  }
+
+  private validateInterval(from: number, to: number): void {
+    // Convert to numbers and round to 6 decimal places to avoid floating point issues
+    const fromNum = this.roundToDecimalPlaces(Number(from));
+    const toNum = this.roundToDecimalPlaces(Number(to));
+
+    if (isNaN(fromNum) || isNaN(toNum)) {
+      console.error('[DB] Invalid from/to values:', { from, to });
+      throw new Error('From and To must be valid numbers');
+    }
+
+    // Use a small epsilon for floating point comparisons
+    const epsilon = 1e-10;
+    if (fromNum >= (toNum - epsilon)) {
+      console.error('[DB] Invalid interval:', { from: fromNum, to: toNum });
+      throw new Error('From must be less than To');
+    }
+  }
+
   public async deleteEntry(id: string): Promise<void> {
     try {
       await this.initialize();
@@ -280,10 +343,16 @@ export class DatabaseService {
         entry: entry,
         timestamp: new Date()
       };
-      await this.db.backupEntries.add(backup);
-
-      // Delete the entry
-      await this.db.logEntries.delete(id);
+      
+      // Start transaction
+      await this.db.transaction('rw', [this.db.logEntries, this.db.backupEntries], async () => {
+        // Save backup first
+        await this.db.backupEntries.add(backup);
+        
+        // Delete the entry
+        console.log('[DB] Deleting original entry:', id);
+        await this.db.logEntries.delete(id);
+      });
       
       console.log(`[DB] Successfully deleted entry ${id}`);
       this.notifyListeners('delete', id);
@@ -446,11 +515,42 @@ export class DatabaseService {
         console.error('[DB] Split failed:', error);
         throw error;
       }
+
+      // Validate numeric fields for both halves
+      const validateHalf = (entry: LogEntry, label: string) => {
+        const from = Number(entry.from);
+        const to = Number(entry.to);
+        if (isNaN(from) || isNaN(to)) {
+          throw new Error(`Invalid numbers in ${label} half of split`);
+        }
+        if (from >= to) {
+          throw new Error(`Invalid range in ${label} half of split`);
+        }
+      };
+
+      validateHalf(firstHalf, 'first');
+      validateHalf(secondHalf, 'second');
+
+      // Verify the split point is valid
+      if (firstHalf.to !== secondHalf.from) {
+        throw new Error('Split point mismatch between first and second half');
+      }
+
       console.log('[DB] Original entry verified:', existingEntry);
 
+      // Create backup before split
+      const backup = {
+        id: uuidv4(),
+        entry: existingEntry,
+        timestamp: new Date()
+      };
+      
       // Start transaction
       console.log('[DB] Starting split transaction');
-      await this.db.transaction('rw', this.db.logEntries, async () => {
+      await this.db.transaction('rw', [this.db.logEntries, this.db.backupEntries], async () => {
+        // Save backup first
+        await this.db.backupEntries.add(backup);
+        
         // Delete original entry
         console.log('[DB] Deleting original entry:', originalEntry.id);
         await this.db.logEntries.delete(originalEntry.id);
@@ -462,6 +562,7 @@ export class DatabaseService {
         console.log('[DB] Adding second half entry:', secondHalf);
         await this.db.logEntries.add(secondHalf);
       });
+      
       console.log('[DB] Split transaction completed successfully');
       this.notifyListeners('split', { originalId: originalEntry.id, firstHalfId: firstHalf.id, secondHalfId: secondHalf.id });
     } catch (error) {
@@ -562,6 +663,137 @@ export class DatabaseService {
       .anyOf(editIds)
       .modify({ synced: true });
     this.notifyListeners('syncEdits', editIds);
+  }
+
+  public async handleOverlap(newEntry: LogEntry, existingEntry: LogEntry, action: 'split' | 'replace' | 'adjust'): Promise<void> {
+    console.log('[DB] Handling overlap:', { action, newEntry, existingEntry });
+    
+    // Round decimal values to avoid floating point comparison issues
+    const roundedNewEntry = {
+      ...newEntry,
+      from: this.roundToDecimalPlaces(newEntry.from),
+      to: this.roundToDecimalPlaces(newEntry.to)
+    };
+
+    const roundedExistingEntry = {
+      ...existingEntry,
+      from: this.roundToDecimalPlaces(existingEntry.from),
+      to: this.roundToDecimalPlaces(existingEntry.to)
+    };
+
+    // Get current state before any changes
+    const originalState = await this.getEntriesByHole(existingEntry.drillhole_id);
+    let newState: LogEntry[] = [];
+    
+    try {
+      if (action === 'adjust') {
+        // Adjust the new entry to avoid overlap
+        let adjustedEntry: LogEntry;
+        
+        if (roundedNewEntry.from < roundedExistingEntry.from && roundedNewEntry.to > roundedExistingEntry.from) {
+          // New entry overlaps at start of existing - adjust to end at existing start
+          adjustedEntry = {
+            ...roundedNewEntry,
+            to: roundedExistingEntry.from
+          };
+        } else if (roundedNewEntry.from < roundedExistingEntry.to && roundedNewEntry.to > roundedExistingEntry.to) {
+          // New entry overlaps at end of existing - adjust to start at existing end
+          adjustedEntry = {
+            ...roundedNewEntry,
+            from: roundedExistingEntry.to
+          };
+        } else {
+          throw new Error('Cannot adjust: invalid overlap scenario');
+        }
+
+        // New state is all existing entries plus the adjusted entry
+        newState = [...originalState, adjustedEntry];
+
+      } else if (action === 'replace') {
+        // Only fully replace if new entry completely contains existing
+        if (roundedNewEntry.from <= roundedExistingEntry.from && roundedNewEntry.to >= roundedExistingEntry.to) {
+          // Remove existing entry, add new entry
+          newState = [...originalState.filter(e => e.id !== existingEntry.id), roundedNewEntry];
+        } else {
+          // For partial overlaps, keep the non-overlapping parts
+          if (roundedNewEntry.from > roundedExistingEntry.from) {
+            // Keep the part before new entry
+            const beforePart = {
+              ...existingEntry,
+              id: uuidv4(),
+              to: roundedNewEntry.from
+            };
+            newState.push(beforePart);
+          }
+          
+          // Add the new entry
+          newState.push(roundedNewEntry);
+          
+          if (roundedNewEntry.to < roundedExistingEntry.to) {
+            // Keep the part after new entry
+            const afterPart = {
+              ...existingEntry,
+              id: uuidv4(),
+              from: roundedNewEntry.to
+            };
+            newState.push(afterPart);
+          }
+
+          // Add all other existing entries
+          newState.push(...originalState.filter(e => e.id !== existingEntry.id));
+        }
+      }
+
+      // Create and execute history command
+      const command = new OverlapResolutionCommand(existingEntry.drillhole_id, originalState, newState);
+      await historyService.executeCommand(command);
+
+    } catch (error) {
+      console.error('[DB] Error handling overlap:', error);
+      throw error;
+    }
+  }
+
+  public async checkOverlap(entry: LogEntry): Promise<OverlapResult> {
+    await this.initialize();
+    console.log(`[DB] Checking for overlaps:`, entry);
+
+    const entries = await this.db.logEntries
+      .where('drillhole_id')
+      .equals(entry.drillhole_id)
+      .filter(e => 
+        // Exclude the entry itself if it's an update
+        e.id !== entry.id &&
+        // Check for any type of overlap
+        !((e.to <= entry.from) || (e.from >= entry.to))
+      )
+      .toArray();
+
+    if (entries.length === 0) {
+      return {
+        hasOverlap: false,
+        type: 'none',
+        overlappingEntries: []
+      };
+    }
+
+    // Determine overlap type for first overlapping entry
+    const overlappingEntry = entries[0];
+    let type: 'contains' | 'contained' | 'partial' | 'none';
+
+    if (overlappingEntry.from <= entry.from && overlappingEntry.to >= entry.to) {
+      type = 'contains'; // Existing entry contains new entry
+    } else if (entry.from <= overlappingEntry.from && entry.to >= overlappingEntry.to) {
+      type = 'contained'; // New entry contains existing entry
+    } else {
+      type = 'partial'; // Partial overlap
+    }
+
+    return {
+      hasOverlap: true,
+      type,
+      overlappingEntries: entries
+    };
   }
 }
 

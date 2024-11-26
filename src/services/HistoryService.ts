@@ -52,7 +52,14 @@ export class HistoryService {
       console.log('[History] Command executed successfully');
     } catch (error) {
       console.error('[History] Command execution failed:', error);
-      throw error;
+      // Don't add failed commands to the stack
+      if (error instanceof Error && error.message === 'OVERLAP_DETECTED') {
+        // Re-throw overlap errors to be handled by UI
+        throw error;
+      } else {
+        // For other errors, provide more context
+        throw new Error(`Command failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     } finally {
       this.#executingCommand = false;
     }
@@ -206,6 +213,148 @@ export class SplitEntryCommand implements Command {
     await databaseService.deleteEntry(this.firstHalf.id);
     await databaseService.deleteEntry(this.secondHalf.id);
     await databaseService.addEntry(this.originalEntry);
+  }
+}
+
+export class AdjustEntryCommand implements Command {
+  private originalEntry: LogEntry;
+  private adjustedEntry: LogEntry;
+  private existingEntry: LogEntry;
+
+  constructor(originalEntry: LogEntry, adjustedEntry: LogEntry, existingEntry: LogEntry) {
+    console.log('[History] Creating AdjustEntryCommand with:', { originalEntry, adjustedEntry, existingEntry });
+    this.originalEntry = HistoryService.cloneEntry(originalEntry);
+    this.adjustedEntry = HistoryService.cloneEntry(adjustedEntry);
+    this.existingEntry = HistoryService.cloneEntry(existingEntry);
+    console.log('[History] AdjustEntryCommand created with cloned entries');
+  }
+
+  public get description(): string {
+    return `Adjust entry from (${this.originalEntry.from} to ${this.originalEntry.to}) to (${this.adjustedEntry.from} to ${this.adjustedEntry.to})`;
+  }
+
+  public async execute(): Promise<void> {
+    console.log('[History] Executing adjust command');
+    await databaseService.addEntry(this.adjustedEntry, true); // Skip overlap check
+  }
+
+  public async undo(): Promise<void> {
+    console.log('[History] Undoing adjust command');
+    await databaseService.deleteEntry(this.adjustedEntry.id);
+    // When undoing, we need to check if we can safely restore the original entry
+    const overlapResult = await databaseService.checkOverlap(this.originalEntry);
+    if (!overlapResult.hasOverlap || 
+        (overlapResult.overlappingEntries.length === 1 && 
+         overlapResult.overlappingEntries[0].id === this.existingEntry.id)) {
+      await databaseService.addEntry(this.originalEntry, true);
+    } else {
+      console.error('[History] Cannot safely undo adjust command - would cause new overlaps');
+      throw new Error('Cannot undo: would cause new overlaps');
+    }
+  }
+}
+
+export class ReplaceOverlapCommand implements Command {
+  private originalEntry: LogEntry;
+  private newEntry: LogEntry;
+  private replacedEntry: LogEntry;
+
+  constructor(originalEntry: LogEntry, newEntry: LogEntry, replacedEntry: LogEntry) {
+    console.log('[History] Creating ReplaceOverlapCommand with:', { originalEntry, newEntry, replacedEntry });
+    this.originalEntry = HistoryService.cloneEntry(originalEntry);
+    this.newEntry = HistoryService.cloneEntry(newEntry);
+    this.replacedEntry = HistoryService.cloneEntry(replacedEntry);
+    console.log('[History] ReplaceOverlapCommand created with cloned entries');
+  }
+
+  public get description(): string {
+    return `Replace overlapping entry ${this.replacedEntry.id} with new entry`;
+  }
+
+  public async execute(): Promise<void> {
+    console.log('[History] Executing replace overlap command');
+    await databaseService.deleteEntry(this.replacedEntry.id);
+    await databaseService.addEntry(this.newEntry, true); // Skip overlap check
+  }
+
+  public async undo(): Promise<void> {
+    console.log('[History] Undoing replace overlap command');
+    await databaseService.deleteEntry(this.newEntry.id);
+    await databaseService.addEntry(this.replacedEntry, true); // Skip overlap check
+  }
+}
+
+export class OverlapResolutionCommand implements Command {
+  private originalState: LogEntry[];
+  private newState: LogEntry[];
+  private drillholeId: string;
+
+  constructor(drillholeId: string, originalState: LogEntry[], newState: LogEntry[]) {
+    console.log('[History] Creating OverlapResolutionCommand with:', { 
+      drillholeId,
+      originalState, 
+      newState 
+    });
+    this.drillholeId = drillholeId;
+    this.originalState = originalState.map(e => HistoryService.cloneEntry(e));
+    this.newState = newState.map(e => HistoryService.cloneEntry(e));
+    console.log('[History] OverlapResolutionCommand created with cloned entries');
+  }
+
+  public get description(): string {
+    return `Resolve overlap in drillhole ${this.drillholeId}`;
+  }
+
+  public async execute(): Promise<void> {
+    console.log('[History] Executing overlap resolution command');
+    // Get current entries for this drillhole
+    const currentEntries = await databaseService.getEntriesByHole(this.drillholeId);
+    
+    // Find entries to remove (in current but not in new state)
+    const entriesToRemove = currentEntries.filter(current => 
+      !this.newState.some(newEntry => newEntry.id === current.id)
+    );
+
+    // Find entries to add (in new state but not in current)
+    const entriesToAdd = this.newState.filter(newEntry => 
+      !currentEntries.some(current => current.id === newEntry.id)
+    );
+
+    // Delete entries that should be removed
+    for (const entry of entriesToRemove) {
+      await databaseService.deleteEntry(entry.id);
+    }
+
+    // Add new entries
+    for (const entry of entriesToAdd) {
+      await databaseService.addEntry(entry, true); // Skip overlap check
+    }
+  }
+
+  public async undo(): Promise<void> {
+    console.log('[History] Undoing overlap resolution command');
+    // Get current entries for this drillhole
+    const currentEntries = await databaseService.getEntriesByHole(this.drillholeId);
+    
+    // Find entries to remove (in current but not in original state)
+    const entriesToRemove = currentEntries.filter(current => 
+      !this.originalState.some(original => original.id === current.id)
+    );
+
+    // Find entries to restore (in original state but not in current)
+    const entriesToRestore = this.originalState.filter(original => 
+      !currentEntries.some(current => current.id === original.id)
+    );
+
+    // Delete entries that should be removed
+    for (const entry of entriesToRemove) {
+      await databaseService.deleteEntry(entry.id);
+    }
+
+    // Restore original entries
+    for (const entry of entriesToRestore) {
+      await databaseService.addEntry(entry, true); // Skip overlap check
+    }
   }
 }
 

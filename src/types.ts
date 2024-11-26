@@ -35,3 +35,9 @@ export interface FieldStyle {
   colors?: { [key: string]: string };
   icons?: { [key: string]: string };
 }
+
+export interface OverlapResult {
+  hasOverlap: boolean;
+  type: 'contains' | 'contained' | 'partial' | 'none';
+  overlappingEntries: LogEntry[];
+}
