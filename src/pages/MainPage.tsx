@@ -114,6 +114,23 @@ const MainPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedDrillhole) return;
+
+      // Undo/Redo shortcuts are handled in LogEntryList
+      
+      // Insert key for new entry
+      if (e.key === 'Insert') {
+        e.preventDefault();
+        setShowNewEntryDialog(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDrillhole]);
+
   const handleDarkModeChange = (newDarkMode: boolean) => {
     setDarkMode(newDarkMode);
     configurationService.updateConfig({ darkMode: newDarkMode });
@@ -492,34 +509,42 @@ const MainPage: React.FC = () => {
         </Box>
         
         <Box>
-          <IconButton 
-            onClick={handleUndo}
-            disabled={!canUndo}
-            title="Undo"
-          >
-            <UndoIcon />
-          </IconButton>
-          <IconButton 
-            onClick={handleRedo}
-            disabled={!canRedo}
-            title="Redo"
-          >
-            <RedoIcon />
-          </IconButton>
-          <IconButton 
-            onClick={() => setShowStriplog(!showStriplog)}
-            color={showStriplog ? "primary" : "default"}
-            title={showStriplog ? "Hide Striplog" : "Show Striplog"}
-          >
-            {showStriplog ? <VisibilityOffIcon /> : <VisibilityIcon />}
-          </IconButton>
-          <IconButton 
-            onClick={() => setConfigOpen(true)} 
-            color="primary"
-            title="Settings"
-          >
-            <SettingsIcon />
-          </IconButton>
+          <Tooltip title="Undo (Ctrl+Z)" arrow>
+            <span>
+              <IconButton 
+                onClick={handleUndo}
+                disabled={!canUndo}
+              >
+                <UndoIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="Redo (Ctrl+Y or Ctrl+Shift+Z)" arrow>
+            <span>
+              <IconButton 
+                onClick={handleRedo}
+                disabled={!canRedo}
+              >
+                <RedoIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title={showStriplog ? "Hide Striplog" : "Show Striplog"} arrow>
+            <IconButton 
+              onClick={() => setShowStriplog(!showStriplog)}
+              color={showStriplog ? "primary" : "default"}
+            >
+              {showStriplog ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Settings" arrow>
+            <IconButton 
+              onClick={() => setConfigOpen(true)} 
+              color="primary"
+            >
+              <SettingsIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -549,7 +574,7 @@ const MainPage: React.FC = () => {
       </Box>
 
       {/* Floating Action Button */}
-      <Tooltip title="Add New Entry" placement="left">
+      <Tooltip title="Add New Entry (Insert)" placement="left" arrow>
         <Fab 
           color="primary" 
           onClick={() => setShowNewEntryDialog(true)}
