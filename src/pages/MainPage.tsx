@@ -17,6 +17,9 @@ import {
   FormControlLabel,
   Switch,
   Divider,
+  Fab,
+  useTheme,
+  Tooltip,
 } from '@mui/material';
 import QuickLogForm from '../components/QuickLogForm';
 import LogEntryList from '../components/LogEntryList';
@@ -63,6 +66,8 @@ const MainPage: React.FC = () => {
     newEntry: null,
     overlapResult: null
   });
+
+  const theme = useTheme();
 
   useEffect(() => {
     // Update undo/redo state
@@ -463,14 +468,29 @@ const MainPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="xl">
+    <Container maxWidth="xl" sx={{ height: '100vh', display: 'flex', flexDirection: 'column', pt: 2, pb: 2 }}>
+      {/* Title and Drillhole Info */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h4" component="h1">
           QuickLogger
         </Typography>
       </Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} mt={2}>
-        <h2>Drillhole: {selectedDrillhole}</h2>
+
+      {/* Drillhole Selection and Controls */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box display="flex" alignItems="center">
+          <Typography variant="h5" component="h2" sx={{ mr: 2 }}>
+            Drillhole: {selectedDrillhole}
+          </Typography>
+          <Button
+            variant="outlined"
+            onClick={() => setSelectedDrillhole(null)}
+            size="small"
+          >
+            Change Drillhole
+          </Button>
+        </Box>
+        
         <Box>
           <IconButton 
             onClick={handleUndo}
@@ -494,70 +514,57 @@ const MainPage: React.FC = () => {
             {showStriplog ? <VisibilityOffIcon /> : <VisibilityIcon />}
           </IconButton>
           <IconButton 
-            onClick={() => setShowNewEntryDialog(true)}
-            color="primary"
-            title="Add New Entry"
-          >
-            <AddIcon />
-          </IconButton>
-          <IconButton 
             onClick={() => setConfigOpen(true)} 
             color="primary"
             title="Settings"
           >
             <SettingsIcon />
           </IconButton>
-          <Button
-            variant="outlined"
-            onClick={() => setSelectedDrillhole(null)}
-            sx={{ ml: 1 }}
-          >
-            Change Drillhole
-          </Button>
         </Box>
       </Box>
-      
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={showStriplog ? 8 : 12}>
-          <Paper sx={{ p: 2, height: '80vh', overflow: 'auto' }}>
-            <LogEntryList
-              entries={entries}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
-              onAddBetween={(from, to) => {
-                setPrefillData({
-                  from: from,
-                  to: to,
-                  drillhole_id: selectedDrillhole || '',
-                  lithology: '',
-                  color: '',
-                  texture: '',
-                  minerals: '',
-                  mineralized: false,
-                  structures: '',
-                  notes: '',
-                  synced: false,
-                  fields: {},
-                  created: new Date(),
-                  modified: new Date()
-                });
-                setShowNewEntryDialog(true);
-              }}
-              onSplit={handleSplit}
-              onCancelSplit={handleCancelSplit}
-            />
-          </Paper>
-        </Grid>
-        {showStriplog && (
-          <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2, height: '80vh', overflow: 'auto' }}>
-              <StripLog entries={entries} />
+
+      {/* Main Content */}
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <Grid container spacing={2} sx={{ height: '100%' }}>
+          <Grid item xs={12} md={showStriplog ? 8 : 12}>
+            <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+              <LogEntryList
+                entries={entries}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+                onAddBetween={handleAddBetween}
+                onSplit={handleSplit}
+                onCancelSplit={handleCancelSplit}
+              />
             </Paper>
           </Grid>
-        )}
-      </Grid>
+          {showStriplog && (
+            <Grid item md={4}>
+              <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+                <StripLog entries={entries} />
+              </Paper>
+            </Grid>
+          )}
+        </Grid>
+      </Box>
 
-      {/* New Entry Dialog */}
+      {/* Floating Action Button */}
+      <Tooltip title="Add New Entry" placement="left">
+        <Fab 
+          color="primary" 
+          onClick={() => setShowNewEntryDialog(true)}
+          sx={{
+            position: 'fixed',
+            bottom: theme.spacing(3),
+            right: theme.spacing(3),
+            zIndex: theme.zIndex.speedDial,
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
+
+      {/* Dialogs */}
       <Dialog 
         open={showNewEntryDialog} 
         onClose={() => {
@@ -620,7 +627,6 @@ const MainPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Edit Entry Dialog */}
       <Dialog 
         open={editDialogOpen} 
         onClose={handleEditClose}
@@ -655,7 +661,6 @@ const MainPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteEntry !== null}
         onClose={() => setDeleteEntry(null)}
@@ -687,7 +692,6 @@ const MainPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Overlap Dialog */}
       <OverlapDialog
         open={!!overlapState.newEntry && !!overlapState.overlapResult}
         onClose={() => handleOverlapConfirm('cancel')}
@@ -696,7 +700,6 @@ const MainPage: React.FC = () => {
         onConfirm={handleOverlapConfirm}
       />
 
-      {/* Configuration Dialog */}
       <ConfigurationDialog
         open={configOpen}
         onClose={() => setConfigOpen(false)}
