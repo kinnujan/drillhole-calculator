@@ -589,3 +589,25 @@ body.dark-mode .data-storage-info {
 body.dark-mode .data-storage-info i {
     color: #4da6ff;
 }
+
+/* Sign hint under the hole dip input: the field accepts -90..90 and negative
+   means the hole points downward, which is not guessable from the label */
+.input-hint {
+    margin: -4px 0 8px 100px;   /* 100px aligns under the input, past the label column */
+    font-size: 0.8em;
+    color: #666;
+    min-height: 1.2em;
+}
+
+.input-hint.warning {
+    color: #d9480f;
+    font-weight: bold;
+}
+
+body.dark-mode .input-hint {
+    color: #aaa;
+}
+
+body.dark-mode .input-hint.warning {
+    color: #ff922b;
+}
