@@ -50,6 +50,7 @@ export async function setupUI() {
     try {
         console.log("Setting up drill hole info toggle...");
         setupDrillHoleInfoToggle();
+        setupChangelogToggle();
         console.log("Drill hole info toggle setup complete.");
 
         console.log("Setting up type selectors...");
@@ -132,6 +133,17 @@ function setupDrillHoleInfoToggle() {
     });
 }
 
+function setupChangelogToggle() {
+    const toggle = document.getElementById('changelogToggle');
+    const changelog = document.getElementById('changelog');
+    if (!toggle || !changelog) return;
+
+    toggle.addEventListener('click', () => {
+        const open = !changelog.classList.toggle('hidden');
+        toggle.setAttribute('aria-expanded', String(open));
+    });
+}
+
 function updateDrillHoleInfoSummary() {
     const holeId = document.getElementById('holeId').value;
     const holeDip = document.getElementById('holeDip').value;
@@ -143,6 +155,8 @@ function updateDrillHoleInfoSummary() {
         <span id="holeDipSummary">Dip: ${holeDip}°</span>
         <span id="holeAzimuthSummary">Azimuth: ${holeAzimuth}°</span>
     `;
+
+    updateHoleDipHint();
 }
 
 function setupMeasurementHandlers() {
@@ -279,6 +293,37 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
     });
 }
 
+/**
+ * Spells out what the sign of the hole dip means, so nobody has to guess whether
+ * 60 or -60 is the hole that points into the ground. Negative is downward; a
+ * positive value is legal (uphole drilling) but is nearly always a typo, so it
+ * is called out rather than silently accepted.
+ */
+export function updateHoleDipHint() {
+    const input = document.getElementById('holeDip');
+    const hint = document.getElementById('holeDipHint');
+    if (!input || !hint) return;
+
+    const dip = parseFloat(input.value);
+    if (isNaN(dip)) {
+        hint.textContent = '';
+        hint.classList.remove('warning');
+        return;
+    }
+
+    const magnitude = Math.abs(dip).toFixed(1).replace(/\.0$/, '');
+    if (dip < 0) {
+        hint.textContent = `↓ ${magnitude}° below horizontal (downward hole)`;
+        hint.classList.remove('warning');
+    } else if (dip > 0) {
+        hint.textContent = `↑ ${magnitude}° ABOVE horizontal — downward is −${magnitude}`;
+        hint.classList.add('warning');
+    } else {
+        hint.textContent = '→ horizontal hole';
+        hint.classList.remove('warning');
+    }
+}
+
 async function syncInputs() {
     const inputs = ['holeDip', 'holeAzimuth', 'alpha', 'beta'];
     inputs.forEach(id => {
@@ -353,6 +398,9 @@ async function syncInputs() {
     } catch (error) {
         handleError(error, "Error loading drill hole info");
     }
+
+    // render the hint on first load too, when there is nothing saved yet
+    updateHoleDipHint();
 }
 
 export async function updatePreview() {

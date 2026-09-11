@@ -11,3 +11,6 @@ venv/
 env/
 .venv/
 .env/
+
+# Local validation against the Mawson drillhole database (not for publication)
+validation/

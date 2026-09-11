@@ -57,6 +57,7 @@
                 <input type="number" id="holeDip" min="-90" max="90" step="0.1" value="0" class="angle-number">
                 <input type="range" id="holeDipSlider" min="-90" max="90" step="0.1" value="0" class="angle-slider">
             </div>
+            <div class="input-hint" id="holeDipHint"></div>
             <div class="input-group angle-input">
                 <label for="holeAzimuth">Hole Azimuth (°):</label>
                 <input type="number" id="holeAzimuth" min="0" max="360" step="0.1" value="0" class="angle-number">
@@ -243,7 +244,19 @@
         <div id="error"></div>
     </div>
     <footer>
-        <span>Done by Janne v.15</span>
+        <span>Done by Janne v.16</span>
+        <button id="changelogToggle" class="changelog-button" aria-expanded="false" aria-controls="changelog" title="What changed"><i class="fas fa-info-circle"></i></button>
+        <div id="changelog" class="hidden">
+            <h3>v.16</h3>
+            <ul>
+                <li>Fixed the dip direction calculation failing on some measurements. Alpha 0 with any beta, and planes that come out exactly vertical, previously produced no result at all.</li>
+                <li>Dip, dip direction and strike are unchanged for every measurement that already worked, except for exactly vertical planes, where the dip direction can now read the opposite way round. That is the same plane described from the other side, and it is now consistent instead of depending on rounding.</li>
+                <li>Hole dip now says whether the hole points down or up, so the sign is not a guess.</li>
+                <li>Offline use now works. The offline store had been failing to set up because it listed two files that are not there, so nothing was ever saved for offline.</li>
+                <li>Updates now reach the app instead of it sticking on an older copy.</li>
+            </ul>
+            <p><a href="https://github.com/kinnujan/drillhole-calculator/commits/main" target="_blank" rel="noopener noreferrer">Full history on GitHub</a></p>
+        </div>
         <div class="social-links">
             <a href="https://www.linkedin.com/in/kinnujan/" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
             <a href="https://github.com/kinnujan/drillhole-calculator/" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i></a>

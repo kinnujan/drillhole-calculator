@@ -86,6 +86,16 @@ domReady(async () => {
 });
 
 if ('serviceWorker' in navigator) {
+    // The worker calls skipWaiting/clients.claim, so a new version takes control of
+    // this page and clears the cache the already-loaded modules came from. Reload
+    // once so the running code matches the version that is now installed.
+    let reloadingForNewVersion = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloadingForNewVersion) return;
+        reloadingForNewVersion = true;
+        window.location.reload();
+    });
+
     window.addEventListener('load', async function() {
         try {
             const registration = await navigator.serviceWorker.register('sw.js');
