@@ -593,7 +593,7 @@ body.dark-mode .data-storage-info i {
 /* Sign hint under the hole dip input: the field accepts -90..90 and negative
    means the hole points downward, which is not guessable from the label */
 .input-hint {
-    margin: -4px 0 8px 100px;   /* 100px aligns under the input, past the label column */
+    margin: -4px 0 8px 100px;   /* matches the label column width, see the 768px rule */
     font-size: 0.8em;
     color: #666;
     min-height: 1.2em;
@@ -610,4 +610,63 @@ body.dark-mode .input-hint {
 
 body.dark-mode .input-hint.warning {
     color: #ff922b;
+}
+
+/* Changelog, opened from the small info icon beside the version in the footer */
+.changelog-button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 1em;
+    padding: 0 4px;
+    vertical-align: middle;
+}
+
+.changelog-button:hover {
+    color: #2196F3;
+}
+
+#changelog {
+    text-align: left;
+    max-width: 520px;
+    margin: 8px auto 0;
+    padding: 10px 14px;
+    background-color: #f7f9fc;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+#changelog h3 {
+    margin: 0 0 6px;
+    font-size: 0.95em;
+}
+
+#changelog ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+#changelog li {
+    margin-bottom: 4px;
+}
+
+#changelog p {
+    margin: 8px 0 0;
+}
+
+body.dark-mode #changelog {
+    background-color: #2a2a2a;
+    border-color: #444;
+}
+
+body.dark-mode .changelog-button {
+    color: #aaa;
+}
+
+@media screen and (min-width: 768px) {
+    /* label grows to 120px there, so the hint has to move with it */
+    .input-hint {
+        margin-left: 120px;
+    }
 }

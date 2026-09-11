@@ -50,6 +50,7 @@ export async function setupUI() {
     try {
         console.log("Setting up drill hole info toggle...");
         setupDrillHoleInfoToggle();
+        setupChangelogToggle();
         console.log("Drill hole info toggle setup complete.");
 
         console.log("Setting up type selectors...");
@@ -129,6 +130,17 @@ function setupDrillHoleInfoToggle() {
             '<i class="fas fa-chevron-down"></i>' : 
             '<i class="fas fa-chevron-up"></i>';
         updateDrillHoleInfoSummary();
+    });
+}
+
+function setupChangelogToggle() {
+    const toggle = document.getElementById('changelogToggle');
+    const changelog = document.getElementById('changelog');
+    if (!toggle || !changelog) return;
+
+    toggle.addEventListener('click', () => {
+        const open = !changelog.classList.toggle('hidden');
+        toggle.setAttribute('aria-expanded', String(open));
     });
 }
 
