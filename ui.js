@@ -294,10 +294,10 @@ function updateSelectorButtons(containerSelector, options, dataAttribute, onClic
 }
 
 /**
- * Spells out what the sign of the hole dip means, so nobody has to guess whether
- * 60 or -60 is the hole that points into the ground. Negative is downward; a
- * positive value is legal (uphole drilling) but is nearly always a typo, so it
- * is called out rather than silently accepted.
+ * Says which way the hole points, next to the value itself. The magnitude is
+ * already in the field, so this only has to carry the sign: negative is
+ * downward. A positive dip is legal, since uphole drilling exists, but it is
+ * nearly always a typo, so it is called out rather than quietly accepted.
  */
 export function updateHoleDipHint() {
     const input = document.getElementById('holeDip');
@@ -307,19 +307,23 @@ export function updateHoleDipHint() {
     const dip = parseFloat(input.value);
     if (isNaN(dip)) {
         hint.textContent = '';
+        hint.removeAttribute('title');
         hint.classList.remove('warning');
         return;
     }
 
     const magnitude = Math.abs(dip).toFixed(1).replace(/\.0$/, '');
     if (dip < 0) {
-        hint.textContent = `↓ ${magnitude}° below horizontal (downward hole)`;
+        hint.textContent = '↓ down';
+        hint.title = `${magnitude}° below horizontal`;
         hint.classList.remove('warning');
     } else if (dip > 0) {
-        hint.textContent = `↑ ${magnitude}° ABOVE horizontal — downward is −${magnitude}`;
+        hint.textContent = '↑ UP';
+        hint.title = `${magnitude}° above horizontal, an uphole. Use −${magnitude} for a hole pointing down.`;
         hint.classList.add('warning');
     } else {
-        hint.textContent = '→ horizontal hole';
+        hint.textContent = 'horiz.';
+        hint.title = 'Horizontal hole';
         hint.classList.remove('warning');
     }
 }

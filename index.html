@@ -55,12 +55,13 @@
             <div class="input-group angle-input">
                 <label for="holeDip">Hole Dip (°):</label>
                 <input type="number" id="holeDip" min="-90" max="90" step="0.1" value="0" class="angle-number">
+                <span class="dip-sign" id="holeDipHint"></span>
                 <input type="range" id="holeDipSlider" min="-90" max="90" step="0.1" value="0" class="angle-slider">
             </div>
-            <div class="input-hint" id="holeDipHint"></div>
             <div class="input-group angle-input">
                 <label for="holeAzimuth">Hole Azimuth (°):</label>
                 <input type="number" id="holeAzimuth" min="0" max="360" step="0.1" value="0" class="angle-number">
+                <span class="dip-sign" aria-hidden="true"></span>
                 <input type="range" id="holeAzimuthSlider" min="0" max="360" step="0.1" value="0" class="angle-slider">
             </div>
         </div>

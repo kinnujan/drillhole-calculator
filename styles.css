@@ -265,7 +265,11 @@ footer {
 }
 
 .angle-number {
-    width: 60px;
+    /* flex-basis, because the width above loses to input[type="number"]'s
+       calc(100% - 110px) on specificity and leaves a 5 character field 130px
+       wide, starving the slider next to it */
+    flex: 0 0 70px;
+    width: 70px;
     margin-right: 10px;
 }
 
@@ -590,25 +594,27 @@ body.dark-mode .data-storage-info i {
     color: #4da6ff;
 }
 
-/* Sign hint under the hole dip input: the field accepts -90..90 and negative
-   means the hole points downward, which is not guessable from the label */
-.input-hint {
-    margin: -4px 0 8px 100px;   /* matches the label column width, see the 768px rule */
-    font-size: 0.8em;
+/* Which way the hole points, shown next to the value rather than as a separate
+   line, so it reads as part of the field. Fixed width, and the azimuth row
+   carries an empty one, so both sliders start at the same place. */
+.dip-sign {
+    flex: 0 0 46px;
+    margin-right: 6px;
+    font-size: 0.75em;
     color: #666;
-    min-height: 1.2em;
+    white-space: nowrap;
 }
 
-.input-hint.warning {
+.dip-sign.warning {
     color: #d9480f;
     font-weight: bold;
 }
 
-body.dark-mode .input-hint {
+body.dark-mode .dip-sign {
     color: #aaa;
 }
 
-body.dark-mode .input-hint.warning {
+body.dark-mode .dip-sign.warning {
     color: #ff922b;
 }
 
@@ -662,11 +668,4 @@ body.dark-mode #changelog {
 
 body.dark-mode .changelog-button {
     color: #aaa;
-}
-
-@media screen and (min-width: 768px) {
-    /* label grows to 120px there, so the hint has to move with it */
-    .input-hint {
-        margin-left: 120px;
-    }
 }
