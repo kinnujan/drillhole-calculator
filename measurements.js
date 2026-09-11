@@ -147,93 +147,70 @@ export async function addMeasurement() {
     }
 }
 
+/**
+ * Converts an alpha/beta core measurement into real-world dip and dip direction.
+ *
+ * Conventions
+ *   inputHoleDip     negative = hole pointing downward (UI range -90..90)
+ *   inputHoleAzimuth degrees clockwise from north
+ *   inputAlpha       0..90, acute angle between the core axis and the plane
+ *   inputBeta        0..360, measured clockwise when looking down-hole, from the
+ *                    bottom-of-core reference line to the deepest (furthest
+ *                    down-hole) point of the elliptical trace
+ *
+ * Works in an East/North/Up frame. Builds the core reference frame (a = down-hole
+ * axis, b = bottom-of-core line, c = a x b), places the pole to the plane in it,
+ * then reads dip and dip direction off the pole.
+ *
+ * @returns {[number, number]} [dip 0..90, dipDirection 0..359.999]
+ */
 export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth) {
-    console.log("Calculating dip direction with inputs:", { inputAlpha, inputBeta, inputHoleDip, inputHoleAzimuth });
+    const plunge = toRadians(-inputHoleDip);
+    const az = toRadians(inputHoleAzimuth);
+    const alpha = toRadians(inputAlpha);
+    const beta = toRadians(inputBeta);
 
-    // Handle the case where both alpha and beta are 0
-    if (inputAlpha === 0 && inputBeta === 0) {
-        console.log("Alpha and Beta are both 0, returning hole dip and azimuth");
-        return [-inputHoleDip, inputHoleAzimuth];
-    }
+    const sinP = Math.sin(plunge), cosP = Math.cos(plunge);
+    const sinA = Math.sin(az), cosA = Math.cos(az);
 
-    const alphaRad = toRadians(inputAlpha);
-    const betaRad = toRadians(inputBeta);
-    const holeDipRad = toRadians(-inputHoleDip);
-    const holeAzimuthRad = toRadians(inputHoleAzimuth);
+    // core reference frame
+    const a = [sinA * cosP, cosA * cosP, -sinP];          // down-hole axis
+    const b = [-sinP * sinA, -sinP * cosA, -cosP];        // bottom-of-core line
+    const c = [                                            // a x b
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    ];
 
-    console.log("Radians:", { alphaRad, betaRad, holeDipRad, holeAzimuthRad });
+    // pole to the plane: sin(alpha) along the core axis, cos(alpha) in the b-c circle at angle beta
+    const kA = Math.sin(alpha);
+    const kB = -Math.cos(alpha) * Math.cos(beta);
+    const kC = -Math.cos(alpha) * Math.sin(beta);
 
-    const sinBeta = -Math.sin(betaRad);
-    const cosBeta = -Math.cos(betaRad);
-    const tanAlpha = -1 / Math.tan(alphaRad);
+    let nx = kA * a[0] + kB * b[0] + kC * c[0];
+    let ny = kA * a[1] + kB * b[1] + kC * c[1];
+    let nz = kA * a[2] + kB * b[2] + kC * c[2];
 
-    console.log("Trigonometric values:", { sinBeta, cosBeta, tanAlpha });
+    const len = Math.hypot(nx, ny, nz);
+    if (len === 0 || !isFinite(len)) return [0, 0];
+    nx /= len; ny /= len; nz /= len;
 
-    let normalX, normalY, normalZ;
-    if (sinBeta === 0) {
-        normalX = 0;
-        normalY = Math.sqrt(-tanAlpha);
-        normalZ = cosBeta / Math.sqrt(-tanAlpha);
-    } else {
-        normalX = Math.sqrt(-tanAlpha / (1 + cosBeta ** 2 / sinBeta ** 2));
-        normalY = cosBeta * normalX / sinBeta;
-        normalZ = sinBeta / normalX;
-    }
+    // use the upward pole so dip lands in 0..90
+    if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
 
-    console.log("Normal vector:", { normalX, normalY, normalZ });
+    const dip = toDegrees(Math.acos(Math.min(1, Math.max(-1, nz))));
 
-    const rotatedX = normalX;
-    const rotatedY = normalY * Math.cos(Math.PI / 2 - holeDipRad) - normalZ * Math.sin(Math.PI / 2 - holeDipRad);
-    const rotatedZ = normalY * Math.sin(Math.PI / 2 - holeDipRad) + normalZ * Math.cos(Math.PI / 2 - holeDipRad);
+    // horizontal plane: dip direction is undefined, report 0
+    if (Math.hypot(nx, ny) < 1e-12) return [dip, 0];
 
-    console.log("Rotated vector:", { rotatedX, rotatedY, rotatedZ });
+    // the pole leans in the same horizontal direction the plane dips
+    let dipDirection = toDegrees(Math.atan2(nx, ny)) % 360;
+    if (dipDirection < 0) dipDirection += 360;
+    if (dipDirection >= 360) dipDirection -= 360;
 
-    const finalX = rotatedX * Math.cos(-holeAzimuthRad) - rotatedY * Math.sin(-holeAzimuthRad);
-    const finalY = rotatedX * Math.sin(-holeAzimuthRad) + rotatedY * Math.cos(-holeAzimuthRad);
-    const finalZ = rotatedZ;
-
-    console.log("Final vector:", { finalX, finalY, finalZ });
-
-    const dipDirectionX = finalZ * finalX;
-    const dipDirectionY = finalZ * finalY;
-    const dipComponent = -(finalX ** 2 + finalY ** 2);
-
-    console.log("Dip direction components:", { dipDirectionX, dipDirectionY, dipComponent });
-
-    const isNonStandardOrientation = (dipDirectionX === 0 && dipDirectionY === 0 && dipComponent === 0) ? 3 : 1;
-
-    let dipOutputFINAL, dipdirectionOutputFINAL;
-
-    if (isNonStandardOrientation > 1) {
-        if (isNonStandardOrientation === 2) {
-            dipOutputFINAL = 90;
-            dipdirectionOutputFINAL = inputHoleAzimuth;
-        } else {
-            dipOutputFINAL = 0;
-            dipdirectionOutputFINAL = 0;
-        }
-    } else {
-        const dipDirectionAngle = Math.atan(Math.abs(dipDirectionX / dipDirectionY));
-        const quadrant1 = toDegrees(dipDirectionAngle);
-        const quadrant2 = toDegrees(Math.PI - dipDirectionAngle);
-        const quadrant3 = toDegrees(Math.PI + dipDirectionAngle);
-        const quadrant4 = toDegrees(2 * Math.PI - dipDirectionAngle);
-
-        console.log("Quadrants:", { quadrant1, quadrant2, quadrant3, quadrant4 });
-
-        if (dipDirectionX > 0) {
-            dipdirectionOutputFINAL = dipDirectionY > 0 ? quadrant1 : quadrant2;
-        } else {
-            dipdirectionOutputFINAL = dipDirectionY > 0 ? quadrant4 : quadrant3;
-        }
-
-        dipOutputFINAL = toDegrees(Math.atan(-dipComponent / Math.sqrt(dipDirectionX ** 2 + dipDirectionY ** 2)));
-    }
-
-    console.log("Final output:", { dipOutputFINAL, dipdirectionOutputFINAL });
-
-    return [dipOutputFINAL, dipdirectionOutputFINAL];
+    return [dip, dipDirection];
 }
+
 export async function undoLastMeasurement() {
     console.log("Undoing last measurement...");
     if (lastAddedMeasurement) {
