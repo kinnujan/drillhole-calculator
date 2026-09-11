@@ -3,9 +3,9 @@
  *
  *   node test_calculations.mjs
  *
- * Validated against 11,761 logged Rajapalot drillhole structure measurements
- * (Core_Drilling_Structures_Planar_final.csv, which carries the database's own
- * computed dip/azimuth to three decimals): median plane-to-plane error 0.000 deg,
+ * Validated against 11,761 logged drillhole structure measurements from a
+ * production database export carrying its own computed dip/azimuth to three
+ * decimals: median plane-to-plane error 0.000 deg,
  * 97.9% within 0.1 deg. The residual 1% sits in four holes and is explained by a
  * constant per-hole azimuth offset between survey versions, not by the math.
  *
