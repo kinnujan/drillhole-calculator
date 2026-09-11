@@ -195,8 +195,14 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
     if (len === 0 || !isFinite(len)) return [0, 0];
     nx /= len; ny /= len; nz /= len;
 
-    // use the upward pole so dip lands in 0..90
+    // Use the upward pole so dip lands in 0..90. A vertical plane has a horizontal
+    // pole that points either way for the same plane, and there nz is floating point
+    // noise around 1e-17, so the sign test alone would let two all-but-identical
+    // inputs report dip directions 180 apart. Pin those to the 0..180 half circle.
+    const VERTICAL_EPSILON = 1e-12;
+    const planeIsVertical = Math.abs(nz) <= VERTICAL_EPSILON;
     if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
+    if (planeIsVertical) nz = 0;
 
     const dip = toDegrees(Math.acos(Math.min(1, Math.max(-1, nz))));
 
@@ -207,6 +213,11 @@ export function calculateDipDirection(inputAlpha, inputBeta, inputHoleDip, input
     let dipDirection = toDegrees(Math.atan2(nx, ny)) % 360;
     if (dipDirection < 0) dipDirection += 360;
     if (dipDirection >= 360) dipDirection -= 360;
+
+    // A vertical plane dips equally both ways, so report the 0..180 half circle.
+    // Folding here rather than by flipping the pole keeps it exact: the sign of a
+    // component sitting at 1e-16 must not decide which way round the answer reads.
+    if (planeIsVertical) dipDirection %= 180;
 
     return [dip, dipDirection];
 }

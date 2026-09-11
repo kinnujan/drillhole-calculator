@@ -26,6 +26,11 @@ const { calculateStrike } = await import('./utils.js');
 let failed = 0;
 const angDiff = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
 const near = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol;
+const pole = (dip, dir) => { const d = dip * Math.PI / 180, a = dir * Math.PI / 180;
+    return [Math.sin(d) * Math.sin(a), Math.sin(d) * Math.cos(a), Math.cos(d)]; };
+// angle between two planes, so that a dip direction flipped by 180 counts as equal
+const planeAngle = (d1, a1, d2, a2) => { const p = pole(d1, a1), q = pole(d2, a2);
+    return Math.acos(Math.min(1, Math.abs(p[0]*q[0] + p[1]*q[1] + p[2]*q[2]))) * 180 / Math.PI; };
 function check(name, cond, detail = '') {
     if (cond) console.log(`  ok    ${name}${detail ? '  ' + detail : ''}`);
     else { failed++; console.log(`  FAIL  ${name}${detail ? '  ' + detail : ''}`); }
@@ -92,7 +97,7 @@ console.log('\ngolden values (lock the result against future refactors)');
 console.log('\nproperties over the full input range');
 {
     let cases = 0, nan = 0, outOfRange = 0, ruleViolation = 0, strikeRejected = 0;
-    for (let holeDip = -90; holeDip <= 0; holeDip += 1)
+    for (let holeDip = -90; holeDip <= 90; holeDip += 1)
         for (let holeAz = 0; holeAz < 360; holeAz += 15)
             for (let alpha = 0; alpha <= 90; alpha += 1)
                 for (let beta = 0; beta < 360; beta += 5) {
@@ -112,6 +117,36 @@ console.log('\nproperties over the full input range');
     check('dip in [0,90], dip direction in [0,360)', outOfRange === 0, `${outOfRange} out of range`);
     check('every dip direction accepted by calculateStrike', strikeRejected === 0, `${strikeRejected} rejected`);
     check('beta 0/180 => dip direction along hole azimuth', ruleViolation === 0, `${ruleViolation} violations`);
+}
+
+console.log('');
+console.log('vertical planes (pole is horizontal, so either direction names the same plane)');
+{
+    // alpha = 90 - |holeDip| with beta 0 or 180 puts the plane exactly vertical.
+    // nz is then floating point noise near 1e-17, so without a tie-break two
+    // all-but-identical inputs could report dip directions 180 apart.
+    let notVertical = 0, unpinned = 0, cases = 0;
+    for (let holeDip = -89; holeDip <= -1; holeDip += 1)
+        for (let holeAz = 0; holeAz < 360; holeAz += 3)
+            {
+                cases++;
+                const [dip, dir] = calculateDipDirection(90 + holeDip, 0, holeDip, holeAz);
+                if (Math.abs(dip - 90) > 1e-6) notVertical++;
+                else if (!(dir >= 0 && dir < 180)) unpinned++;
+            }
+    check('the construction really is vertical', notVertical === 0, `${cases} cases, ${notVertical} were not`);
+    check('dip direction pinned to [0,180)', unpinned === 0, `${unpinned} unpinned`);
+
+    // Neighbouring inputs must describe the same plane. Compared as planes, not as
+    // azimuths: any half circle convention is discontinuous at its own seam, and
+    // dip direction 179.9 and 0.1 are the same vertical plane.
+    let jumps = 0;
+    for (let holeAz = 0; holeAz < 360; holeAz += 1) {
+        const [d1, a1] = calculateDipDirection(30, 0, -60, holeAz);
+        const [d2, a2] = calculateDipDirection(30, 0, -60, holeAz + 1e-9);
+        if (planeAngle(d1, a1, d2, a2) > 1e-3) jumps++;
+    }
+    check('neighbouring inputs describe the same plane', jumps === 0, `${jumps} differ`);
 }
 
 console.log(failed === 0 ? '\nall passed' : `\n${failed} failed`);
